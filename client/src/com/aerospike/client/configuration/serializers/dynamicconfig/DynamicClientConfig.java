@@ -86,7 +86,7 @@ public class DynamicClientConfig {
             propsString.append(" error_rate_window=").append(maxErrorRate.value).append(", ");
             propsString.append(" fail_if_not_connected=").append(failIfNotConnected.value).append(", ");
             propsString.append(" login_timeout=").append(loginTimeout.value).append(", ");
-            propsString.append(" maxSocketIdle=").append(maxSocketIdle.value).append(", ");
+            propsString.append(" max_socket_idle=").append(maxSocketIdle.value).append(", ");
             propsString.append(" rack_aware=").append(rackAware.value).append(", ");
             propsString.append(" rack_ids=").append(getRackIds().toString()).append(", ");
             propsString.append(" tend_interval=").append(tendInterval.value).append(", ");
