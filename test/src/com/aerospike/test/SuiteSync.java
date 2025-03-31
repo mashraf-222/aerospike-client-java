@@ -30,6 +30,7 @@ import com.aerospike.test.sync.basic.TestAdd;
 import com.aerospike.test.sync.basic.TestAppend;
 import com.aerospike.test.sync.basic.TestBatch;
 import com.aerospike.test.sync.basic.TestBitExp;
+import com.aerospike.test.sync.basic.TestConfigLoadYAML;
 import com.aerospike.test.sync.basic.TestDeleteBin;
 import com.aerospike.test.sync.basic.TestExpOperation;
 import com.aerospike.test.sync.basic.TestExpire;
@@ -74,6 +75,7 @@ import com.aerospike.test.util.Args;
 	TestAppend.class,
 	TestBatch.class,
 	TestBitExp.class,
+	TestConfigLoadYAML.class,
 	TestDeleteBin.class,
 	TestExpire.class,
 	TestExpOperation.class,

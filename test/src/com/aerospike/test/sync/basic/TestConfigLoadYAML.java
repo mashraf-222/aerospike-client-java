@@ -16,72 +16,69 @@
  */
 package com.aerospike.test.sync.basic;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
-
 import java.io.IOException;
-
-import com.aerospike.client.policy.ClientPolicy;
+import static org.junit.Assert.*;
 import org.junit.Test;
 
 import com.aerospike.client.configuration.YamlConfigProvider;
 import com.aerospike.client.configuration.serializers.Configuration;
+import com.aerospike.client.policy.ClientPolicy;
 import com.aerospike.test.sync.TestSync;
 
 public class TestConfigLoadYAML extends TestSync {
     public static String goodYamlConfRelativePath = "/src/resources/aerospikeconfig.yaml";
     public static String bogusYamlIPconfRelativePath = "/src/resources/bogus_invalid_property.yaml";
     public static String bogusYamlIFconfRelativePath = "/src/resources/bogus_invalid_format.yaml";
+
     @Test
     public void loadGoodYAML() throws IOException, InterruptedException {
         YamlConfigProvider yamlLoader = new YamlConfigProvider(System.getProperty("user.dir") + goodYamlConfRelativePath);
         Configuration yamlConf = yamlLoader.fetchConfiguration();
-        assert yamlConf != null;
-        System.out.println(yamlConf);
+        assertNotNull(yamlConf);
+        // System.out.println(yamlConf);
         assert yamlConf.metadata.appName.equals("example_app");
         assert yamlConf.staticConfiguration.staticClientConfig.maxConnectionsPerNode.value == 99;
-        Thread.sleep(3000);
     }
 
     @Test
     public void loadBogusIPYAML() throws IOException, InterruptedException {
         YamlConfigProvider yamlLoader = new YamlConfigProvider(System.getProperty("user.dir") + bogusYamlIPconfRelativePath);
         Configuration yamlConf = yamlLoader.fetchConfiguration();
-        assert yamlConf == null;
+        assertNull(yamlConf);
     }
 
     @Test
     public void loadBogusMVYAML() throws IOException, InterruptedException {
         YamlConfigProvider yamlLoader = new YamlConfigProvider(System.getProperty("user.dir") + bogusYamlIFconfRelativePath);
         Configuration yamlConf = yamlLoader.fetchConfiguration();
-        assert yamlConf == null;
+        assertNull(yamlConf);
     }
 
     @Test
     public void testPolicyConfig() {
         var clientPolicy = new ClientPolicy();
         clientPolicy.configProvider = new YamlConfigProvider(System.getProperty("user.dir") + goodYamlConfRelativePath);
-        assert clientPolicy.configProvider.fetchConfiguration() != null;
+        assertNotNull(clientPolicy.configProvider.fetchConfiguration());
 
     }
 
     @Test
-    public void getStaticYAMLmap() {
+    public void getStaticYAMLConfig() {
         YamlConfigProvider yamlLoader = new YamlConfigProvider(System.getProperty("user.dir") + goodYamlConfRelativePath);
         Configuration yamlConf = yamlLoader.fetchConfiguration();
-        assert yamlConf != null;
-        assert yamlConf.staticConfiguration.staticClientConfig.configInterval.value == 3;
+        assertNotNull(yamlConf);
+        assertNotNull(yamlConf.staticConfiguration);
+        assertNotNull(yamlConf.dynamicConfiguration);
+        assert yamlConf.staticConfiguration.staticClientConfig.maxConnectionsPerNode.value == 99;
     }
 
     @Test
-    public void getDynamicYAMLmap() {
+    public void getDynamicYAMLConfig() {
         YamlConfigProvider yamlLoader = new YamlConfigProvider(System.getProperty("user.dir") + goodYamlConfRelativePath);
-        Configuration yamlConf = yamlLoader.fetchConfiguration();
-        assert yamlConf != null;
-    }
-
-    @Test
-    public void monitorYAML() {
-
+        Configuration yamlConf = yamlLoader.fetchDynamicConfiguration();
+        assertNotNull(yamlConf);
+        assertNull(yamlConf.staticConfiguration);
+        assertNotNull(yamlConf.dynamicConfiguration);
+        assert yamlConf.dynamicConfiguration.dynamicClientConfig.tendInterval.value == 250;
     }
 }
