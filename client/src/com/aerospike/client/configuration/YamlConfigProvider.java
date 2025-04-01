@@ -68,9 +68,9 @@ public class YamlConfigProvider implements ConfigurationProvider {
                 Log.debug("YAML config file has NOT been modified.  NOT loading.");
             }
         } catch (FileNotFoundException e) {
-            Log.error("Configuration file could not be read from" + configurationPath + ". Will fall back to default settings.");
-        } catch (IOException ioException) {
-            Log.error("Configuration file could not be read from" + configurationPath + ". Make sure configuration is valid YAML file. Will fall back to default settings");
+            Log.error("YAML configuration file could not be found at: " + configurationPath + ". " + e.getMessage());
+        } catch (IOException e) {
+            Log.error("YAML Configuration file could not be read from: " + configurationPath + ". " + e.getMessage());
         } catch (YAMLException e) {
             Log.error("Unable to parse YAML file: " + e.getMessage());
         }
