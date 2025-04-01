@@ -625,8 +625,8 @@ public class Cluster implements Runnable, Closeable {
 		}
 
 		// Check YAML config file for updates.
-		if (this.configInterval > -1 && tendCount % this.configInterval == 0) {
-			this.client.configProvider.loadConfiguration();
+		if (configInterval > -1 && tendCount % configInterval == 0) {
+			client.configProvider.loadConfiguration();
 			Log.debug("Config successfully updated.");
 			Configuration config = client.configProvider.fetchDynamicConfiguration();
 			Log.debug("ERW: "  + config.dynamicConfiguration.dynamicClientConfig.errorRateWindow.value);
