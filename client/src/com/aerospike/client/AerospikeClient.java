@@ -3356,6 +3356,10 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		BatchAttr attr = new BatchAttr(batchPolicy, writePolicy, ops);
+		if (attr.hasWrite && configProvider != null) {
+			batchPolicy.graftBatchWriteConfig(configProvider);
+		}
+
 		BatchRecord[] records = new BatchRecord[keys.length];
 
 		for (int i = 0; i < keys.length; i++) {
@@ -3448,6 +3452,10 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		BatchAttr attr = new BatchAttr(batchPolicy, writePolicy, ops);
+		if (attr.hasWrite && configProvider != null) {
+			batchPolicy.graftBatchWriteConfig(configProvider);
+		}
+
 		BatchRecord[] records = new BatchRecord[keys.length];
 
 		for (int i = 0; i < keys.length; i++) {
@@ -3530,6 +3538,10 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		BatchAttr attr = new BatchAttr(batchPolicy, writePolicy, ops);
+		if (attr.hasWrite && configProvider != null) {
+			batchPolicy.graftBatchWriteConfig(configProvider);
+		}
+
 		boolean[] sent = new boolean[keys.length];
 		AsyncBatchExecutor.BatchRecordSequence executor = new AsyncBatchExecutor.BatchRecordSequence(
 			eventLoop, cluster, listener, sent);
