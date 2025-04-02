@@ -118,10 +118,7 @@ public class SuiteSync {
 
 	@BeforeClass
 	public static void init() {
-		Log.setCallbackStandard();
-		Log.setLevel(Log.Level.DEBUG);
-
-		//Log.setCallback(null);
+		Log.setCallback(null);
 
 		System.out.println("Begin AerospikeClient");
 		Args args = Args.Instance;
