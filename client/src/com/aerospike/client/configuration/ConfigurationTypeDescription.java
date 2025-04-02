@@ -27,7 +27,10 @@ public class ConfigurationTypeDescription {
     }
 
     public Map<Class<?>, TypeDescription> buildTypeDescriptions(String packagePath, Class<?> rootClass) {
+        // Temp workaround to prevent snakeyaml logging WARNINGs - should be fixed in snakeyaml 2.5
+        java.util.logging.Logger.getLogger("org.yaml.snakeyaml.introspector").setLevel(java.util.logging.Level.SEVERE);
         buildTypeDescriptionsHelper(packagePath, rootClass);
+        java.util.logging.Logger.getLogger("org.yaml.snakeyaml.introspector").setLevel(java.util.logging.Level.INFO);
         return cache;
     }
 
@@ -36,7 +39,6 @@ public class ConfigurationTypeDescription {
             return;
         }
         visited.add(clazz);
-
         TypeDescription typeDescription = new TypeDescription(clazz);
         for (Field field : clazz.getDeclaredFields()) {
             Class<?> fieldType = field.getType();
