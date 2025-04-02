@@ -179,7 +179,7 @@ public class BatchPolicy extends Policy {
 	}
 
 	/**
-	 * Override certain policy attributes if they exist in the configProvider (BatchWrite).
+	 * Apply batch_write config properties if they exist in the configProvider (BatchWrite).
 	 */
 	public void graftBatchWriteConfig(ConfigurationProvider configProvider) {
 		Configuration config = configProvider.fetchConfiguration();
@@ -198,6 +198,6 @@ public class BatchPolicy extends Policy {
 		if (dynBWC.allowInlineSSD != null ) this.allowInlineSSD = dynBWC.allowInlineSSD.value;
 		if (dynBWC.respondAllKeys != null ) this.respondAllKeys = dynBWC.respondAllKeys.value;
 
-		Log.debug("BatchWritePolicy has been grafted onto BatchPolicy");
+		Log.debug("batch_write config has been grafted onto BatchPolicy");
 	}
 }
