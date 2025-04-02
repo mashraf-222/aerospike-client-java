@@ -191,20 +191,8 @@ public final class BatchWritePolicy {
 		Configuration config = configProvider.fetchConfiguration();
 		DynamicBatchWriteConfig dynBWC = config.dynamicConfiguration.dynamicBatchWriteConfig;
 
-		//Dynamic Batch Write
-		//this.connectTimeout = dynBWC.connectTimeout.value;
-		//this.failOnFilteredOut = dynBWC.failOnFilteredOut.value;
-		//this.replica = dynBWC.replica;
 		if (dynBWC.sendKey != null) this.sendKey = dynBWC.sendKey.value;
-		//this.sleepBetweenRetries = dynBWC.sleepBetweenRetries.value;
-		//this.socketTimeout = dynBWC.socketTimeout.value;
-		//this.timeoutDelay = dynBWC.timeoutDelay.value;
-		//this.totalTimeout = dynBWC.totalTimeout.value;
-		//this.maxRetries = dynBWC.maxRetries.value;
 		if (dynBWC.durableDelete != null) this.durableDelete = dynBWC.durableDelete.value;
-		//this.maxConcurrentThreads = dynBWC.maxConcurrentThreads.value;
-		//this.allowInline = dynBWC.allowInline.value;
-		//this.batchParentPolicyWriteDefault.allowInlineSSD = dynBWC.allowInlineSSD.value;
 
 		Log.debug("BatchWritePolicy has been aligned with config properties.");
 	}

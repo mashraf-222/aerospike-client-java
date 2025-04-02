@@ -20,6 +20,7 @@ import com.aerospike.client.Log;
 import com.aerospike.client.configuration.ConfigurationProvider;
 import com.aerospike.client.configuration.serializers.Configuration;
 import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicBatchReadConfig;
+import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicBatchWriteConfig;
 
 /**
  * Batch parent policy.
@@ -175,5 +176,28 @@ public class BatchPolicy extends Policy {
 		if (dynBRC.respondAllKeys != null ) this.respondAllKeys = dynBRC.respondAllKeys.value;
 
 		Log.debug("BatchPolicy has been aligned with config properties.");
+	}
+
+	/**
+	 * Override certain policy attributes if they exist in the configProvider (BatchWrite).
+	 */
+	public void graftBatchWriteConfig(ConfigurationProvider configProvider) {
+		Configuration config = configProvider.fetchConfiguration();
+		DynamicBatchWriteConfig dynBWC = config.dynamicConfiguration.dynamicBatchWriteConfig;
+
+		if (dynBWC.connectTimeout != null) this.connectTimeout = dynBWC.connectTimeout.value;
+		if (dynBWC.failOnFilteredOut != null) this.failOnFilteredOut = dynBWC.failOnFilteredOut.value;
+		if (dynBWC.replica != null) this.replica = dynBWC.replica;
+		if (dynBWC.sendKey != null) this.sendKey = dynBWC.sendKey.value;
+		if (dynBWC.sleepBetweenRetries != null) this.sleepBetweenRetries = dynBWC.sleepBetweenRetries.value;
+		if (dynBWC.socketTimeout != null) this.socketTimeout = dynBWC.socketTimeout.value;
+		if (dynBWC.timeoutDelay != null) this.timeoutDelay = dynBWC.timeoutDelay.value;
+		if (dynBWC.totalTimeout != null) this.totalTimeout = dynBWC.totalTimeout.value;
+		if (dynBWC.maxRetries != null) this.maxRetries = dynBWC.maxRetries.value;
+		if (dynBWC.maxConcurrentThreads != null) this.maxConcurrentThreads = dynBWC.maxConcurrentThreads.value;
+		if (dynBWC.allowInlineSSD != null ) this.allowInlineSSD = dynBWC.allowInlineSSD.value;
+		if (dynBWC.respondAllKeys != null ) this.respondAllKeys = dynBWC.respondAllKeys.value;
+
+		Log.debug("BatchWritePolicy has been grafted onto BatchPolicy");
 	}
 }
