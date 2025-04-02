@@ -104,6 +104,4 @@ public final class BatchReadPolicy {
 	public void setReadTouchTtlPercent(int readTouchTtlPercent) {
 		this.readTouchTtlPercent = readTouchTtlPercent;
 	}
-
-
 }
