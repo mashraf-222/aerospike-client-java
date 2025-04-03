@@ -16,11 +16,11 @@
  */
 package com.aerospike.client.policy;
 
-import com.aerospike.client.Log;
 import com.aerospike.client.configuration.ConfigurationProvider;
 import com.aerospike.client.configuration.serializers.Configuration;
 import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicBatchUDFconfig;
 import com.aerospike.client.exp.Expression;
+import com.aerospike.client.Log;
 
 /**
  * Policy attributes used in batch UDF execute commands.
@@ -95,6 +95,20 @@ public final class BatchUDFPolicy {
 	public boolean sendKey;
 
 	/**
+	 * Copy policy from another policy AND override certain policy attributes if they exist in the configProvider.
+	 */
+	public BatchUDFPolicy(BatchUDFPolicy other, ConfigurationProvider configProvider ) {
+		this(other);
+		Configuration config = configProvider.fetchConfiguration();
+		DynamicBatchUDFconfig dynUDF = config.dynamicConfiguration.dynamicBatchUDFconfig;
+
+		if (dynUDF.sendKey != null) this.sendKey = dynUDF.sendKey.value;
+		if (dynUDF.durableDelete != null ) this.durableDelete = dynUDF.durableDelete.value;
+
+		Log.debug("BatchUDFPolicy has been aligned with config properties.");
+	}
+
+	/**
 	 * Copy constructor.
 	 */
 	public BatchUDFPolicy(BatchUDFPolicy other) {
@@ -136,18 +150,5 @@ public final class BatchUDFPolicy {
 
 	public void setSendKey(boolean sendKey) {
 		this.sendKey = sendKey;
-	}
-
-	/**
-	 * Override certain policy attributes if they exist in the configProvider.
-	 */
-	public void applyConfigOverrides(ConfigurationProvider configProvider) {
-		Configuration config = configProvider.fetchConfiguration();
-		DynamicBatchUDFconfig dynUDF = config.dynamicConfiguration.dynamicBatchUDFconfig;
-
-		if (dynUDF.sendKey != null) this.sendKey = dynUDF.sendKey.value;
-		if (dynUDF.durableDelete != null ) this.durableDelete = dynUDF.durableDelete.value;
-
-		Log.debug("BatchUDFPolicy has been aligned with config properties.");
 	}
 }

@@ -24,9 +24,9 @@ import java.util.concurrent.ExecutorService;
 import com.aerospike.client.async.EventLoops;
 import com.aerospike.client.configuration.ConfigurationProvider;
 import com.aerospike.client.configuration.serializers.Configuration;
-import com.aerospike.client.configuration.serializers.dynamicconfig.*;
 import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicClientConfig;
 import com.aerospike.client.configuration.serializers.staticconfig.StaticClientConfig;
+import com.aerospike.client.Log;
 
 /**
  * Container object for client policy Command.
@@ -408,6 +408,34 @@ public class ClientPolicy {
 	public List<Integer> rackIds;
 
 	/**
+	 * Copy client policy from another client policy AND override certain policy attributes if they exist in the
+	 * configProvider.
+	 */
+	public ClientPolicy(ClientPolicy other, ConfigurationProvider configProvider ) {
+		Configuration config = configProvider.fetchConfiguration();
+
+		StaticClientConfig staCC = config.staticConfiguration.staticClientConfig;
+		if (staCC.maxConnectionsPerNode != null) this.maxConnsPerNode = staCC.maxConnectionsPerNode.value;
+		if (staCC.minConnectionsPerNode != null) this.minConnsPerNode = staCC.minConnectionsPerNode.value;
+		if (staCC.asyncMaxConnectionsPerNode != null) this.asyncMaxConnsPerNode = staCC.asyncMaxConnectionsPerNode.value;
+		if (staCC.asyncMinConnectionsPerNode != null) this.asyncMinConnsPerNode = staCC.asyncMinConnectionsPerNode.value;
+
+		DynamicClientConfig dynCC = config.dynamicConfiguration.dynamicClientConfig;
+		if (dynCC.timeout != null) this.timeout = dynCC.timeout.value;
+		if (dynCC.errorRateWindow != null) this.errorRateWindow = dynCC.errorRateWindow.value;
+		if (dynCC.maxErrorRate != null) this.maxErrorRate = dynCC.maxErrorRate.value;
+		if (dynCC.failIfNotConnected != null) this.failIfNotConnected = dynCC.failIfNotConnected.value;
+		if (dynCC.loginTimeout != null) this.loginTimeout = dynCC.loginTimeout.value;
+		if (dynCC.maxSocketIdle != null) this.maxSocketIdle = dynCC.maxSocketIdle.value;
+		if (dynCC.rackAware != null) this.rackAware = dynCC.rackAware.value;
+		if (dynCC.timeout != null) this.rackIds = dynCC.rackIds;
+		if (dynCC.tendInterval != null) this.tendInterval = dynCC.tendInterval.value;
+		if (dynCC.useServiceAlternative != null) this.useServicesAlternate = dynCC.useServiceAlternative.value;
+
+		Log.debug("ClientPolicy has been aligned with config properties.");
+	}
+
+	/**
 	 * Copy client policy from another client policy.
 	 */
 	public ClientPolicy(ClientPolicy other) {
@@ -624,33 +652,5 @@ public class ClientPolicy {
 
 	public void setRackIds(List<Integer> rackIds) {
 		this.rackIds = rackIds;
-	}
-
-	/**
-	 * Override certain policy attributes if they exist in the configProvider.
-	 */
-	public void applyConfigOverrides() {
-		Configuration config = configProvider.fetchConfiguration();
-
-		// Static client
-		StaticClientConfig staCC = config.staticConfiguration.staticClientConfig;
-		if (staCC.maxConnectionsPerNode != null) this.maxConnsPerNode = staCC.maxConnectionsPerNode.value;
-		if (staCC.minConnectionsPerNode != null) this.minConnsPerNode = staCC.minConnectionsPerNode.value;
-		if (staCC.asyncMaxConnectionsPerNode != null) this.asyncMaxConnsPerNode = staCC.asyncMaxConnectionsPerNode.value;
-		if (staCC.asyncMinConnectionsPerNode != null) this.asyncMinConnsPerNode = staCC.asyncMinConnectionsPerNode.value;
-
-		// Dynamic client
-		DynamicClientConfig dynCC = config.dynamicConfiguration.dynamicClientConfig;
-		if (dynCC.timeout != null) this.timeout = dynCC.timeout.value;
-		if (dynCC.errorRateWindow != null) this.errorRateWindow = dynCC.errorRateWindow.value;
-		if (dynCC.maxErrorRate != null) this.maxErrorRate = dynCC.maxErrorRate.value;
-		if (dynCC.failIfNotConnected != null) this.failIfNotConnected = dynCC.failIfNotConnected.value;
-		if (dynCC.loginTimeout != null) this.loginTimeout = dynCC.loginTimeout.value;
-		if (dynCC.maxSocketIdle != null) this.maxSocketIdle = dynCC.maxSocketIdle.value;
-		if (dynCC.rackAware != null) this.rackAware = dynCC.rackAware.value;
-		if (dynCC.timeout != null) this.rackIds = dynCC.rackIds;
-		if (dynCC.tendInterval != null) this.tendInterval = dynCC.tendInterval.value;
-		if (dynCC.useServiceAlternative != null) this.useServicesAlternate = dynCC.useServiceAlternative.value;
-
 	}
 }

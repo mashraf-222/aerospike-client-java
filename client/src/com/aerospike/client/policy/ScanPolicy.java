@@ -16,10 +16,10 @@
  */
 package com.aerospike.client.policy;
 
-import com.aerospike.client.Log;
 import com.aerospike.client.configuration.ConfigurationProvider;
 import com.aerospike.client.configuration.serializers.Configuration;
 import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicScanConfig;
+import com.aerospike.client.Log;
 
 /**
  * Container object for optional parameters used in scan operations.
@@ -72,6 +72,29 @@ public final class ScanPolicy extends Policy {
 	 * Default: true
 	 */
 	public boolean includeBinData = true;
+
+	/**
+	 * Copy scan policy from another scan policy AND override certain policy attributes if they exist in the configProvider.
+	 */
+	public ScanPolicy(ScanPolicy other, ConfigurationProvider configProvider ) {
+		this(other);
+		Configuration config = configProvider.fetchConfiguration();
+		DynamicScanConfig dynSC = config.dynamicConfiguration.dynamicScanConfig;
+
+		if (dynSC.readModeAP != null) this.readModeAP = dynSC.readModeAP;
+		if (dynSC.readModeSC != null) this.readModeSC = dynSC.readModeSC;
+		if (dynSC.connectTimeout != null) this.connectTimeout = dynSC.connectTimeout.value;
+		if (dynSC.replica != null) this.replica = dynSC.replica;
+		if (dynSC.sleepBetweenRetries != null) this.sleepBetweenRetries = dynSC.sleepBetweenRetries.value;
+		if (dynSC.socketTimeout != null) this.socketTimeout = dynSC.socketTimeout.value;
+		if (dynSC.timeoutDelay != null) this.timeoutDelay = dynSC.timeoutDelay.value;
+		if (dynSC.totalTimeout != null) this.totalTimeout = dynSC.totalTimeout.value;
+		if (dynSC.maxRetries != null) this.maxRetries = dynSC.maxRetries.value;
+		if (dynSC.concurrentNodes != null) this.concurrentNodes = dynSC.concurrentNodes.value;
+		if (dynSC.maxConcurrentNodes != null) this.maxConcurrentNodes = dynSC.maxConcurrentNodes.value;
+
+		Log.debug("ScanPolicy has been aligned with config properties.");
+	}
 
 	/**
 	 * Copy scan policy from another scan policy.
@@ -130,27 +153,5 @@ public final class ScanPolicy extends Policy {
 
 	public void setIncludeBinData(boolean includeBinData) {
 		this.includeBinData = includeBinData;
-	}
-
-	/**
-	 * Override certain policy attributes if they exist in the configProvider.
-	 */
-	public void applyConfigOverrides( ConfigurationProvider configProvider) {
-		Configuration config = configProvider.fetchConfiguration();
-		DynamicScanConfig dynSC = config.dynamicConfiguration.dynamicScanConfig;
-
-		if (dynSC.readModeAP != null) this.readModeAP = dynSC.readModeAP;
-		if (dynSC.readModeSC != null) this.readModeSC = dynSC.readModeSC;
-		if (dynSC.connectTimeout != null) this.connectTimeout = dynSC.connectTimeout.value;
-		if (dynSC.replica != null) this.replica = dynSC.replica;
-		if (dynSC.sleepBetweenRetries != null) this.sleepBetweenRetries = dynSC.sleepBetweenRetries.value;
-		if (dynSC.socketTimeout != null) this.socketTimeout = dynSC.socketTimeout.value;
-		if (dynSC.timeoutDelay != null) this.timeoutDelay = dynSC.timeoutDelay.value;
-		if (dynSC.totalTimeout != null) this.totalTimeout = dynSC.totalTimeout.value;
-		if (dynSC.maxRetries != null) this.maxRetries = dynSC.maxRetries.value;
-		if (dynSC.concurrentNodes != null) this.concurrentNodes = dynSC.concurrentNodes.value;
-		if (dynSC.maxConcurrentNodes != null) this.maxConcurrentNodes = dynSC.maxConcurrentNodes.value;
-
-		Log.debug("ScanPolicy has been aligned with config properties.");
 	}
 }

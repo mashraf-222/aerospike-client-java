@@ -16,10 +16,10 @@
  */
 package com.aerospike.client.policy;
 
-import com.aerospike.client.Log;
 import com.aerospike.client.configuration.ConfigurationProvider;
 import com.aerospike.client.configuration.serializers.Configuration;
 import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicQueryConfig;
+import com.aerospike.client.Log;
 
 /**
  * Container object for policy attributes used in query operations.
@@ -114,6 +114,31 @@ public class QueryPolicy extends Policy {
 	 */
 	@Deprecated
 	public boolean shortQuery;
+
+	/**
+	 * Copy query policy from another query policy AND override certain policy attributes if they exist in the
+	 * configProvider.
+	 */
+	public QueryPolicy(QueryPolicy other, ConfigurationProvider configProvider) {
+		this(other);
+		Configuration config = configProvider.fetchConfiguration();
+		DynamicQueryConfig dynQC = config.dynamicConfiguration.dynamicQueryConfig;
+
+		if (dynQC.readModeAP != null) this.readModeSC = dynQC.readModeSC;
+		if (dynQC.connectTimeout != null) this.connectTimeout = dynQC.connectTimeout.value;
+		if (dynQC.replica != null) this.replica = dynQC.replica;
+		if (dynQC.sleepBetweenRetries != null) this.sleepBetweenRetries = dynQC.sleepBetweenRetries.value;
+		if (dynQC.socketTimeout != null) this.socketTimeout = dynQC.socketTimeout.value;
+		if (dynQC.timeoutDelay != null) this.timeoutDelay = dynQC.timeoutDelay.value;
+		if (dynQC.totalTimeout != null) this.totalTimeout = dynQC.totalTimeout.value;
+		if (dynQC.maxRetries != null) this.maxRetries = dynQC.maxRetries.value;
+		if (dynQC.includeBinData != null) this.includeBinData = dynQC.includeBinData.value;
+		if (dynQC.infoTimeout != null) this.infoTimeout = dynQC.infoTimeout.value;
+		if (dynQC.recordQueueSize != null) this.recordQueueSize = dynQC.recordQueueSize.value;
+		if (dynQC.expectedDuration != null) this.expectedDuration = dynQC.expectedDuration;
+
+		Log.debug("QueryPolicy has been aligned with config properties.");
+	}
 
 	/**
 	 * Copy query policy from another query policy.

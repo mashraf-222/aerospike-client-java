@@ -16,10 +16,10 @@
  */
 package com.aerospike.client.policy;
 
-import com.aerospike.client.Log;
 import com.aerospike.client.configuration.ConfigurationProvider;
 import com.aerospike.client.configuration.serializers.Configuration;
 import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicTxnRollConfig;
+import com.aerospike.client.Log;
 
 /**
  * Transaction policy fields used to batch roll forward/backward records on

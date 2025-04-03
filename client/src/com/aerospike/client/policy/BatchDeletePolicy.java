@@ -16,11 +16,11 @@
  */
 package com.aerospike.client.policy;
 
-import com.aerospike.client.Log;
 import com.aerospike.client.configuration.ConfigurationProvider;
 import com.aerospike.client.configuration.serializers.Configuration;
 import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicBatchDeleteConfig;
 import com.aerospike.client.exp.Expression;
+import com.aerospike.client.Log;
 
 /**
  * Policy attributes used in batch delete commands.
@@ -83,6 +83,20 @@ public final class BatchDeletePolicy {
 	public boolean sendKey;
 
 	/**
+	 * Copy policy from another policy AND override certain policy attributes if they exist in the configProvider.
+	 */
+	public BatchDeletePolicy(BatchDeletePolicy other, ConfigurationProvider configProvider ) {
+		this(other);
+		Configuration config = configProvider.fetchConfiguration();
+		DynamicBatchDeleteConfig dynBDC = config.dynamicConfiguration.dynamicBatchDeleteConfig;
+
+		if (dynBDC.sendKey != null) this.sendKey = dynBDC.sendKey.value;
+		if (dynBDC.durableDelete != null) this.durableDelete = dynBDC.durableDelete.value;
+
+		Log.debug("BatchDeletePolicy has been aligned with config properties.");
+	}
+
+	/**
 	 * Copy constructor.
 	 */
 	public BatchDeletePolicy(BatchDeletePolicy other) {
@@ -124,18 +138,5 @@ public final class BatchDeletePolicy {
 
 	public void setSendKey(boolean sendKey) {
 		this.sendKey = sendKey;
-	}
-
-	/**
-	 * Override certain policy attributes if they exist in the configProvider.
-	 */
-	public void applyConfigOverrides(ConfigurationProvider configProvider) {
-		Configuration config = configProvider.fetchConfiguration();
-		DynamicBatchDeleteConfig dynBDC = config.dynamicConfiguration.dynamicBatchDeleteConfig;
-
-		if (dynBDC.sendKey != null) this.sendKey = dynBDC.sendKey.value;
-		if (dynBDC.durableDelete != null) this.durableDelete = dynBDC.durableDelete.value;
-
-		Log.debug("BatchDeletePolicy has been aligned with config properties.");
 	}
 }

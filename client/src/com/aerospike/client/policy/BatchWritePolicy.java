@@ -16,11 +16,11 @@
  */
 package com.aerospike.client.policy;
 
-import com.aerospike.client.Log;
 import com.aerospike.client.configuration.ConfigurationProvider;
 import com.aerospike.client.configuration.serializers.Configuration;
 import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicBatchWriteConfig;
 import com.aerospike.client.exp.Expression;
+import com.aerospike.client.Log;
 
 /**
  * Policy attributes used in batch write commands.
@@ -126,6 +126,20 @@ public final class BatchWritePolicy {
 	public boolean sendKey;
 
 	/**
+	 * Copy policy from another policy AND override certain policy attributes if they exist in the configProvider.
+	 */
+	public BatchWritePolicy(BatchWritePolicy other, ConfigurationProvider configProvider ) {
+		this(other);
+		Configuration config = configProvider.fetchConfiguration();
+		DynamicBatchWriteConfig dynBWC = config.dynamicConfiguration.dynamicBatchWriteConfig;
+
+		if (dynBWC.sendKey != null) this.sendKey = dynBWC.sendKey.value;
+		if (dynBWC.durableDelete != null) this.durableDelete = dynBWC.durableDelete.value;
+
+		Log.debug("BatchWritePolicy has been aligned with config properties.");
+	}
+
+	/**
 	 * Copy constructor.
 	 */
 	public BatchWritePolicy(BatchWritePolicy other) {
@@ -182,18 +196,5 @@ public final class BatchWritePolicy {
 
 	public void setSendKey(boolean sendKey) {
 		this.sendKey = sendKey;
-	}
-
-	/**
-	 * Override certain policy attributes if they exist in the configProvider.
-	 */
-	public void applyConfigOverrides(ConfigurationProvider configProvider) {
-		Configuration config = configProvider.fetchConfiguration();
-		DynamicBatchWriteConfig dynBWC = config.dynamicConfiguration.dynamicBatchWriteConfig;
-
-		if (dynBWC.sendKey != null) this.sendKey = dynBWC.sendKey.value;
-		if (dynBWC.durableDelete != null) this.durableDelete = dynBWC.durableDelete.value;
-
-		Log.debug("BatchWritePolicy has been aligned with config properties.");
 	}
 }
