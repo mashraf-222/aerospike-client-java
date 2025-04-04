@@ -301,7 +301,7 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		if (! Log.isSet()) {
 			throw new AerospikeException(
 				"Log.setCallback() or Log.setCallbackStandard() must be called." + System.lineSeparator() +
-				"See https://aerospike.com/developer/client/logging?client=java for details.");
+				"See https://aerospike.com/docs/develop/client/java/logging/ for details.");
 		}
 		*/
 
