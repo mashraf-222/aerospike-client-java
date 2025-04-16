@@ -627,9 +627,6 @@ public class Cluster implements Runnable, Closeable {
 		// Check YAML config file for updates.
 		if (configInterval > -1 && tendCount % configInterval == 0) {
 			client.configProvider.loadConfiguration();
-			Log.debug("Config successfully updated.");
-			Configuration config = client.configProvider.fetchDynamicConfiguration();
-			Log.debug("ERW: "  + config.dynamicConfiguration.dynamicClientConfig.errorRateWindow.value);
 		}
 
 		// Reset connection error window for all nodes every connErrorWindow tend iterations.

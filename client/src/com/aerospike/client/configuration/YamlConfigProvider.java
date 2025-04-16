@@ -21,32 +21,54 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 
-import com.aerospike.client.Log;
+import org.yaml.snakeyaml.constructor.Constructor;
+import org.yaml.snakeyaml.error.YAMLException;
 import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.TypeDescription;
 import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.constructor.Constructor;
 
 import com.aerospike.client.configuration.serializers.Configuration;
-import org.yaml.snakeyaml.error.YAMLException;
+import com.aerospike.client.Log;
+
 
 public class YamlConfigProvider implements ConfigurationProvider {
-    private static final String configurationPathEnv = "CONFIGURATION_PATH";
-    private static final String configurationPathProp = "configuration.path";
-    private static final String yamlSerializersPath = "com.aerospike.client.configuration.serializers.";
-    private static String configurationPath = System.getenv().getOrDefault(configurationPathEnv, System.getProperty(configurationPathProp, System.getProperty("user.dir")));
+    private static final String CONFIG_PATH_ENV = "AEROSPIKE_CLIENT_CONFIG_URL";
+    private static final String CONFIG_PATH_SYS_PROP = "AEROSPIKE_CLIENT_CONFIG_SYS_PROP";
+    private static final String YAML_SERIALIZERS_PATH = "com.aerospike.client.configuration.serializers.";
+    private static Path configurationPath;
     private Configuration configuration;
     public long lastModified;
 
     public YamlConfigProvider() {
+        setConfigPath();
         loadConfiguration();
     }
 
-    public YamlConfigProvider(String configFilePath) {
-        configurationPath = configFilePath;
-        loadConfiguration();
+    public String getConfigPathEnv() {
+        return System.getenv(CONFIG_PATH_ENV) != null ? System.getenv(CONFIG_PATH_ENV) :
+                System.getProperty(CONFIG_PATH_SYS_PROP, "");
+    }
+
+    public void setConfigPath() {
+        try {
+            URI envURI = new URI(getConfigPathEnv());
+            URL envURL = envURI.toURL();
+            configurationPath = convertURLToPath(envURL);
+        } catch (Exception e) {
+            Log.error("Could not parse the " + CONFIG_PATH_ENV + " env var");
+        }
+    }
+
+    public static Path convertURLToPath(URL url) throws URISyntaxException {
+        URI uri = url.toURI();
+        return Paths.get(uri);
     }
 
     public Configuration fetchConfiguration() {
@@ -64,13 +86,13 @@ public class YamlConfigProvider implements ConfigurationProvider {
         ConfigurationTypeDescription configurationTypeDescription = new ConfigurationTypeDescription();
         LoaderOptions yamlLoaderOptions = new LoaderOptions();
 
-        Map<Class<?>, TypeDescription> typeDescriptions = configurationTypeDescription.buildTypeDescriptions(yamlSerializersPath, Configuration.class);
+        Map<Class<?>, TypeDescription> typeDescriptions = configurationTypeDescription.buildTypeDescriptions(YAML_SERIALIZERS_PATH, Configuration.class);
         Constructor typeDescriptionConstructor = new Constructor(Configuration.class, yamlLoaderOptions);
         Yaml yaml = new Yaml(typeDescriptionConstructor);
 
         typeDescriptions.values().forEach(typeDescriptionConstructor::addTypeDescription);
-        try(FileInputStream fileInputStream = new FileInputStream(configurationPath)) {
-            File file = new File(configurationPath);
+        try(FileInputStream fileInputStream = new FileInputStream(configurationPath.toString())) {
+            File file = new File(configurationPath.toString());
             long newLastModified = file.lastModified();
             if (newLastModified > lastModified) {
                 if (lastModified == 0) {
@@ -80,6 +102,7 @@ public class YamlConfigProvider implements ConfigurationProvider {
                 }
                 lastModified = newLastModified;
                 configuration = yaml.load(fileInputStream);
+                Log.debug("Config successfully loaded.");
             }
             else {
                 Log.debug("YAML config file has NOT been modified.  NOT loading.");
