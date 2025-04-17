@@ -83,6 +83,10 @@ public class YamlConfigProvider implements ConfigurationProvider {
     }
 
     public void loadConfiguration() {
+        if (configurationPath == null) {
+            Log.error("The YAML config file path has not been set. Check the " + CONFIG_PATH_ENV + " env variable");
+            return;
+        }
         ConfigurationTypeDescription configurationTypeDescription = new ConfigurationTypeDescription();
         LoaderOptions yamlLoaderOptions = new LoaderOptions();
 
