@@ -149,6 +149,7 @@ public final class WritePolicy extends Policy {
 		if (dynWC.timeoutDelay != null) this.timeoutDelay = dynWC.timeoutDelay.value;
 		if (dynWC.totalTimeout != null) this.totalTimeout = dynWC.totalTimeout.value;
 		if (dynWC.maxRetries != null) this.maxRetries = dynWC.maxRetries.value;;
+		if (dynWC.durableDelete != null) this.durableDelete = dynWC.durableDelete.value;
 
 		Log.debug("WritePolicy has been aligned with config properties.");
 	}
