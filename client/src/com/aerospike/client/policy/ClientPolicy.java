@@ -413,7 +413,9 @@ public class ClientPolicy {
 	 */
 	public ClientPolicy(ClientPolicy other, ConfigurationProvider configProvider ) {
 		Configuration config = configProvider.fetchConfiguration();
-
+		if (config == null) {
+			return;
+		}
 		StaticClientConfig staCC = config.staticConfiguration.staticClientConfig;
 		if (staCC.maxConnectionsPerNode != null) this.maxConnsPerNode = staCC.maxConnectionsPerNode.value;
 		if (staCC.minConnectionsPerNode != null) this.minConnsPerNode = staCC.minConnectionsPerNode.value;

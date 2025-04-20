@@ -215,7 +215,9 @@ public class Cluster implements Runnable, Closeable {
 
 		if (client.configProvider != null) {
 			Configuration config = this.client.configProvider.fetchConfiguration();
-			this.configInterval = config.staticConfiguration.staticClientConfig.configInterval.value;
+			if (config != null) {
+				this.configInterval = config.staticConfiguration.staticClientConfig.configInterval.value;
+			}
 		} else {
 			this.configInterval = -1;
 		}
@@ -625,8 +627,10 @@ public class Cluster implements Runnable, Closeable {
 		}
 
 		// Check YAML config file for updates.
-		if (configInterval > -1 && tendCount % configInterval == 0) {
-			client.configProvider.loadConfiguration();
+		if (configInterval > 0 && tendCount % configInterval == 0) {
+			if( client.configProvider.loadConfiguration() ) {
+				client.mergeDefaultPoliciesWithConfig();
+			}
 		}
 
 		// Reset connection error window for all nodes every connErrorWindow tend iterations.

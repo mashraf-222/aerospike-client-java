@@ -99,7 +99,13 @@ public final class BatchUDFPolicy {
 	 */
 	public BatchUDFPolicy(BatchUDFPolicy other, ConfigurationProvider configProvider ) {
 		this(other);
+		if (configProvider == null) {
+			return;
+		}
 		Configuration config = configProvider.fetchConfiguration();
+		if (config == null) {
+			return;
+		}
 		DynamicBatchUDFconfig dynUDF = config.dynamicConfiguration.dynamicBatchUDFconfig;
 
 		if (dynUDF.sendKey != null) this.sendKey = dynUDF.sendKey.value;

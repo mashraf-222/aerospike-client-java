@@ -82,10 +82,10 @@ public class YamlConfigProvider implements ConfigurationProvider {
         return configuration;
     }
 
-    public void loadConfiguration() {
+    public boolean loadConfiguration() {
         if (configurationPath == null) {
             Log.error("The YAML config file path has not been set. Check the " + CONFIG_PATH_ENV + " env variable");
-            return;
+            return false;
         }
         ConfigurationTypeDescription configurationTypeDescription = new ConfigurationTypeDescription();
         LoaderOptions yamlLoaderOptions = new LoaderOptions();
@@ -107,6 +107,7 @@ public class YamlConfigProvider implements ConfigurationProvider {
                 lastModified = newLastModified;
                 configuration = yaml.load(fileInputStream);
                 Log.debug("Config successfully loaded.");
+                return true;
             }
             else {
                 Log.debug("YAML config file has NOT been modified.  NOT loading.");
@@ -118,5 +119,6 @@ public class YamlConfigProvider implements ConfigurationProvider {
         } catch (YAMLException e) {
             Log.error("Unable to parse YAML file: " + e.getMessage());
         }
+        return false;
     }
 }

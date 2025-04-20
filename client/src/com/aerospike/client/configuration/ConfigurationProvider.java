@@ -20,7 +20,7 @@ package com.aerospike.client.configuration;
 import com.aerospike.client.configuration.serializers.Configuration;
 
 public interface ConfigurationProvider {
-    void loadConfiguration();
+    boolean loadConfiguration();
 
     Configuration fetchConfiguration();
     Configuration fetchDynamicConfiguration();

@@ -78,7 +78,13 @@ public final class ScanPolicy extends Policy {
 	 */
 	public ScanPolicy(ScanPolicy other, ConfigurationProvider configProvider ) {
 		this(other);
+		if (configProvider == null) {
+			return;
+		}
 		Configuration config = configProvider.fetchConfiguration();
+		if (config == null) {
+			return;
+		}
 		DynamicScanConfig dynSC = config.dynamicConfiguration.dynamicScanConfig;
 
 		if (dynSC.readModeAP != null) this.readModeAP = dynSC.readModeAP;

@@ -87,7 +87,13 @@ public final class BatchDeletePolicy {
 	 */
 	public BatchDeletePolicy(BatchDeletePolicy other, ConfigurationProvider configProvider ) {
 		this(other);
+		if (configProvider == null) {
+			return;
+		}
 		Configuration config = configProvider.fetchConfiguration();
+		if (config == null) {
+			return;
+		}
 		DynamicBatchDeleteConfig dynBDC = config.dynamicConfiguration.dynamicBatchDeleteConfig;
 
 		if (dynBDC.sendKey != null) this.sendKey = dynBDC.sendKey.value;

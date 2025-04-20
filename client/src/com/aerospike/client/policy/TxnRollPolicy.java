@@ -34,21 +34,17 @@ public class TxnRollPolicy extends BatchPolicy {
 	}
 
 	/**
-	 * Default constructor.
+	 * Copy policy from another policy AND apply config overrides
 	 */
-	public TxnRollPolicy() {
-		replica = Replica.MASTER;
-		maxRetries = 5;
-		socketTimeout = 3000;
-		totalTimeout = 10000;
-		sleepBetweenRetries = 1000;
-	}
-
-	/**
-	 * Override certain policy attributes if they exist in the configProvider
-	 */
-	public void applyConfigOverrides(ConfigurationProvider configProvider) {
+	public TxnRollPolicy(TxnRollPolicy other, ConfigurationProvider configProvider) {
+		super(other);
+		if (configProvider == null) {
+			return;
+		}
 		Configuration config = configProvider.fetchConfiguration();
+		if (config == null) {
+			return;
+		}
 		DynamicTxnRollConfig dynTRC = config.dynamicConfiguration.dynamicTxnRollConfig;
 
 		if (dynTRC.readModeAP != null ) this.readModeAP = dynTRC.readModeAP;
@@ -68,4 +64,14 @@ public class TxnRollPolicy extends BatchPolicy {
 		Log.debug("TxnRollPolicy has been aligned with config properties.");
 	}
 
+		/**
+         * Default constructor.
+         */
+	public TxnRollPolicy() {
+		replica = Replica.MASTER;
+		maxRetries = 5;
+		socketTimeout = 3000;
+		totalTimeout = 10000;
+		sleepBetweenRetries = 1000;
+	}
 }

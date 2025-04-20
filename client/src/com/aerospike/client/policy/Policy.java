@@ -289,7 +289,13 @@ public class Policy {
 	 */
 	public Policy(Policy other, ConfigurationProvider configProvider ) {
 		this(other);
+		if (configProvider == null) {
+			return;
+		}
 		Configuration config = configProvider.fetchConfiguration();
+		if (config == null) {
+			return;
+		}
 		DynamicReadConfig dynRC = config.dynamicConfiguration.dynamicReadConfig;
 
 		if (dynRC.readModeAP != null ) this.readModeAP = dynRC.readModeAP;

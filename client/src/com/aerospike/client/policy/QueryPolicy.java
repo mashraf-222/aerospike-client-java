@@ -121,7 +121,13 @@ public class QueryPolicy extends Policy {
 	 */
 	public QueryPolicy(QueryPolicy other, ConfigurationProvider configProvider) {
 		this(other);
+		if (configProvider == null) {
+			return;
+		}
 		Configuration config = configProvider.fetchConfiguration();
+		if (config == null) {
+			return;
+		}
 		DynamicQueryConfig dynQC = config.dynamicConfiguration.dynamicQueryConfig;
 
 		if (dynQC.readModeAP != null) this.readModeSC = dynQC.readModeSC;

@@ -137,7 +137,13 @@ public final class WritePolicy extends Policy {
 	 */
 	public WritePolicy(WritePolicy other, ConfigurationProvider configProvider) {
 		this(other);
+		if (configProvider == null) {
+			return;
+		}
 		Configuration config = configProvider.fetchConfiguration();
+		if (config == null) {
+			return;
+		}
 		DynamicWriteConfig dynWC = config.dynamicConfiguration.dynamicWriteConfig;
 
 		if (dynWC.connectTimeout != null) this.connectTimeout = dynWC.connectTimeout.value;

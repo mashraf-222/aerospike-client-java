@@ -100,7 +100,13 @@ public class BatchPolicy extends Policy {
 	 */
 	public BatchPolicy(BatchPolicy other, ConfigurationProvider configProvider ) {
 		this(other);
+		if (configProvider == null) {
+			return;
+		}
 		Configuration config = configProvider.fetchConfiguration();
+		if (config == null) {
+			return;
+		}
 		DynamicBatchReadConfig dynBRC = config.dynamicConfiguration.dynamicBatchReadConfig;
 
 		if (dynBRC.readModeAP != null ) this.readModeAP = dynBRC.readModeAP;
@@ -183,6 +189,9 @@ public class BatchPolicy extends Policy {
 	 */
 	public void graftBatchWriteConfig(ConfigurationProvider configProvider) {
 		Configuration config = configProvider.fetchConfiguration();
+		if (config == null) {
+			return;
+		}
 		DynamicBatchWriteConfig dynBWC = config.dynamicConfiguration.dynamicBatchWriteConfig;
 
 		if (dynBWC.connectTimeout != null) this.connectTimeout = dynBWC.connectTimeout.value;

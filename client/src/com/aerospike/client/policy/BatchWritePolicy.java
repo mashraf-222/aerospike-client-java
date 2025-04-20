@@ -130,7 +130,13 @@ public final class BatchWritePolicy {
 	 */
 	public BatchWritePolicy(BatchWritePolicy other, ConfigurationProvider configProvider ) {
 		this(other);
+		if (configProvider == null) {
+			return;
+		}
 		Configuration config = configProvider.fetchConfiguration();
+		if (config == null) {
+			return;
+		}
 		DynamicBatchWriteConfig dynBWC = config.dynamicConfiguration.dynamicBatchWriteConfig;
 
 		if (dynBWC.sendKey != null) this.sendKey = dynBWC.sendKey.value;
