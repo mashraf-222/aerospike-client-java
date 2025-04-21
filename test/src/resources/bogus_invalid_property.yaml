@@ -1,3 +1,5 @@
+# A bogus config YAML that is intended only for test purposes.  Not to be used outside of testing.
+
 metadata:
   schema_version: 0.0.1
   app_name: "example_app"

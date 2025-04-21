@@ -1,3 +1,6 @@
+# A config YAML that is intended only for test purposes.  Property keys can be used as a template, but property values
+# should not be taken as "typical" and should not be used in aggregate outside of testing.
+
 metadata:
   schema_version: 0.0.1
   app_name: "example_app"
@@ -20,7 +23,7 @@ dynamic:
     rack_aware: true
     rack_ids: [2,4,6,8]
     tend_interval: 250
-    use_service_alternative: false
+    use_service_alternative: true
   read:
     read_mode_ap: ONE
     read_mode_sc: SESSION
@@ -52,7 +55,7 @@ dynamic:
     socket_timeout: 11000
     timeout_delay: 1500
     total_timeout: 3500
-    max_retries: 3
+    max_retries: 7
     include_bin_data: true
     info_timeout: 4000
     record_queue_size: 5

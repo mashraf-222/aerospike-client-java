@@ -164,8 +164,6 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	public final WritePolicy writePolicyDefault;
 	public WritePolicy mergedWritePolicyDefault;
 
-	public Map<Integer, Policy> policyCache = new HashMap<>();
-
 	/**
 	 * Default scan policy that is used when scan command policy is null.
 	 */
