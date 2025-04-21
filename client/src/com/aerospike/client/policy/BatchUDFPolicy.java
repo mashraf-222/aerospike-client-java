@@ -97,7 +97,7 @@ public final class BatchUDFPolicy {
 	/**
 	 * Copy policy from another policy AND override certain policy attributes if they exist in the configProvider.
 	 */
-	public BatchUDFPolicy(BatchUDFPolicy other, ConfigurationProvider configProvider ) {
+	public BatchUDFPolicy(BatchUDFPolicy other, ConfigurationProvider configProvider) {
 		this(other);
 		if (configProvider == null) {
 			return;
@@ -109,9 +109,7 @@ public final class BatchUDFPolicy {
 		DynamicBatchUDFconfig dynUDF = config.dynamicConfiguration.dynamicBatchUDFconfig;
 
 		if (dynUDF.sendKey != null) this.sendKey = dynUDF.sendKey.value;
-		if (dynUDF.durableDelete != null ) this.durableDelete = dynUDF.durableDelete.value;
-
-		Log.debug("BatchUDFPolicy has been aligned with config properties.");
+		if (dynUDF.durableDelete != null) this.durableDelete = dynUDF.durableDelete.value;
 	}
 
 	/**

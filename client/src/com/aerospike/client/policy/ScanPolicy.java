@@ -76,7 +76,7 @@ public final class ScanPolicy extends Policy {
 	/**
 	 * Copy scan policy from another scan policy AND override certain policy attributes if they exist in the configProvider.
 	 */
-	public ScanPolicy(ScanPolicy other, ConfigurationProvider configProvider ) {
+	public ScanPolicy(ScanPolicy other, ConfigurationProvider configProvider) {
 		this(other);
 		if (configProvider == null) {
 			return;
@@ -98,8 +98,6 @@ public final class ScanPolicy extends Policy {
 		if (dynSC.maxRetries != null) this.maxRetries = dynSC.maxRetries.value;
 		if (dynSC.concurrentNodes != null) this.concurrentNodes = dynSC.concurrentNodes.value;
 		if (dynSC.maxConcurrentNodes != null) this.maxConcurrentNodes = dynSC.maxConcurrentNodes.value;
-
-		Log.debug("ScanPolicy has been aligned with config properties.");
 	}
 
 	/**

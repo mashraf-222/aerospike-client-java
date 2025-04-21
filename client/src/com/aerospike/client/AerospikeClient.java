@@ -18,7 +18,11 @@ package com.aerospike.client;
 
 import java.io.Closeable;
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.List;
+import java.util.Map;
 
 import com.aerospike.client.admin.AdminCommand;
 import com.aerospike.client.admin.Privilege;
@@ -148,7 +152,7 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	// Member variables.
 	//-------------------------------------------------------
 
-	public ConfigurationProvider configProvider;
+	private ConfigurationProvider configProvider;
 
 	protected Cluster cluster;
 
@@ -156,58 +160,58 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	 * Default read policy that is used when read command policy is null.
 	 */
 	public final Policy readPolicyDefault;
-	public Policy mergedReadPolicyDefault;
+	private Policy mergedReadPolicyDefault;
 
 	/**
 	 * Default write policy that is used when write command policy is null.
 	 */
 	public final WritePolicy writePolicyDefault;
-	public WritePolicy mergedWritePolicyDefault;
+	private WritePolicy mergedWritePolicyDefault;
 
 	/**
 	 * Default scan policy that is used when scan command policy is null.
 	 */
 	public final ScanPolicy scanPolicyDefault;
-	public ScanPolicy mergedScanPolicyDefault;
+	private ScanPolicy mergedScanPolicyDefault;
 
 	/**
 	 * Default query policy that is used when query command policy is null.
 	 */
 	public final QueryPolicy queryPolicyDefault;
-	public QueryPolicy mergedQueryPolicyDefault;
+	private QueryPolicy mergedQueryPolicyDefault;
 
 	/**
 	 * Default parent policy used in batch read commands. Parent policy fields
 	 * include socketTimeout, totalTimeout, maxRetries, etc...
 	 */
 	public final BatchPolicy batchPolicyDefault;
-	public BatchPolicy mergedBatchPolicyDefault;
+	private BatchPolicy mergedBatchPolicyDefault;
 
 	/**
 	 * Default parent policy used in batch write commands. Parent policy fields
 	 * include socketTimeout, totalTimeout, maxRetries, etc...
 	 */
 	public final BatchPolicy batchParentPolicyWriteDefault;
-	public BatchPolicy mergedBatchParentPolicyWriteDefault;
+	private BatchPolicy mergedBatchParentPolicyWriteDefault;
 
 	/**
 	 * Default write policy used in batch operate commands.
 	 * Write policy fields include generation, expiration, durableDelete, etc...
 	 */
 	public final BatchWritePolicy batchWritePolicyDefault;
-	public BatchWritePolicy mergedBatchWritePolicyDefault;
+	private BatchWritePolicy mergedBatchWritePolicyDefault;
 
 	/**
 	 * Default delete policy used in batch delete commands.
 	 */
 	public final BatchDeletePolicy batchDeletePolicyDefault;
-	public BatchDeletePolicy mergedBatchDeletePolicyDefault;
+	private BatchDeletePolicy mergedBatchDeletePolicyDefault;
 
 	/**
 	 * Default user defined function policy used in batch UDF execute commands.
 	 */
 	public final BatchUDFPolicy batchUDFPolicyDefault;
-	public BatchUDFPolicy mergedBatchUDFPolicyDefault;
+	private BatchUDFPolicy mergedBatchUDFPolicyDefault;
 
 	/**
 	 * Default info policy that is used when info command policy is null.
@@ -218,16 +222,17 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	 * Default transaction policy when verifying record versions in a batch on a commit.
 	 */
 	public final TxnVerifyPolicy txnVerifyPolicyDefault;
-	public TxnVerifyPolicy mergedTxnVerifyPolicyDefault;
+	private TxnVerifyPolicy mergedTxnVerifyPolicyDefault;
 
 	/**
 	 * Default transaction policy when rolling the transaction records forward (commit)
 	 * or back (abort) in a batch.
 	 */
 	public final TxnRollPolicy txnRollPolicyDefault;
-	public TxnRollPolicy mergedTxnRollPolicyDefault;
+	private TxnRollPolicy mergedTxnRollPolicyDefault;
 
 	private final WritePolicy operatePolicyReadDefault;
+	private WritePolicy mergedOperatePolicyReadDefault;
 
 	//-------------------------------------------------------
 	// Constructors
@@ -375,6 +380,10 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 			this.txnRollPolicyDefault = new TxnRollPolicy();
 			this.operatePolicyReadDefault = new WritePolicy(this.readPolicyDefault);
 		}
+	}
+
+	public ConfigurationProvider getConfigProvider() {
+		return configProvider;
 	}
 
 	//-------------------------------------------------------
@@ -573,6 +582,7 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		mergedBatchUDFPolicyDefault = new BatchUDFPolicy(batchUDFPolicyDefault, configProvider);
 		mergedTxnVerifyPolicyDefault = new TxnVerifyPolicy(txnVerifyPolicyDefault, configProvider);
 		mergedTxnRollPolicyDefault = new TxnRollPolicy(txnRollPolicyDefault, configProvider);
+		mergedOperatePolicyReadDefault = new WritePolicy(operatePolicyReadDefault, configProvider);
 	}
 
 	//-------------------------------------------------------
@@ -2791,7 +2801,7 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	 */
 	public final Record operate(WritePolicy policy, Key key, Operation... operations)
 		throws AerospikeException {
-		OperateArgs args = new OperateArgs(policy, mergedWritePolicyDefault, operatePolicyReadDefault, operations);
+		OperateArgs args = new OperateArgs(policy, mergedWritePolicyDefault, mergedOperatePolicyReadDefault, operations);
 		policy = args.writePolicy;
 
 		if (configProvider != null) {
@@ -2847,7 +2857,7 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 			eventLoop = cluster.eventLoops.next();
 		}
 
-		OperateArgs args = new OperateArgs(policy, mergedWritePolicyDefault, operatePolicyReadDefault, operations);
+		OperateArgs args = new OperateArgs(policy, mergedWritePolicyDefault, mergedOperatePolicyReadDefault, operations);
 		policy = args.writePolicy;
 
 		if (configProvider != null) {
@@ -3029,10 +3039,6 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 			policy = mergedBatchPolicyDefault;
 		} else if (configProvider != null) {
 			policy = new BatchPolicy(policy, configProvider);
-		}
-
-		if (policy.txn != null) {
-			TxnMonitor.addKeys(cluster, policy, records);
 		}
 
 		AsyncBatchExecutor.OperateList executor = new AsyncBatchExecutor.OperateList(

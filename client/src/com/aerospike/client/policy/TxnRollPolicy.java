@@ -47,21 +47,19 @@ public class TxnRollPolicy extends BatchPolicy {
 		}
 		DynamicTxnRollConfig dynTRC = config.dynamicConfiguration.dynamicTxnRollConfig;
 
-		if (dynTRC.readModeAP != null ) this.readModeAP = dynTRC.readModeAP;
-		if (dynTRC.readModeSC != null ) this.readModeSC = dynTRC.readModeSC;
-		if (dynTRC.connectTimeout != null ) this.connectTimeout = dynTRC.connectTimeout.value;
-		if (dynTRC.replica != null ) this.replica = dynTRC.replica;
-		if (dynTRC.sleepBetweenRetries != null ) this.sleepBetweenRetries = dynTRC.sleepBetweenRetries.value;
-		if (dynTRC.socketTimeout != null ) this.socketTimeout = dynTRC.socketTimeout.value;
-		if (dynTRC.timeoutDelay != null ) this.timeoutDelay = dynTRC.timeoutDelay.value;
-		if (dynTRC.totalTimeout != null ) this.totalTimeout = dynTRC.totalTimeout.value;
-		if (dynTRC.maxRetries != null ) this.maxRetries = dynTRC.maxRetries.value;
-		if (dynTRC.maxConcurrentThreads != null ) this.maxConcurrentThreads = dynTRC.maxConcurrentThreads.value;
-		if (dynTRC.allowInline != null ) this.allowInline = dynTRC.allowInline.value;
-		if (dynTRC.allowInlineSSD != null ) this.allowInlineSSD = dynTRC.allowInlineSSD.value;
-		if (dynTRC.respondAllKeys != null ) this.respondAllKeys = dynTRC.respondAllKeys.value;
-
-		Log.debug("TxnRollPolicy has been aligned with config properties.");
+		if (dynTRC.readModeAP != null) this.readModeAP = dynTRC.readModeAP;
+		if (dynTRC.readModeSC != null) this.readModeSC = dynTRC.readModeSC;
+		if (dynTRC.connectTimeout != null) this.connectTimeout = dynTRC.connectTimeout.value;
+		if (dynTRC.replica != null) this.replica = dynTRC.replica;
+		if (dynTRC.sleepBetweenRetries != null) this.sleepBetweenRetries = dynTRC.sleepBetweenRetries.value;
+		if (dynTRC.socketTimeout != null) this.socketTimeout = dynTRC.socketTimeout.value;
+		if (dynTRC.timeoutDelay != null) this.timeoutDelay = dynTRC.timeoutDelay.value;
+		if (dynTRC.totalTimeout != null) this.totalTimeout = dynTRC.totalTimeout.value;
+		if (dynTRC.maxRetries != null) this.maxRetries = dynTRC.maxRetries.value;
+		if (dynTRC.maxConcurrentThreads != null) this.maxConcurrentThreads = dynTRC.maxConcurrentThreads.value;
+		if (dynTRC.allowInline != null) this.allowInline = dynTRC.allowInline.value;
+		if (dynTRC.allowInlineSSD != null) this.allowInlineSSD = dynTRC.allowInlineSSD.value;
+		if (dynTRC.respondAllKeys != null) this.respondAllKeys = dynTRC.respondAllKeys.value;
 	}
 
 		/**

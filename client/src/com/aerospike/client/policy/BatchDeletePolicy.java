@@ -85,7 +85,7 @@ public final class BatchDeletePolicy {
 	/**
 	 * Copy policy from another policy AND override certain policy attributes if they exist in the configProvider.
 	 */
-	public BatchDeletePolicy(BatchDeletePolicy other, ConfigurationProvider configProvider ) {
+	public BatchDeletePolicy(BatchDeletePolicy other, ConfigurationProvider configProvider) {
 		this(other);
 		if (configProvider == null) {
 			return;
@@ -98,8 +98,6 @@ public final class BatchDeletePolicy {
 
 		if (dynBDC.sendKey != null) this.sendKey = dynBDC.sendKey.value;
 		if (dynBDC.durableDelete != null) this.durableDelete = dynBDC.durableDelete.value;
-
-		Log.debug("BatchDeletePolicy has been aligned with config properties.");
 	}
 
 	/**

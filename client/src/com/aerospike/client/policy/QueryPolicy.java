@@ -138,8 +138,6 @@ public class QueryPolicy extends Policy {
 		if (dynQC.infoTimeout != null) this.infoTimeout = dynQC.infoTimeout.value;
 		if (dynQC.recordQueueSize != null) this.recordQueueSize = dynQC.recordQueueSize.value;
 		if (dynQC.expectedDuration != null) this.expectedDuration = dynQC.expectedDuration;
-
-		Log.debug("QueryPolicy has been aligned with config properties.");
 	}
 
 	/**
@@ -214,29 +212,5 @@ public class QueryPolicy extends Policy {
 
 	public void setShortQuery(boolean shortQuery) {
 		this.shortQuery = shortQuery;
-	}
-
-
-	/**
-	 * Override certain policy attributes if they exist in the configProvider.
-	 */
-	public void applyConfigOverrides( ConfigurationProvider configProvider) {
-		Configuration config = configProvider.fetchConfiguration();
-		DynamicQueryConfig dynQC = config.dynamicConfiguration.dynamicQueryConfig;
-
-		if (dynQC.readModeAP != null) this.readModeSC = dynQC.readModeSC;
-		if (dynQC.connectTimeout != null) this.connectTimeout = dynQC.connectTimeout.value;
-		if (dynQC.replica != null) this.replica = dynQC.replica;
-		if (dynQC.sleepBetweenRetries != null) this.sleepBetweenRetries = dynQC.sleepBetweenRetries.value;
-		if (dynQC.socketTimeout != null) this.socketTimeout = dynQC.socketTimeout.value;
-		if (dynQC.timeoutDelay != null) this.timeoutDelay = dynQC.timeoutDelay.value;
-		if (dynQC.totalTimeout != null) this.totalTimeout = dynQC.totalTimeout.value;
-		if (dynQC.maxRetries != null) this.maxRetries = dynQC.maxRetries.value;
-		if (dynQC.includeBinData != null) this.includeBinData = dynQC.includeBinData.value;
-		if (dynQC.infoTimeout != null) this.infoTimeout = dynQC.infoTimeout.value;
-		if (dynQC.recordQueueSize != null) this.recordQueueSize = dynQC.recordQueueSize.value;
-		if (dynQC.expectedDuration != null) this.expectedDuration = dynQC.expectedDuration;
-
-		Log.debug("QueryPolicy has been aligned with config properties.");
 	}
 }

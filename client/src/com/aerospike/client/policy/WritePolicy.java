@@ -28,8 +28,6 @@ import java.util.Objects;
  * This object is passed into methods where database writes can occur.
  */
 public final class WritePolicy extends Policy {
-	public ConfigurationProvider configProvider;
-
 	/**
 	 * Qualify how to handle writes where the record already exists.
 	 * <p>
@@ -156,8 +154,6 @@ public final class WritePolicy extends Policy {
 		if (dynWC.totalTimeout != null) this.totalTimeout = dynWC.totalTimeout.value;
 		if (dynWC.maxRetries != null) this.maxRetries = dynWC.maxRetries.value;;
 		if (dynWC.durableDelete != null) this.durableDelete = dynWC.durableDelete.value;
-
-		Log.debug("WritePolicy has been aligned with config properties.");
 	}
 
 	/**

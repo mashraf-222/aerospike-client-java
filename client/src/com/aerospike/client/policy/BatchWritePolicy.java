@@ -128,7 +128,7 @@ public final class BatchWritePolicy {
 	/**
 	 * Copy policy from another policy AND override certain policy attributes if they exist in the configProvider.
 	 */
-	public BatchWritePolicy(BatchWritePolicy other, ConfigurationProvider configProvider ) {
+	public BatchWritePolicy(BatchWritePolicy other, ConfigurationProvider configProvider) {
 		this(other);
 		if (configProvider == null) {
 			return;
@@ -141,8 +141,6 @@ public final class BatchWritePolicy {
 
 		if (dynBWC.sendKey != null) this.sendKey = dynBWC.sendKey.value;
 		if (dynBWC.durableDelete != null) this.durableDelete = dynBWC.durableDelete.value;
-
-		Log.debug("BatchWritePolicy has been aligned with config properties.");
 	}
 
 	/**

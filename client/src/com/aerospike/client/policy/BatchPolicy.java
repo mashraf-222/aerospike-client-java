@@ -98,7 +98,7 @@ public class BatchPolicy extends Policy {
 	 * Copy batch policy from another batch policy AND override certain policy attributes if they exist in the
 	 * configProvider.
 	 */
-	public BatchPolicy(BatchPolicy other, ConfigurationProvider configProvider ) {
+	public BatchPolicy(BatchPolicy other, ConfigurationProvider configProvider) {
 		this(other);
 		if (configProvider == null) {
 			return;
@@ -109,21 +109,19 @@ public class BatchPolicy extends Policy {
 		}
 		DynamicBatchReadConfig dynBRC = config.dynamicConfiguration.dynamicBatchReadConfig;
 
-		if (dynBRC.readModeAP != null ) this.readModeAP = dynBRC.readModeAP;
-		if (dynBRC.readModeSC != null ) this.readModeSC = dynBRC.readModeSC;
-		if (dynBRC.connectTimeout != null ) this.connectTimeout = dynBRC.connectTimeout.value;
-		if (dynBRC.replica != null ) this.replica = dynBRC.replica;
-		if (dynBRC.sleepBetweenRetries != null ) this.sleepBetweenRetries = dynBRC.sleepBetweenRetries.value;
-		if (dynBRC.socketTimeout != null ) this.socketTimeout = dynBRC.socketTimeout.value;
-		if (dynBRC.timeoutDelay != null ) this.timeoutDelay = dynBRC.timeoutDelay.value;
-		if (dynBRC.totalTimeout != null ) this.totalTimeout = dynBRC.totalTimeout.value;
-		if (dynBRC.maxRetries != null ) this.maxRetries = dynBRC.maxRetries.value;
-		if (dynBRC.maxConcurrentThreads != null ) this.maxConcurrentThreads = dynBRC.maxConcurrentThreads.value;
-		if (dynBRC.allowInline != null ) this.allowInline = dynBRC.allowInline.value;
-		if (dynBRC.allowInlineSSD != null ) this.allowInlineSSD = dynBRC.allowInlineSSD.value;
-		if (dynBRC.respondAllKeys != null ) this.respondAllKeys = dynBRC.respondAllKeys.value;
-
-		Log.debug("BatchPolicy has been aligned with config properties.");
+		if (dynBRC.readModeAP != null) this.readModeAP = dynBRC.readModeAP;
+		if (dynBRC.readModeSC != null) this.readModeSC = dynBRC.readModeSC;
+		if (dynBRC.connectTimeout != null) this.connectTimeout = dynBRC.connectTimeout.value;
+		if (dynBRC.replica != null) this.replica = dynBRC.replica;
+		if (dynBRC.sleepBetweenRetries != null) this.sleepBetweenRetries = dynBRC.sleepBetweenRetries.value;
+		if (dynBRC.socketTimeout != null) this.socketTimeout = dynBRC.socketTimeout.value;
+		if (dynBRC.timeoutDelay != null) this.timeoutDelay = dynBRC.timeoutDelay.value;
+		if (dynBRC.totalTimeout != null) this.totalTimeout = dynBRC.totalTimeout.value;
+		if (dynBRC.maxRetries != null) this.maxRetries = dynBRC.maxRetries.value;
+		if (dynBRC.maxConcurrentThreads != null) this.maxConcurrentThreads = dynBRC.maxConcurrentThreads.value;
+		if (dynBRC.allowInline != null) this.allowInline = dynBRC.allowInline.value;
+		if (dynBRC.allowInlineSSD != null) this.allowInlineSSD = dynBRC.allowInlineSSD.value;
+		if (dynBRC.respondAllKeys != null) this.respondAllKeys = dynBRC.respondAllKeys.value;
 	}
 	/**
 	 * Copy batch policy from another batch policy.
@@ -204,8 +202,8 @@ public class BatchPolicy extends Policy {
 		if (dynBWC.totalTimeout != null) this.totalTimeout = dynBWC.totalTimeout.value;
 		if (dynBWC.maxRetries != null) this.maxRetries = dynBWC.maxRetries.value;
 		if (dynBWC.maxConcurrentThreads != null) this.maxConcurrentThreads = dynBWC.maxConcurrentThreads.value;
-		if (dynBWC.allowInlineSSD != null ) this.allowInlineSSD = dynBWC.allowInlineSSD.value;
-		if (dynBWC.respondAllKeys != null ) this.respondAllKeys = dynBWC.respondAllKeys.value;
+		if (dynBWC.allowInlineSSD != null) this.allowInlineSSD = dynBWC.allowInlineSSD.value;
+		if (dynBWC.respondAllKeys != null) this.respondAllKeys = dynBWC.respondAllKeys.value;
 
 		Log.debug("batch_write config has been grafted onto BatchPolicy");
 	}

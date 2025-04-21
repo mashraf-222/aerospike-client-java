@@ -213,8 +213,8 @@ public class Cluster implements Runnable, Closeable {
 		this.tlsPolicy = policy.tlsPolicy;
 		this.authMode = policy.authMode;
 
-		if (client.configProvider != null) {
-			Configuration config = this.client.configProvider.fetchConfiguration();
+		if (client.getConfigProvider() != null) {
+			Configuration config = client.getConfigProvider().fetchConfiguration();
 			if (config != null) {
 				this.configInterval = config.staticConfiguration.staticClientConfig.configInterval.value;
 			}
@@ -628,7 +628,7 @@ public class Cluster implements Runnable, Closeable {
 
 		// Check YAML config file for updates.
 		if (configInterval > 0 && tendCount % configInterval == 0) {
-			if( client.configProvider.loadConfiguration() ) {
+			if( client.getConfigProvider().loadConfiguration() ) {
 				client.mergeDefaultPoliciesWithConfig();
 			}
 		}

@@ -32,7 +32,9 @@ import com.aerospike.client.Log;
  * Container object for client policy Command.
  */
 public class ClientPolicy {
-
+	/**
+	 * Configuration provider that will override user-provided and/or merged policy settings
+	 */
 	public ConfigurationProvider configProvider;
 
 	/**
@@ -411,7 +413,7 @@ public class ClientPolicy {
 	 * Copy client policy from another client policy AND override certain policy attributes if they exist in the
 	 * configProvider.
 	 */
-	public ClientPolicy(ClientPolicy other, ConfigurationProvider configProvider ) {
+	public ClientPolicy(ClientPolicy other, ConfigurationProvider configProvider) {
 		Configuration config = configProvider.fetchConfiguration();
 		if (config == null) {
 			return;
@@ -433,8 +435,6 @@ public class ClientPolicy {
 		if (dynCC.timeout != null) this.rackIds = dynCC.rackIds;
 		if (dynCC.tendInterval != null) this.tendInterval = dynCC.tendInterval.value;
 		if (dynCC.useServiceAlternative != null) this.useServicesAlternate = dynCC.useServiceAlternative.value;
-
-		Log.debug("ClientPolicy has been aligned with config properties.");
 	}
 
 	/**

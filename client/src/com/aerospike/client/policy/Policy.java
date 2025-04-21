@@ -29,9 +29,6 @@ import com.aerospike.client.Txn;
  * Command policy attributes used in all database commands.
  */
 public class Policy {
-
-	public ConfigurationProvider configProvider;
-
 	/**
 	 * Multi-record transaction. If this field is populated, the corresponding
 	 * command will be included in the transaction. This field is ignored for scan/query.
@@ -287,7 +284,7 @@ public class Policy {
 	/**
 	 * Copy policy from another policy AND override certain policy attributes if they exist in the configProvider.
 	 */
-	public Policy(Policy other, ConfigurationProvider configProvider ) {
+	public Policy(Policy other, ConfigurationProvider configProvider) {
 		this(other);
 		if (configProvider == null) {
 			return;
@@ -298,18 +295,16 @@ public class Policy {
 		}
 		DynamicReadConfig dynRC = config.dynamicConfiguration.dynamicReadConfig;
 
-		if (dynRC.readModeAP != null ) this.readModeAP = dynRC.readModeAP;
-		if (dynRC.readModeSC != null ) this.readModeSC = dynRC.readModeSC;
-		if (dynRC.connectTimeout != null ) this.connectTimeout = dynRC.connectTimeout.value;
-		if (dynRC.failOnFilteredOut != null ) this.failOnFilteredOut = dynRC.failOnFilteredOut.value;
-		if (dynRC.replica != null ) this.replica = dynRC.replica;
-		if (dynRC.sleepBetweenRetries != null ) this.sleepBetweenRetries = dynRC.sleepBetweenRetries.value;
-		if (dynRC.socketTimeout != null ) this.socketTimeout = dynRC.socketTimeout.value;
-		if (dynRC.timeoutDelay != null ) this.timeoutDelay = dynRC.timeoutDelay.value;
-		if (dynRC.totalTimeout != null ) this.totalTimeout = dynRC.totalTimeout.value;
-		if (dynRC.maxRetries != null ) this.maxRetries = dynRC.maxRetries.value;
-
-		Log.debug("(read) Policy has been aligned with config properties.");
+		if (dynRC.readModeAP != null) this.readModeAP = dynRC.readModeAP;
+		if (dynRC.readModeSC != null) this.readModeSC = dynRC.readModeSC;
+		if (dynRC.connectTimeout != null) this.connectTimeout = dynRC.connectTimeout.value;
+		if (dynRC.failOnFilteredOut != null) this.failOnFilteredOut = dynRC.failOnFilteredOut.value;
+		if (dynRC.replica != null) this.replica = dynRC.replica;
+		if (dynRC.sleepBetweenRetries != null) this.sleepBetweenRetries = dynRC.sleepBetweenRetries.value;
+		if (dynRC.socketTimeout != null) this.socketTimeout = dynRC.socketTimeout.value;
+		if (dynRC.timeoutDelay != null) this.timeoutDelay = dynRC.timeoutDelay.value;
+		if (dynRC.totalTimeout != null) this.totalTimeout = dynRC.totalTimeout.value;
+		if (dynRC.maxRetries != null) this.maxRetries = dynRC.maxRetries.value;
 }
 	/**
 	 * Default constructor.
