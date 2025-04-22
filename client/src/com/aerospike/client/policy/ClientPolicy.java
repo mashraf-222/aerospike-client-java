@@ -414,6 +414,7 @@ public class ClientPolicy {
 	 * configProvider.
 	 */
 	public ClientPolicy(ClientPolicy other, ConfigurationProvider configProvider) {
+		this(other);
 		Configuration config = configProvider.fetchConfiguration();
 		if (config == null) {
 			return;

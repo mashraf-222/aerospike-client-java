@@ -2993,7 +2993,7 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 				}
 			}
 			else {
-				commands[count++] = new Batch.OperateListCommand(cluster, bn, policy, records, status);
+				commands[count++] = new Batch.OperateListCommand(cluster, bn, policy, records, status, configProvider);
 			}
 		}
 		BatchExecutor.execute(cluster, policy, commands, status);
@@ -3120,7 +3120,7 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 				}
 			}
 			else {
-				commands[count++] = new AsyncBatch.OperateListCommand(executor, bn, policy, records);
+				commands[count++] = new AsyncBatch.OperateListCommand(executor, bn, policy, records, configProvider);
 			}
 		}
 		AsyncTxnMonitor.executeBatch(policy, executor, commands, records);
@@ -3249,7 +3249,8 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 				}
 			}
 			else {
-				commands[count++] = new AsyncBatch.OperateSequenceCommand(executor, bn, policy, listener, records);
+				commands[count++] = new AsyncBatch.OperateSequenceCommand(executor, bn, policy, listener, records,
+						configProvider);
 			}
 		}
 		AsyncTxnMonitor.executeBatch(policy, executor, commands, records);

@@ -35,6 +35,8 @@ import com.aerospike.client.Record;
 import com.aerospike.client.ResultCode;
 import com.aerospike.client.Value;
 import com.aerospike.client.cluster.Cluster;
+import com.aerospike.client.configuration.*;
+import com.aerospike.client.configuration.serializers.*;
 import com.aerospike.client.exp.Expression;
 import com.aerospike.client.policy.BatchDeletePolicy;
 import com.aerospike.client.policy.BatchPolicy;
@@ -1064,7 +1066,8 @@ public class Command {
 		BatchUDFPolicy udfPolicy,
 		BatchDeletePolicy deletePolicy,
 		List<? extends BatchRecord> records,
-		BatchNode batch
+		BatchNode batch,
+		ConfigurationProvider configProvider
 	) {
 		begin();
 		int max = batch.offsetsSize;
@@ -1186,8 +1189,16 @@ public class Command {
 					}
 
 					case BATCH_WRITE: {
+						Configuration config = null;
+						if (configProvider != null) {
+							config = configProvider.fetchConfiguration();
+						}
 						BatchWrite bw = (BatchWrite)record;
 						BatchWritePolicy bwp = (bw.policy != null)? bw.policy : writePolicy;
+						if (config != null) {
+							bwp.sendKey = config.dynamicConfiguration.dynamicBatchWriteConfig.sendKey.value;
+							bwp.durableDelete = config.dynamicConfiguration.dynamicBatchWriteConfig.durableDelete.value;
+						}
 
 						attr.setWrite(bwp);
 						attr.adjustWrite(bw.ops);
@@ -1196,9 +1207,16 @@ public class Command {
 					}
 
 					case BATCH_UDF: {
+						Configuration config = null;
+						if (configProvider != null) {
+							config = configProvider.fetchConfiguration();
+						}
 						BatchUDF bu = (BatchUDF)record;
 						BatchUDFPolicy bup = (bu.policy != null)? bu.policy : udfPolicy;
-
+						if (config != null) {
+							bup.sendKey = config.dynamicConfiguration.dynamicBatchUDFconfig.sendKey.value;
+							bup.durableDelete = config.dynamicConfiguration.dynamicBatchUDFconfig.durableDelete.value;
+						}
 						attr.setUDF(bup);
 						writeBatchWrite(key, txn, ver, attr, attr.filterExp, 3, 0);
 						writeField(bu.packageName, FieldType.UDF_PACKAGE_NAME);
@@ -1208,9 +1226,16 @@ public class Command {
 					}
 
 					case BATCH_DELETE: {
+						Configuration config = null;
+						if (configProvider != null) {
+							config = configProvider.fetchConfiguration();
+						}
 						BatchDelete bd = (BatchDelete)record;
 						BatchDeletePolicy bdp = (bd.policy != null)? bd.policy : deletePolicy;
-
+						if (config != null) {
+							bdp.sendKey = config.dynamicConfiguration.dynamicBatchDeleteConfig.sendKey.value;
+							bdp.durableDelete = config.dynamicConfiguration.dynamicBatchDeleteConfig.durableDelete.value;
+						}
 						attr.setDelete(bdp);
 						writeBatchWrite(key, txn, ver, attr, attr.filterExp, 0, 0);
 						break;
