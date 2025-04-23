@@ -1196,8 +1196,11 @@ public class Command {
 						BatchWrite bw = (BatchWrite)record;
 						BatchWritePolicy bwp = (bw.policy != null)? bw.policy : writePolicy;
 						if (config != null) {
-							bwp.sendKey = config.dynamicConfiguration.dynamicBatchWriteConfig.sendKey.value;
-							bwp.durableDelete = config.dynamicConfiguration.dynamicBatchWriteConfig.durableDelete.value;
+							bwp.sendKey = (config.dynamicConfiguration.dynamicBatchWriteConfig.sendKey != null)?
+									config.dynamicConfiguration.dynamicBatchWriteConfig.sendKey.value : bwp.sendKey ;
+							bwp.durableDelete = (config.dynamicConfiguration.dynamicBatchWriteConfig.durableDelete !=
+									null)? config.dynamicConfiguration.dynamicBatchWriteConfig.durableDelete.value :
+									bwp.durableDelete;
 						}
 
 						attr.setWrite(bwp);
@@ -1214,8 +1217,11 @@ public class Command {
 						BatchUDF bu = (BatchUDF)record;
 						BatchUDFPolicy bup = (bu.policy != null)? bu.policy : udfPolicy;
 						if (config != null) {
-							bup.sendKey = config.dynamicConfiguration.dynamicBatchUDFconfig.sendKey.value;
-							bup.durableDelete = config.dynamicConfiguration.dynamicBatchUDFconfig.durableDelete.value;
+							bup.sendKey = (config.dynamicConfiguration.dynamicBatchUDFconfig.sendKey != null)?
+									config.dynamicConfiguration.dynamicBatchUDFconfig.sendKey.value : bup.sendKey;
+							bup.durableDelete = (config.dynamicConfiguration.dynamicBatchUDFconfig.durableDelete !=
+									null)? config.dynamicConfiguration.dynamicBatchUDFconfig.durableDelete.value :
+									bup.durableDelete;
 						}
 						attr.setUDF(bup);
 						writeBatchWrite(key, txn, ver, attr, attr.filterExp, 3, 0);
@@ -1233,8 +1239,11 @@ public class Command {
 						BatchDelete bd = (BatchDelete)record;
 						BatchDeletePolicy bdp = (bd.policy != null)? bd.policy : deletePolicy;
 						if (config != null) {
-							bdp.sendKey = config.dynamicConfiguration.dynamicBatchDeleteConfig.sendKey.value;
-							bdp.durableDelete = config.dynamicConfiguration.dynamicBatchDeleteConfig.durableDelete.value;
+							bdp.sendKey = (config.dynamicConfiguration.dynamicBatchDeleteConfig.sendKey != null)?
+									config.dynamicConfiguration.dynamicBatchDeleteConfig.sendKey.value : bdp.sendKey;
+							bdp.durableDelete = (config.dynamicConfiguration.dynamicBatchDeleteConfig.durableDelete !=
+									null)? config.dynamicConfiguration.dynamicBatchDeleteConfig.durableDelete.value :
+									bdp.durableDelete;
 						}
 						attr.setDelete(bdp);
 						writeBatchWrite(key, txn, ver, attr, attr.filterExp, 0, 0);
