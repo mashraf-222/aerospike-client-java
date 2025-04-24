@@ -127,14 +127,6 @@ public class BatchRecord {
 	 * Optimized reference equality check to determine batch wire protocol repeat flag.
 	 * For internal use only.
 	 */
-	public boolean equals(BatchRecord other) {
-		return false;
-	}
-
-	/**
-	 * Optimized reference equality check to determine batch wire protocol repeat flag.
-	 * For internal use only.
-	 */
 	public boolean equals(BatchRecord other, ConfigurationProvider configProvider) {
 		return false;
 	}

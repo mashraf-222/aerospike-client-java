@@ -131,7 +131,7 @@ public final class BatchRead extends BatchRecord {
 	 * For internal use only.
 	 */
 	@Override
-	public boolean equals(BatchRecord obj) {
+	public boolean equals(BatchRecord obj, ConfigurationProvider configProvider) {
 		if (getClass() != obj.getClass())
 			return false;
 
