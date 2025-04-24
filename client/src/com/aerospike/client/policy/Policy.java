@@ -305,7 +305,7 @@ public class Policy {
 		if (dynRC.timeoutDelay != null) this.timeoutDelay = dynRC.timeoutDelay.value;
 		if (dynRC.totalTimeout != null) this.totalTimeout = dynRC.totalTimeout.value;
 		if (dynRC.maxRetries != null) this.maxRetries = dynRC.maxRetries.value;
-}
+	}
 	/**
 	 * Default constructor.
 	 */
