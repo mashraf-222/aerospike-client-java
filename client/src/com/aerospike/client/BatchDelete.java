@@ -17,6 +17,8 @@
 package com.aerospike.client;
 
 import com.aerospike.client.command.Command;
+import com.aerospike.client.configuration.*;
+import com.aerospike.client.configuration.serializers.*;
 import com.aerospike.client.policy.BatchDeletePolicy;
 import com.aerospike.client.policy.Policy;
 
@@ -58,20 +60,39 @@ public final class BatchDelete extends BatchRecord {
 	 * For internal use only.
 	 */
 	@Override
-	public boolean equals(BatchRecord obj) {
+	public boolean equals(BatchRecord obj, ConfigurationProvider configProvider) {
 		if (getClass() != obj.getClass())
 			return false;
 
 		BatchDelete other = (BatchDelete)obj;
+		if (configProvider != null) {
+			Configuration config = configProvider.fetchConfiguration();
+			if (config != null && config.dynamicConfiguration.dynamicBatchDeleteConfig.sendKey != null) {
+				if (policy != null) {
+					policy.sendKey = config.dynamicConfiguration.dynamicBatchDeleteConfig.sendKey.value;
+				}
+			}
+		}
 		return policy == other.policy && (policy == null || !policy.sendKey);
+
 	}
 
 	/**
 	 * Return wire protocol size. For internal use only.
 	 */
 	@Override
-	public int size(Policy parentPolicy) {
+	public int size(Policy parentPolicy, ConfigurationProvider configProvider) {
 		int size = 2; // gen(2) = 2
+		if (configProvider != null) {
+			Configuration config = configProvider.fetchConfiguration();
+			if (config != null && config.dynamicConfiguration.dynamicBatchDeleteConfig.sendKey != null) {
+				if (policy != null) {
+					policy.sendKey = config.dynamicConfiguration.dynamicBatchDeleteConfig.sendKey.value;
+				} else {
+					parentPolicy.sendKey = config.dynamicConfiguration.dynamicBatchDeleteConfig.sendKey.value;
+				}
+			}
+		}
 
 		if (policy != null) {
 			if (policy.filterExp != null) {

@@ -18,6 +18,8 @@ package com.aerospike.client;
 
 import com.aerospike.client.command.Buffer;
 import com.aerospike.client.command.Command;
+import com.aerospike.client.configuration.*;
+import com.aerospike.client.configuration.serializers.*;
 import com.aerospike.client.policy.BatchWritePolicy;
 import com.aerospike.client.policy.Policy;
 
@@ -74,26 +76,45 @@ public final class BatchWrite extends BatchRecord {
 	 * For internal use only.
 	 */
 	@Override
-	public boolean equals(BatchRecord obj) {
+	public boolean equals(BatchRecord obj, ConfigurationProvider configProvider) {
 		if (getClass() != obj.getClass())
 			return false;
 
 		BatchWrite other = (BatchWrite)obj;
+		if (configProvider != null) {
+			Configuration config = configProvider.fetchConfiguration();
+			if (config != null && config.dynamicConfiguration.dynamicBatchWriteConfig.sendKey != null) {
+				if (policy != null) {
+					policy.sendKey = config.dynamicConfiguration.dynamicBatchWriteConfig.sendKey.value;
+				}
+			}
+		}
+
 		return ops == other.ops && policy == other.policy && (policy == null || !policy.sendKey);
+
 	}
 
 	/**
 	 * Return wire protocol size. For internal use only.
 	 */
 	@Override
-	public int size(Policy parentPolicy) {
+	public int size(Policy parentPolicy, ConfigurationProvider configProvider) {
 		int size = 2; // gen(2) = 2
+		if (configProvider != null) {
+			Configuration config = configProvider.fetchConfiguration();
+			if (config != null && config.dynamicConfiguration.dynamicBatchWriteConfig.sendKey != null) {
+				if (policy != null) {
+					policy.sendKey = config.dynamicConfiguration.dynamicBatchWriteConfig.sendKey.value;
+				} else {
+					parentPolicy.sendKey = config.dynamicConfiguration.dynamicBatchWriteConfig.sendKey.value;
+				}
+			}
+		}
 
 		if (policy != null) {
 			if (policy.filterExp != null) {
 				size += policy.filterExp.size();
 			}
-
 			if (policy.sendKey || parentPolicy.sendKey) {
 				size += key.userKey.estimateSize() + Command.FIELD_HEADER_SIZE + 1;
 			}
