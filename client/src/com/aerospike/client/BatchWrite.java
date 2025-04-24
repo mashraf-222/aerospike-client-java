@@ -81,16 +81,19 @@ public final class BatchWrite extends BatchRecord {
 			return false;
 
 		BatchWrite other = (BatchWrite)obj;
+
+		boolean sendkey = false;
+		if (policy != null) {
+			sendkey = policy.sendKey;
+		}
 		if (configProvider != null) {
 			Configuration config = configProvider.fetchConfiguration();
 			if (config != null && config.dynamicConfiguration.dynamicBatchWriteConfig.sendKey != null) {
-				if (policy != null) {
-					policy.sendKey = config.dynamicConfiguration.dynamicBatchWriteConfig.sendKey.value;
-				}
+				sendkey = config.dynamicConfiguration.dynamicBatchWriteConfig.sendKey.value;
 			}
 		}
 
-		return ops == other.ops && policy == other.policy && (policy == null || !policy.sendKey);
+		return ops == other.ops && policy == other.policy && (policy == null || !sendkey);
 
 	}
 
@@ -100,14 +103,13 @@ public final class BatchWrite extends BatchRecord {
 	@Override
 	public int size(Policy parentPolicy, ConfigurationProvider configProvider) {
 		int size = 2; // gen(2) = 2
+
+		boolean sendkey;
+		sendkey = (policy != null) ? policy.sendKey : parentPolicy.sendKey;
 		if (configProvider != null) {
 			Configuration config = configProvider.fetchConfiguration();
 			if (config != null && config.dynamicConfiguration.dynamicBatchWriteConfig.sendKey != null) {
-				if (policy != null) {
-					policy.sendKey = config.dynamicConfiguration.dynamicBatchWriteConfig.sendKey.value;
-				} else {
-					parentPolicy.sendKey = config.dynamicConfiguration.dynamicBatchWriteConfig.sendKey.value;
-				}
+				sendkey = config.dynamicConfiguration.dynamicBatchWriteConfig.sendKey.value;
 			}
 		}
 
@@ -115,7 +117,7 @@ public final class BatchWrite extends BatchRecord {
 			if (policy.filterExp != null) {
 				size += policy.filterExp.size();
 			}
-			if (policy.sendKey || parentPolicy.sendKey) {
+			if (sendkey || parentPolicy.sendKey) {
 				size += key.userKey.estimateSize() + Command.FIELD_HEADER_SIZE + 1;
 			}
 		}

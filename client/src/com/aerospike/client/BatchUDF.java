@@ -94,17 +94,20 @@ public final class BatchUDF extends BatchRecord {
 			return false;
 
 		BatchUDF other = (BatchUDF)obj;
+
+		boolean sendkey = false;
+		if (policy != null) {
+			sendkey = policy.sendKey;
+		}
 		if (configProvider != null) {
 			Configuration config = configProvider.fetchConfiguration();
 			if (config != null && config.dynamicConfiguration.dynamicBatchUDFconfig.sendKey != null) {
-				if (policy != null) {
-					policy.sendKey = config.dynamicConfiguration.dynamicBatchUDFconfig.sendKey.value;
-				}
+				sendkey = config.dynamicConfiguration.dynamicBatchUDFconfig.sendKey.value;
 			}
 		}
 
 		return functionName == other.functionName && functionArgs == other.functionArgs &&
-			   packageName == other.packageName && policy == other.policy && (policy == null || !policy.sendKey);
+			   packageName == other.packageName && policy == other.policy && !sendkey;
 	}
 
 	/**
@@ -113,14 +116,13 @@ public final class BatchUDF extends BatchRecord {
 	@Override
 	public int size(Policy parentPolicy, ConfigurationProvider configProvider) {
 		int size = 2; // gen(2) = 2
+
+		boolean sendkey;
+		sendkey = (policy != null) ? policy.sendKey : parentPolicy.sendKey;
 		if (configProvider != null) {
 			Configuration config = configProvider.fetchConfiguration();
 			if (config != null && config.dynamicConfiguration.dynamicBatchUDFconfig.sendKey != null) {
-				if (policy != null) {
-					policy.sendKey = config.dynamicConfiguration.dynamicBatchUDFconfig.sendKey.value;
-				} else {
-					parentPolicy.sendKey = config.dynamicConfiguration.dynamicBatchUDFconfig.sendKey.value;
-				}
+				sendkey = config.dynamicConfiguration.dynamicBatchUDFconfig.sendKey.value;
 			}
 		}
 
@@ -129,7 +131,7 @@ public final class BatchUDF extends BatchRecord {
 				size += policy.filterExp.size();
 			}
 
-			if (policy.sendKey || parentPolicy.sendKey) {
+			if (sendkey || parentPolicy.sendKey) {
 				size += key.userKey.estimateSize() + Command.FIELD_HEADER_SIZE + 1;
 			}
 		}
