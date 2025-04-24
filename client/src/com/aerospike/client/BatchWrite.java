@@ -81,7 +81,7 @@ public final class BatchWrite extends BatchRecord {
 			return false;
 
 		BatchWrite other = (BatchWrite)obj;
-		if ( ops != other.ops || policy != other.policy ) {
+		if (ops != other.ops || policy != other.policy) {
 			return false;
 		}
 
