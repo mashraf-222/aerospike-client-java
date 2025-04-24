@@ -95,6 +95,11 @@ public final class BatchUDF extends BatchRecord {
 
 		BatchUDF other = (BatchUDF)obj;
 
+		if (functionName != other.functionName || functionArgs != other.functionArgs ||
+				packageName != other.packageName || policy != other.policy) {
+			return false;
+		}
+
 		boolean sendkey = false;
 		if (policy != null) {
 			sendkey = policy.sendKey;
@@ -106,8 +111,7 @@ public final class BatchUDF extends BatchRecord {
 			}
 		}
 
-		return functionName == other.functionName && functionArgs == other.functionArgs &&
-			   packageName == other.packageName && policy == other.policy && !sendkey;
+		return !sendkey;
 	}
 
 	/**

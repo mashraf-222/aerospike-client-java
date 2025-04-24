@@ -65,6 +65,9 @@ public final class BatchDelete extends BatchRecord {
 			return false;
 
 		BatchDelete other = (BatchDelete)obj;
+		if ( policy != other.policy ) {
+			return false;
+		}
 
 		boolean sendkey = false;
 		if (policy != null) {
@@ -76,7 +79,7 @@ public final class BatchDelete extends BatchRecord {
 				sendkey = config.dynamicConfiguration.dynamicBatchUDFconfig.sendKey.value;
 			}
 		}
-		return policy == other.policy && !sendkey;
+		return !sendkey;
 	}
 
 	/**
