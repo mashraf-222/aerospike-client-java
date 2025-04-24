@@ -121,18 +121,18 @@ public final class BatchUDF extends BatchRecord {
 	public int size(Policy parentPolicy, ConfigurationProvider configProvider) {
 		int size = 2; // gen(2) = 2
 
-		boolean sendkey;
-		sendkey = (policy != null) ? policy.sendKey : parentPolicy.sendKey;
-		if (configProvider != null) {
-			Configuration config = configProvider.fetchConfiguration();
-			if (config != null && config.dynamicConfiguration.dynamicBatchUDFconfig.sendKey != null) {
-				sendkey = config.dynamicConfiguration.dynamicBatchUDFconfig.sendKey.value;
-			}
-		}
-
 		if (policy != null) {
 			if (policy.filterExp != null) {
 				size += policy.filterExp.size();
+			}
+
+			boolean sendkey;
+			sendkey = policy.sendKey;
+			if (configProvider != null) {
+				Configuration config = configProvider.fetchConfiguration();
+				if (config != null && config.dynamicConfiguration.dynamicBatchUDFconfig.sendKey != null) {
+					sendkey = config.dynamicConfiguration.dynamicBatchUDFconfig.sendKey.value;
+				}
 			}
 
 			if (sendkey || parentPolicy.sendKey) {
