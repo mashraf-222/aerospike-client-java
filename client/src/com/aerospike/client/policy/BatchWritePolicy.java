@@ -16,7 +16,11 @@
  */
 package com.aerospike.client.policy;
 
+import com.aerospike.client.configuration.ConfigurationProvider;
+import com.aerospike.client.configuration.serializers.Configuration;
+import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicBatchWriteConfig;
 import com.aerospike.client.exp.Expression;
+import com.aerospike.client.Log;
 
 /**
  * Policy attributes used in batch write commands.
@@ -120,6 +124,24 @@ public final class BatchWritePolicy {
 	 * Default: false (do not send the user defined key)
 	 */
 	public boolean sendKey;
+
+	/**
+	 * Copy policy from another policy AND override certain policy attributes if they exist in the configProvider.
+	 */
+	public BatchWritePolicy(BatchWritePolicy other, ConfigurationProvider configProvider) {
+		this(other);
+		if (configProvider == null) {
+			return;
+		}
+		Configuration config = configProvider.fetchConfiguration();
+		if (config == null) {
+			return;
+		}
+		DynamicBatchWriteConfig dynBWC = config.dynamicConfiguration.dynamicBatchWriteConfig;
+
+		if (dynBWC.sendKey != null) this.sendKey = dynBWC.sendKey.value;
+		if (dynBWC.durableDelete != null) this.durableDelete = dynBWC.durableDelete.value;
+	}
 
 	/**
 	 * Copy constructor.

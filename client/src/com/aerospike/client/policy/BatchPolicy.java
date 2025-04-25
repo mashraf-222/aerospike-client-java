@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 Aerospike, Inc.
+ * Copyright 2012-2025 Aerospike, Inc.
  *
  * Portions may be licensed to Aerospike, Inc. under one or more contributor
  * license agreements WHICH ARE COMPATIBLE WITH THE APACHE LICENSE, VERSION 2.0.
@@ -15,6 +15,12 @@
  * the License.
  */
 package com.aerospike.client.policy;
+
+import com.aerospike.client.configuration.ConfigurationProvider;
+import com.aerospike.client.configuration.serializers.Configuration;
+import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicBatchReadConfig;
+import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicBatchWriteConfig;
+import com.aerospike.client.Log;
 
 /**
  * Batch parent policy.
@@ -89,6 +95,35 @@ public class BatchPolicy extends Policy {
 	public boolean sendSetName;
 
 	/**
+	 * Copy batch policy from another batch policy AND override certain policy attributes if they exist in the
+	 * configProvider.
+	 */
+	public BatchPolicy(BatchPolicy other, ConfigurationProvider configProvider) {
+		this(other);
+		if (configProvider == null) {
+			return;
+		}
+		Configuration config = configProvider.fetchConfiguration();
+		if (config == null) {
+			return;
+		}
+		DynamicBatchReadConfig dynBRC = config.dynamicConfiguration.dynamicBatchReadConfig;
+
+		if (dynBRC.readModeAP != null) this.readModeAP = dynBRC.readModeAP;
+		if (dynBRC.readModeSC != null) this.readModeSC = dynBRC.readModeSC;
+		if (dynBRC.connectTimeout != null) this.connectTimeout = dynBRC.connectTimeout.value;
+		if (dynBRC.replica != null) this.replica = dynBRC.replica;
+		if (dynBRC.sleepBetweenRetries != null) this.sleepBetweenRetries = dynBRC.sleepBetweenRetries.value;
+		if (dynBRC.socketTimeout != null) this.socketTimeout = dynBRC.socketTimeout.value;
+		if (dynBRC.timeoutDelay != null) this.timeoutDelay = dynBRC.timeoutDelay.value;
+		if (dynBRC.totalTimeout != null) this.totalTimeout = dynBRC.totalTimeout.value;
+		if (dynBRC.maxRetries != null) this.maxRetries = dynBRC.maxRetries.value;
+		if (dynBRC.maxConcurrentThreads != null) this.maxConcurrentThreads = dynBRC.maxConcurrentThreads.value;
+		if (dynBRC.allowInline != null) this.allowInline = dynBRC.allowInline.value;
+		if (dynBRC.allowInlineSSD != null) this.allowInlineSSD = dynBRC.allowInlineSSD.value;
+		if (dynBRC.respondAllKeys != null) this.respondAllKeys = dynBRC.respondAllKeys.value;
+	}
+	/**
 	 * Copy batch policy from another batch policy.
 	 */
 	public BatchPolicy(BatchPolicy other) {
@@ -145,5 +180,29 @@ public class BatchPolicy extends Policy {
 
 	public void setRespondAllKeys(boolean respondAllKeys) {
 		this.respondAllKeys = respondAllKeys;
+	}
+
+	/**
+	 * Apply batch_write config properties if they exist in the configProvider (BatchWrite).
+	 */
+	public void graftBatchWriteConfig(ConfigurationProvider configProvider) {
+		Configuration config = configProvider.fetchConfiguration();
+		if (config == null) {
+			return;
+		}
+		DynamicBatchWriteConfig dynBWC = config.dynamicConfiguration.dynamicBatchWriteConfig;
+
+		if (dynBWC.connectTimeout != null) this.connectTimeout = dynBWC.connectTimeout.value;
+		if (dynBWC.failOnFilteredOut != null) this.failOnFilteredOut = dynBWC.failOnFilteredOut.value;
+		if (dynBWC.replica != null) this.replica = dynBWC.replica;
+		if (dynBWC.sendKey != null) this.sendKey = dynBWC.sendKey.value;
+		if (dynBWC.sleepBetweenRetries != null) this.sleepBetweenRetries = dynBWC.sleepBetweenRetries.value;
+		if (dynBWC.socketTimeout != null) this.socketTimeout = dynBWC.socketTimeout.value;
+		if (dynBWC.timeoutDelay != null) this.timeoutDelay = dynBWC.timeoutDelay.value;
+		if (dynBWC.totalTimeout != null) this.totalTimeout = dynBWC.totalTimeout.value;
+		if (dynBWC.maxRetries != null) this.maxRetries = dynBWC.maxRetries.value;
+		if (dynBWC.maxConcurrentThreads != null) this.maxConcurrentThreads = dynBWC.maxConcurrentThreads.value;
+		if (dynBWC.allowInlineSSD != null) this.allowInlineSSD = dynBWC.allowInlineSSD.value;
+		if (dynBWC.respondAllKeys != null) this.respondAllKeys = dynBWC.respondAllKeys.value;
 	}
 }

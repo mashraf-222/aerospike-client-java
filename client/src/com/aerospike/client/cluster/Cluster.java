@@ -47,6 +47,7 @@ import com.aerospike.client.async.NettyTlsContext;
 import com.aerospike.client.async.NioEventLoops;
 import com.aerospike.client.cluster.Node.AsyncPool;
 import com.aerospike.client.command.Buffer;
+import com.aerospike.client.configuration.serializers.Configuration;
 import com.aerospike.client.listener.ClusterStatsListener;
 import com.aerospike.client.metrics.MetricsListener;
 import com.aerospike.client.metrics.MetricsPolicy;
@@ -130,10 +131,10 @@ public class Cluster implements Runnable, Closeable {
 	private final long maxSocketIdleNanosTrim;
 
 	// Minimum sync connections per node.
-	protected final int minConnsPerNode;
+	protected int minConnsPerNode;
 
 	// Maximum sync connections per node.
-	protected final int maxConnsPerNode;
+	protected int maxConnsPerNode;
 
 	// Minimum async connections per node.
 	protected final int asyncMinConnsPerNode;
@@ -170,6 +171,9 @@ public class Cluster implements Runnable, Closeable {
 
 	// Cluster tend counter
 	private int tendCount;
+
+	// YAML config file monitor frequency - expressed as a multiple of the tendInterval
+	public int configInterval;
 
 	// Has cluster instance been closed.
 	private AtomicBoolean closed;
@@ -208,6 +212,15 @@ public class Cluster implements Runnable, Closeable {
 		this.validateClusterName = policy.validateClusterName;
 		this.tlsPolicy = policy.tlsPolicy;
 		this.authMode = policy.authMode;
+
+		if (client.getConfigProvider() != null) {
+			Configuration config = client.getConfigProvider().fetchConfiguration();
+			if (config != null) {
+				this.configInterval = config.staticConfiguration.staticClientConfig.configInterval.value;
+			}
+		} else {
+			this.configInterval = -1;
+		}
 
 		// Default TLS names when TLS enabled.
 		if (tlsPolicy != null) {
@@ -610,6 +623,13 @@ public class Cluster implements Runnable, Closeable {
 						}
 					});
 				}
+			}
+		}
+
+		// Check YAML config file for updates.
+		if (configInterval > 0 && tendCount % configInterval == 0) {
+			if( client.getConfigProvider().loadConfiguration() ) {
+				client.mergeDefaultPoliciesWithConfig();
 			}
 		}
 

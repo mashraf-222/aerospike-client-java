@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 Aerospike, Inc.
+ * Copyright 2012-2025 Aerospike, Inc.
  *
  * Portions may be licensed to Aerospike, Inc. under one or more contributor
  * license agreements WHICH ARE COMPATIBLE WITH THE APACHE LICENSE, VERSION 2.0.
@@ -16,7 +16,11 @@
  */
 package com.aerospike.client.policy;
 
+import com.aerospike.client.configuration.ConfigurationProvider;
+import com.aerospike.client.configuration.serializers.Configuration;
+import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicBatchDeleteConfig;
 import com.aerospike.client.exp.Expression;
+import com.aerospike.client.Log;
 
 /**
  * Policy attributes used in batch delete commands.
@@ -77,6 +81,24 @@ public final class BatchDeletePolicy {
 	 * Default: false (do not send the user defined key)
 	 */
 	public boolean sendKey;
+
+	/**
+	 * Copy policy from another policy AND override certain policy attributes if they exist in the configProvider.
+	 */
+	public BatchDeletePolicy(BatchDeletePolicy other, ConfigurationProvider configProvider) {
+		this(other);
+		if (configProvider == null) {
+			return;
+		}
+		Configuration config = configProvider.fetchConfiguration();
+		if (config == null) {
+			return;
+		}
+		DynamicBatchDeleteConfig dynBDC = config.dynamicConfiguration.dynamicBatchDeleteConfig;
+
+		if (dynBDC.sendKey != null) this.sendKey = dynBDC.sendKey.value;
+		if (dynBDC.durableDelete != null) this.durableDelete = dynBDC.durableDelete.value;
+	}
 
 	/**
 	 * Copy constructor.
