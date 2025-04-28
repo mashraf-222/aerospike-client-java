@@ -1,10 +1,7 @@
 # A config YAML that is intended only for test purposes.  Property keys can be used as a template, but property values
 # should not be taken as "typical" and should not be used in aggregate outside of testing.
 
-metadata:
-  schema_version: 0.0.1
-  app_name: "example_app"
-  generation: 3
+
 static:
   client:
     config_interval: 10
@@ -90,7 +87,7 @@ dynamic:
     connect_timeout: 20000
     fail_on_filtered_out: false
     replica: PREFER_RACK
-    send_key: false
+    send_key: true
     sleep_between_retries: 2500
     socket_timeout: 15000
     timeout_delay: 1300
@@ -139,3 +136,8 @@ dynamic:
     enable: false
     latency_shift: 0
     latency_columns: 0
+    app_id: unit_tester
+    labels:
+      - region: us-west
+      - zone: usw1-az3
+      - rack-id: kjsdfj2k3k
