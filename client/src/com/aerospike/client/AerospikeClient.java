@@ -382,6 +382,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 	}
 
+	/**
+	 * Returns the client's ConfigurationProvider, if any was added to the clientPolicy
+	 */
 	public ConfigurationProvider getConfigProvider() {
 		return configProvider;
 	}

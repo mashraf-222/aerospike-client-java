@@ -1104,7 +1104,7 @@ public class Command {
 
 			dataOffset += key.digest.length + 4;
 
-			if (canRepeat(policy, key, record, prev, ver, verPrev)) {
+			if (canRepeat(policy, key, record, prev, ver, verPrev, configProvider)) {
 				// Can set repeat previous namespace/bin names to save space.
 				dataOffset++;
 			}
@@ -1114,7 +1114,7 @@ public class Command {
 				dataOffset += Buffer.estimateSizeUtf8(key.namespace) + FIELD_HEADER_SIZE;
 				dataOffset += Buffer.estimateSizeUtf8(key.setName) + FIELD_HEADER_SIZE;
 				sizeTxnBatch(txn, ver, record.hasWrite);
-				dataOffset += record.size(policy);
+				dataOffset += record.size(policy, configProvider);
 				prev = record;
 				verPrev = ver;
 			}
@@ -1151,7 +1151,7 @@ public class Command {
 			System.arraycopy(digest, 0, dataBuffer, dataOffset, digest.length);
 			dataOffset += digest.length;
 
-			if (canRepeat(policy, key, record, prev, ver, verPrev)) {
+			if (canRepeat(policy, key, record, prev, ver, verPrev, configProvider)) {
 				// Can set repeat previous namespace/bin names to save space.
 				dataBuffer[dataOffset++] = BATCH_MSG_REPEAT;
 			}
@@ -1189,18 +1189,18 @@ public class Command {
 					}
 
 					case BATCH_WRITE: {
-						Configuration config = null;
-						if (configProvider != null) {
-							config = configProvider.fetchConfiguration();
-						}
 						BatchWrite bw = (BatchWrite)record;
 						BatchWritePolicy bwp = (bw.policy != null)? bw.policy : writePolicy;
-						if (config != null) {
-							bwp.sendKey = (config.dynamicConfiguration.dynamicBatchWriteConfig.sendKey != null)?
-									config.dynamicConfiguration.dynamicBatchWriteConfig.sendKey.value : bwp.sendKey ;
-							bwp.durableDelete = (config.dynamicConfiguration.dynamicBatchWriteConfig.durableDelete !=
-									null)? config.dynamicConfiguration.dynamicBatchWriteConfig.durableDelete.value :
-									bwp.durableDelete;
+
+						if (configProvider != null) {
+							Configuration config = configProvider.fetchConfiguration();
+							if (config != null) {
+								bwp.sendKey = (config.dynamicConfiguration.dynamicBatchWriteConfig.sendKey != null) ?
+										config.dynamicConfiguration.dynamicBatchWriteConfig.sendKey.value : bwp.sendKey;
+								bwp.durableDelete = (config.dynamicConfiguration.dynamicBatchWriteConfig.durableDelete !=
+										null) ? config.dynamicConfiguration.dynamicBatchWriteConfig.durableDelete.value :
+										bwp.durableDelete;
+							}
 						}
 
 						attr.setWrite(bwp);
@@ -1210,19 +1210,19 @@ public class Command {
 					}
 
 					case BATCH_UDF: {
-						Configuration config = null;
-						if (configProvider != null) {
-							config = configProvider.fetchConfiguration();
-						}
 						BatchUDF bu = (BatchUDF)record;
 						BatchUDFPolicy bup = (bu.policy != null)? bu.policy : udfPolicy;
-						if (config != null) {
-							bup.sendKey = (config.dynamicConfiguration.dynamicBatchUDFconfig.sendKey != null)?
-									config.dynamicConfiguration.dynamicBatchUDFconfig.sendKey.value : bup.sendKey;
-							bup.durableDelete = (config.dynamicConfiguration.dynamicBatchUDFconfig.durableDelete !=
-									null)? config.dynamicConfiguration.dynamicBatchUDFconfig.durableDelete.value :
-									bup.durableDelete;
+						if (configProvider != null) {
+							Configuration config = configProvider.fetchConfiguration();
+							if (config != null) {
+								bup.sendKey = (config.dynamicConfiguration.dynamicBatchUDFconfig.sendKey != null) ?
+										config.dynamicConfiguration.dynamicBatchUDFconfig.sendKey.value : bup.sendKey;
+								bup.durableDelete = (config.dynamicConfiguration.dynamicBatchUDFconfig.durableDelete !=
+										null) ? config.dynamicConfiguration.dynamicBatchUDFconfig.durableDelete.value :
+										bup.durableDelete;
+							}
 						}
+
 						attr.setUDF(bup);
 						writeBatchWrite(key, txn, ver, attr, attr.filterExp, 3, 0);
 						writeField(bu.packageName, FieldType.UDF_PACKAGE_NAME);
@@ -1232,19 +1232,19 @@ public class Command {
 					}
 
 					case BATCH_DELETE: {
-						Configuration config = null;
-						if (configProvider != null) {
-							config = configProvider.fetchConfiguration();
-						}
 						BatchDelete bd = (BatchDelete)record;
 						BatchDeletePolicy bdp = (bd.policy != null)? bd.policy : deletePolicy;
-						if (config != null) {
-							bdp.sendKey = (config.dynamicConfiguration.dynamicBatchDeleteConfig.sendKey != null)?
-									config.dynamicConfiguration.dynamicBatchDeleteConfig.sendKey.value : bdp.sendKey;
-							bdp.durableDelete = (config.dynamicConfiguration.dynamicBatchDeleteConfig.durableDelete !=
-									null)? config.dynamicConfiguration.dynamicBatchDeleteConfig.durableDelete.value :
-									bdp.durableDelete;
+						if (configProvider != null) {
+							Configuration config = configProvider.fetchConfiguration();
+							if (config != null) {
+								bdp.sendKey = (config.dynamicConfiguration.dynamicBatchDeleteConfig.sendKey != null) ?
+										config.dynamicConfiguration.dynamicBatchDeleteConfig.sendKey.value : bdp.sendKey;
+								bdp.durableDelete = (config.dynamicConfiguration.dynamicBatchDeleteConfig.durableDelete !=
+										null) ? config.dynamicConfiguration.dynamicBatchDeleteConfig.durableDelete.value :
+										bdp.durableDelete;
+							}
 						}
+
 						attr.setDelete(bdp);
 						writeBatchWrite(key, txn, ver, attr, attr.filterExp, 0, 0);
 						break;
@@ -1524,15 +1524,33 @@ public class Command {
 		BatchRecord record,
 		BatchRecord prev,
 		Long ver,
-		Long verPrev
+		Long verPrev,
+		ConfigurationProvider configProvider
 	) {
 		// Avoid relatively expensive full equality checks for performance reasons.
 		// Use reference equality only in hope that common namespaces/bin names are set from
 		// fixed variables.  It's fine if equality not determined correctly because it just
 		// results in more space used. The batch will still be correct.
 		// Same goes for ver reference equality check.
-		return !policy.sendKey && verPrev == ver && prev != null && prev.key.namespace == key.namespace &&
-				prev.key.setName == key.setName && record.equals(prev);
+
+		if ( !(verPrev == ver && prev != null && prev.key.namespace == key.namespace &&
+				prev.key.setName == key.setName )) {
+			return false;
+		}
+
+		boolean sendkey = policy.sendKey;
+		if (configProvider != null) {
+			Configuration config = configProvider.fetchConfiguration();
+			if (config != null && config.dynamicConfiguration.dynamicBatchWriteConfig.sendKey != null) {
+				sendkey = config.dynamicConfiguration.dynamicBatchWriteConfig.sendKey.value;
+			}
+		}
+		if (sendkey) {
+			return false;
+		}
+
+		return record.equals(prev);
+
 	}
 
 	private static boolean canRepeat(BatchAttr attr, Key key, Key keyPrev, Long ver, Long verPrev) {

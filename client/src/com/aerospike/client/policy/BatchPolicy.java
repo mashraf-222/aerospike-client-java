@@ -204,7 +204,5 @@ public class BatchPolicy extends Policy {
 		if (dynBWC.maxConcurrentThreads != null) this.maxConcurrentThreads = dynBWC.maxConcurrentThreads.value;
 		if (dynBWC.allowInlineSSD != null) this.allowInlineSSD = dynBWC.allowInlineSSD.value;
 		if (dynBWC.respondAllKeys != null) this.respondAllKeys = dynBWC.respondAllKeys.value;
-
-		Log.debug("batch_write config has been grafted onto BatchPolicy");
 	}
 }
