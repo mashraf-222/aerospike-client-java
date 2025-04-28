@@ -17,15 +17,15 @@
 
 package com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops;
 
-public class IntProperty {
-    public int value;
+public class StringProperty {
+    public String value;
 
-    public IntProperty() {}
-    public IntProperty(int value) {
+    public StringProperty() {}
+    public StringProperty(String value) {
         this.value = value;
     }
 
-    public void setValue(int value) {
+    public void setValue(String value) {
         this.value = value;
     }
 }
