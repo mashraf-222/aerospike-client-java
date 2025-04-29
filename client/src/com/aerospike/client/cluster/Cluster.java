@@ -49,9 +49,7 @@ import com.aerospike.client.cluster.Node.AsyncPool;
 import com.aerospike.client.command.Buffer;
 import com.aerospike.client.configuration.serializers.Configuration;
 import com.aerospike.client.listener.ClusterStatsListener;
-import com.aerospike.client.metrics.MetricsListener;
-import com.aerospike.client.metrics.MetricsPolicy;
-import com.aerospike.client.metrics.MetricsWriter;
+import com.aerospike.client.metrics.*;
 import com.aerospike.client.policy.AuthMode;
 import com.aerospike.client.policy.ClientPolicy;
 import com.aerospike.client.policy.TCPKeepAlive;
@@ -62,6 +60,9 @@ import com.aerospike.client.util.Util;
 public class Cluster implements Runnable, Closeable {
 	// Client back pointer.
 	public final AerospikeClient client;
+
+	// Config created from a ConfigProvder, if available
+	private Configuration config;
 
 	// Expected cluster name.
 	protected final String clusterName;
@@ -203,6 +204,7 @@ public class Cluster implements Runnable, Closeable {
 	MetricsPolicy metricsPolicy;
 	private volatile MetricsListener metricsListener;
 	private final AtomicLong retryCount = new AtomicLong();
+	private Counter retryCounter = new Counter();
 	private final AtomicLong commandCount = new AtomicLong();
 	private final AtomicLong delayQueueTimeoutCount = new AtomicLong();
 
@@ -214,7 +216,7 @@ public class Cluster implements Runnable, Closeable {
 		this.authMode = policy.authMode;
 
 		if (client.getConfigProvider() != null) {
-			Configuration config = client.getConfigProvider().fetchConfiguration();
+			config = client.getConfigProvider().fetchConfiguration();
 			if (config != null) {
 				this.configInterval = config.staticConfiguration.staticClientConfig.configInterval.value;
 			}
@@ -628,8 +630,16 @@ public class Cluster implements Runnable, Closeable {
 
 		// Check YAML config file for updates.
 		if (configInterval > 0 && tendCount % configInterval == 0) {
-			if( client.getConfigProvider().loadConfiguration() ) {
+			if (client.getConfigProvider().loadConfiguration()) {
+				config = client.getConfigProvider().fetchConfiguration();
 				client.mergeDefaultPoliciesWithConfig();
+				if (config != null && config.dynamicConfiguration.dynamicMetricsConfig.enable != null ) {
+					if (!metricsEnabled && config.dynamicConfiguration.dynamicMetricsConfig.enable.value ) {
+						enableMetrics(this.metricsPolicy);
+					} else if (metricsEnabled && !config.dynamicConfiguration.dynamicMetricsConfig.enable.value ) {
+						disableMetrics();
+					}
+				}
 			}
 		}
 
@@ -1070,9 +1080,6 @@ public class Cluster implements Runnable, Closeable {
 	}
 
 	public final void enableMetrics(MetricsPolicy policy) {
-		if (metricsEnabled) {
-			this.metricsListener.onDisable(this);
-		}
 
 		MetricsListener listener = policy.listener;
 
@@ -1083,14 +1090,32 @@ public class Cluster implements Runnable, Closeable {
 		this.metricsListener = listener;
 		this.metricsPolicy = policy;
 
+		if (config != null) {
+			if (config.dynamicConfiguration.dynamicMetricsConfig.enable != null) {
+				if (!config.dynamicConfiguration.dynamicMetricsConfig.enable.value) {
+					Log.error("When a config exists, metrics can not be enabled via enableMetrics unless they" +
+							" are enabled in the config provider.");
+					return;
+				}
+			}
+		}
+		finalizeMetricsEnablement();
+	}
+
+	private void finalizeMetricsEnablement() {
+		if (metricsEnabled) {
+			this.metricsListener.onDisable(this);
+		}
+
 		Node[] nodeArray = nodes;
 
 		for (Node node : nodeArray) {
-			node.enableMetrics(policy);
+			node.enableMetrics(this.metricsPolicy);
 		}
 
-		listener.onEnable(this, policy);
+		this.metricsListener.onEnable(this, this.metricsPolicy);
 		metricsEnabled = true;
+		Log.debug("Metrics Enabled!");
 	}
 
 	public final void disableMetrics() {
@@ -1098,6 +1123,7 @@ public class Cluster implements Runnable, Closeable {
 			metricsEnabled = false;
 			metricsListener.onDisable(this);
 		}
+		Log.debug("Metrics Disabled!");
 	}
 
 	public EventLoop[] getEventLoopArray() {
