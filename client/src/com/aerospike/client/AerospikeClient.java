@@ -780,7 +780,7 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 			default:
 			case OPEN:
 			case VERIFIED:
-				return tr.abort(txnRollPolicyDefault);
+				return tr.abort(mergedTxnRollPolicyDefault);
 
 			case COMMITTED:
 				throw new AerospikeException(ResultCode.TXN_ALREADY_COMMITTED, "Transaction already committed");

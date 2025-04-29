@@ -75,8 +75,8 @@ public final class BatchDelete extends BatchRecord {
 		}
 		if (configProvider != null) {
 			Configuration config = configProvider.fetchConfiguration();
-			if (config != null && config.dynamicConfiguration.dynamicBatchUDFconfig.sendKey != null) {
-				sendkey = config.dynamicConfiguration.dynamicBatchUDFconfig.sendKey.value;
+			if (config != null && config.dynamicConfiguration.dynamicBatchDeleteConfig.sendKey != null) {
+				sendkey = config.dynamicConfiguration.dynamicBatchDeleteConfig.sendKey.value;
 			}
 		}
 		return !sendkey;
