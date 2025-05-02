@@ -794,7 +794,7 @@ public final class NettyCommand implements Runnable, TimerTask {
 		}
 
 		// Increment node's timeout counter.
-		node.addTimeout();
+		node.addTimeout(command.namespace);
 
 		// Recover connection when possible.
 		recoverConnection();
@@ -826,7 +826,7 @@ public final class NettyCommand implements Runnable, TimerTask {
 			}
 		}
 
-		cluster.addRetry();
+		cluster.addRetry(command.namespace);
 		executeCommand(deadline, TimeoutState.TIMEOUT);
 	}
 
@@ -836,7 +836,7 @@ public final class NettyCommand implements Runnable, TimerTask {
 		if (state == AsyncCommand.DELAY_QUEUE) {
 			// Command timed out in delay queue.
 			if (metricsEnabled) {
-				cluster.addDelayQueueTimeout();
+				cluster.addDelayQueueTimeout(command.namespace);
 			}
 			closeFromDelayQueue();
 			notifyFailure(ae);
@@ -844,7 +844,7 @@ public final class NettyCommand implements Runnable, TimerTask {
 		}
 
 		// Increment node's timeout counter.
-		node.addTimeout();
+		node.addTimeout(command.namespace);
 
 		// Recover connection when possible.
 		recoverConnection();
@@ -941,7 +941,7 @@ public final class NettyCommand implements Runnable, TimerTask {
 	}
 
 	private void onServerTimeout() {
-		node.addTimeout();
+		node.addTimeout(command.namespace);
 		retryServerError(new AerospikeException.Timeout(command.policy, false));
 	}
 
@@ -1052,7 +1052,7 @@ public final class NettyCommand implements Runnable, TimerTask {
 			}
 		}
 
-		cluster.addRetry();
+		cluster.addRetry(command.namespace);
 		executeCommand(deadline, TimeoutState.RETRY);
 	}
 
@@ -1099,7 +1099,7 @@ public final class NettyCommand implements Runnable, TimerTask {
 	private void addError() {
 		// Some errors can occur before the node is assigned.
 		if (node != null) {
-			node.addError();
+			node.addError(command.namespace);
 		}
 	}
 

@@ -30,11 +30,11 @@ public abstract class AsyncWriteBase extends AsyncCommand {
 	final Partition partition;
 
 	public AsyncWriteBase(Cluster cluster, WritePolicy writePolicy, Key key) {
-		super(writePolicy, true);
+		super(writePolicy, true, key.namespace);
 		this.writePolicy = writePolicy;
 		this.key = key;
 		this.partition = Partition.write(cluster, writePolicy, key);
-		cluster.addCommandCount();
+		cluster.addCommandCount(key.namespace);
 	}
 
 	@Override

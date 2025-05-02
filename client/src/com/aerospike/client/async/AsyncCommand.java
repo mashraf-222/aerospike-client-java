@@ -55,23 +55,26 @@ public abstract class AsyncCommand extends Command {
 	final boolean isSingle;
 	boolean compressed;
 	boolean valid = true;
+	String namespace;
 
 	/**
 	 * Default constructor.
 	 */
-	public AsyncCommand(Policy policy, boolean isSingle) {
+	public AsyncCommand(Policy policy, boolean isSingle, String namespace) {
 		super(policy.socketTimeout, policy.totalTimeout, policy.maxRetries);
 		this.policy = policy;
 		this.isSingle = isSingle;
+		this.namespace = namespace;
 	}
 
 	/**
 	 * Scan/Query constructor.
 	 */
-	public AsyncCommand(Policy policy, int socketTimeout, int totalTimeout) {
+	public AsyncCommand(Policy policy, int socketTimeout, int totalTimeout, String namespace) {
 		super(socketTimeout, totalTimeout, 0);
 		this.policy = policy;
 		this.isSingle = false;
+		this.namespace = namespace;
 	}
 
 	final int parseProto(long proto) {

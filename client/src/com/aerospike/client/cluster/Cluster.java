@@ -203,10 +203,9 @@ public class Cluster implements Runnable, Closeable {
 	public boolean metricsEnabled;
 	MetricsPolicy metricsPolicy;
 	private volatile MetricsListener metricsListener;
-	private final AtomicLong retryCount = new AtomicLong();
-	private Counter retryCounter = new Counter();
-	private final AtomicLong commandCount = new AtomicLong();
-	private final AtomicLong delayQueueTimeoutCount = new AtomicLong();
+	private Counter retryCounter = new Counter(MetricType.RETRY_COUNT);
+	private Counter commandCounter = new Counter(MetricType.COMMAND_COUNT);
+	private Counter delayQtimeoutCounter = new Counter(MetricType.DELAY_Q_TIMEOUT_COUNT);
 
 	public Cluster(AerospikeClient client, ClientPolicy policy, Host[] hosts) {
 		this.client = client;
@@ -1395,9 +1394,9 @@ public class Cluster implements Runnable, Closeable {
 	/**
 	 * Increment command count when metrics are enabled.
 	 */
-	public final void addCommandCount() {
+	public final void addCommandCount(String namespace) {
 		if (metricsEnabled) {
-			commandCount.getAndIncrement();
+			commandCounter.increment(namespace);
 		}
 	}
 
@@ -1405,7 +1404,7 @@ public class Cluster implements Runnable, Closeable {
 	 * Return command count. The value is cumulative and not reset per metrics interval.
 	 */
 	public final long getCommandCount() {
-		return commandCount.get();
+		return commandCounter.getTotal();
 	}
 
 	/**
@@ -1413,42 +1412,42 @@ public class Cluster implements Runnable, Closeable {
 	 * This function is left for backwards compatibility. Use {@link #getCommandCount()} instead.
 	 */
 	public final long getTranCount() {
-		return commandCount.get();
+		return commandCounter.getTotal();
 	}
 
 	/**
 	 * Increment command retry count. There can be multiple retries for a single command.
 	 */
-	public final void addRetry() {
-		retryCount.getAndIncrement();
+	public final void addRetry(String namespace) {
+		retryCounter.increment(namespace);
 	}
 
 	/**
 	 * Add command retry count. There can be multiple retries for a single command.
 	 */
-	public final void addRetries(int count) {
-		retryCount.getAndAdd(count);
+	public final void addRetries(String namespace, int count) {
+		retryCounter.increment(namespace, count);
 	}
 
 	/**
 	 * Return command retry count. The value is cumulative and not reset per metrics interval.
 	 */
 	public final long getRetryCount() {
-		return retryCount.get();
+        return retryCounter.getTotal();
 	}
 
 	/**
 	 * Increment async delay queue timeout count.
 	 */
-	public final void addDelayQueueTimeout() {
-		delayQueueTimeoutCount.getAndIncrement();
+	public final void addDelayQueueTimeout(String namespace) {
+		delayQtimeoutCounter.increment(namespace);
 	}
 
 	/**
 	 * Increment async delay queue timeout count.
 	 */
 	public final long getDelayQueueTimeoutCount() {
-		return delayQueueTimeoutCount.get();
+        return delayQtimeoutCounter.getTotal();
 	}
 
 	/**

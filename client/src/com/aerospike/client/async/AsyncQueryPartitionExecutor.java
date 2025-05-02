@@ -50,7 +50,7 @@ public final class AsyncQueryPartitionExecutor extends AsyncMultiExecutor {
 		this.statement = statement;
 		this.tracker = tracker;
 
-		cluster.addCommandCount();
+		cluster.addCommandCount(statement.getNamespace());
 		task = new TaskGen(statement);
 		taskId = task.getId();
 		tracker.setSleepBetweenRetries(0);

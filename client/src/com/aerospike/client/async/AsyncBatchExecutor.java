@@ -314,7 +314,12 @@ public abstract class AsyncBatchExecutor implements BatchNodeList.IBatchStatus {
 		this.eventLoop = eventLoop;
 		this.cluster = cluster;
 		this.hasResultCode = hasResultCode;
-		cluster.addCommandCount();
+		cluster.addCommandCount(null);
+
+		// Note: check to see if we want to count individual batch commands, where namespaces could be extracted
+		//for (AsyncCommand cmd : commands) {
+		//	cluster.addCommandCount(cmd.namespace);
+		//}
 	}
 
 	public void execute(AsyncCommand[] cmds) {

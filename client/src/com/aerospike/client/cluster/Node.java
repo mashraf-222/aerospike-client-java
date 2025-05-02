@@ -43,9 +43,7 @@ import com.aerospike.client.async.EventState;
 import com.aerospike.client.async.Monitor;
 import com.aerospike.client.async.NettyConnection;
 import com.aerospike.client.command.SyncCommand;
-import com.aerospike.client.metrics.LatencyType;
-import com.aerospike.client.metrics.MetricsPolicy;
-import com.aerospike.client.metrics.NodeMetrics;
+import com.aerospike.client.metrics.*;
 import com.aerospike.client.util.Util;
 
 /**
@@ -80,8 +78,8 @@ public class Node implements Closeable {
 	final AtomicInteger connsOpened;
 	final AtomicInteger connsClosed;
 	private final AtomicInteger errorRateCount;
-	private final AtomicLong errorCount;
-	private final AtomicLong timeoutCount;
+	private final Counter errorCounter;
+	private final Counter timeoutCounter;
 	protected int connectionIter;
 	private int peersGeneration;
 	int partitionGeneration;
@@ -113,8 +111,8 @@ public class Node implements Closeable {
 		this.connsOpened = new AtomicInteger(1);
 		this.connsClosed = new AtomicInteger(0);
 		this.errorRateCount = new AtomicInteger(0);
-		this.errorCount = new AtomicLong(0);
-		this.timeoutCount = new AtomicLong(0);
+		this.errorCounter = new Counter(MetricType.ERROR_COUNT);
+		this.timeoutCounter = new Counter(MetricType.TIMEOUT_COUNT);
 		this.peersGeneration = -1;
 		this.partitionGeneration = -1;
 		this.rebalanceGeneration = -1;
@@ -1125,30 +1123,30 @@ public class Node implements Closeable {
 	 * Increment transaction error count. If the error is retryable, multiple errors per
 	 * transaction may occur.
 	 */
-	public void addError() {
-		errorCount.getAndIncrement();
+	public void addError(String namespace) {
+		errorCounter.increment(namespace);
 	}
 
 	/**
 	 * Increment transaction timeout count. If the timeout is retryable (ie socketTimeout),
 	 * multiple timeouts per transaction may occur.
 	 */
-	public void addTimeout() {
-		timeoutCount.getAndIncrement();
+	public void addTimeout(String namespace) {
+		timeoutCounter.increment(namespace);
 	}
 
 	/**
 	 * Return transaction error count. The value is cumulative and not reset per metrics interval.
 	 */
 	public long getErrorCount() {
-		return errorCount.get();
+        return errorCounter.getTotal();
 	}
 
 	/**
 	 * Return transaction timeout count. The value is cumulative and not reset per metrics interval.
 	 */
 	public long getTimeoutCount() {
-		return timeoutCount.get();
+        return timeoutCounter.getTotal();
 	}
 
 	/**

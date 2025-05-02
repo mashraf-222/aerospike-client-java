@@ -28,10 +28,10 @@ public abstract class AsyncReadBase extends AsyncCommand {
 	protected final Partition partition;
 
 	public AsyncReadBase(Cluster cluster, Policy policy, Key key) {
-		super(policy, true);
+		super(policy, true, key.namespace);
 		this.key = key;
 		this.partition = Partition.read(cluster, policy, key);
-		cluster.addCommandCount();
+		cluster.addCommandCount(key.namespace);
 	}
 
 	@Override

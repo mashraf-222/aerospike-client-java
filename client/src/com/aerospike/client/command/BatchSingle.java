@@ -463,7 +463,7 @@ public final class BatchSingle {
 			Node node,
 			boolean hasWrite
 		) {
-			super(cluster, policy);
+			super(cluster, policy, key.namespace);
 			this.status = status;
 			this.key = key;
 			this.node = node;

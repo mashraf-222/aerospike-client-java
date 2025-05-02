@@ -22,8 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import com.aerospike.client.AerospikeException;
-import com.aerospike.client.ResultCode;
+import com.aerospike.client.*;
 import com.aerospike.client.cluster.Cluster;
 import com.aerospike.client.cluster.Connection;
 import com.aerospike.client.cluster.ConnectionRecover;
@@ -40,14 +39,16 @@ public abstract class SyncCommand extends Command {
 	int iteration = 1;
 	int commandSentCounter;
 	long deadline;
+	String namespace;
 
 	/**
 	 * Default constructor.
 	 */
-	public SyncCommand(Cluster cluster, Policy policy) {
+	public SyncCommand(Cluster cluster, Policy policy, String namespace) {
 		super(policy.socketTimeout, policy.totalTimeout, policy.maxRetries);
 		this.cluster = cluster;
 		this.policy = policy;
+		this.namespace = namespace;
 	}
 
 	/**
@@ -137,17 +138,17 @@ public abstract class SyncCommand extends Command {
 						exception = new AerospikeException.Timeout(policy, false);
 						isClientTimeout = false;
 						node.incrErrorRate();
-						node.addTimeout();
+						node.addTimeout(namespace);
 					}
 					else if (ae.getResultCode() == ResultCode.DEVICE_OVERLOAD) {
 						// Add to circuit breaker error count and retry.
 						exception = ae;
 						isClientTimeout = false;
 						node.incrErrorRate();
-						node.addError();
+						node.addError(namespace);
 					}
 					else {
-						node.addError();
+						node.addError(namespace);
 						prepareException(node, ae, subExceptions);
 						throw ae;
 					}
@@ -161,7 +162,7 @@ public abstract class SyncCommand extends Command {
 					}
 					exception = new AerospikeException.Timeout(policy, true);
 					isClientTimeout = true;
-					node.addTimeout();
+					node.addTimeout(namespace);
 				}
 				catch (SocketTimeoutException ste) {
 					// Full timeout has been reached.
@@ -169,7 +170,7 @@ public abstract class SyncCommand extends Command {
 					node.closeConnection(conn);
 					exception = new AerospikeException.Timeout(policy, true);
 					isClientTimeout = true;
-					node.addTimeout();
+					node.addTimeout(namespace);
 				}
 				catch (IOException ioe) {
 					// IO errors are considered temporary anomalies.  Retry.
@@ -177,14 +178,14 @@ public abstract class SyncCommand extends Command {
 					node.closeConnection(conn);
 					exception = new AerospikeException.Connection(ioe);
 					isClientTimeout = false;
-					node.addError();
+					node.addError(namespace);
 				}
 				catch (Throwable t) {
 					// All remaining exceptions are considered fatal.  Do not retry.
 					// Close socket to flush out possible garbage.  Do not put back in pool.
 					// Log.info("Throw Throwable: " + tranId + ',' + node + ',' + sequence + ',' + iteration);
 					node.closeConnection(conn);
-					node.addError();
+					node.addError(namespace);
 					AerospikeException ae = new AerospikeException(t);
 					prepareException(node, ae, subExceptions);
 					throw ae;
@@ -194,30 +195,30 @@ public abstract class SyncCommand extends Command {
 				// Connection already handled.
 				exception = new AerospikeException.Timeout(policy, true);
 				isClientTimeout = true;
-				node.addTimeout();
+				node.addTimeout(namespace);
 			}
 			catch (AerospikeException.Connection ce) {
 				// Socket connection error has occurred. Retry.
 				// Log.info("Connection error: " + tranId + ',' + node + ',' + sequence + ',' + iteration);
 				exception = ce;
 				isClientTimeout = false;
-				node.addError();
+				node.addError(namespace);
 			}
 			catch (AerospikeException.Backoff be) {
 				// Node is in backoff state. Retry, hopefully on another node.
 				// Log.info("Backoff error: " + tranId + ',' + node + ',' + sequence + ',' + iteration);
 				exception = be;
 				isClientTimeout = false;
-				node.addError();
+				node.addError(namespace);
 			}
 			catch (AerospikeException ae) {
 				// Log.info("Throw AerospikeException: " + tranId + ',' + node + ',' + sequence + ',' + iteration + ',' + ae.getResultCode());
-				node.addError();
+				node.addError(namespace);
 				prepareException(node, ae, subExceptions);
 				throw ae;
 			}
 			catch (Throwable t) {
-				node.addError();
+				node.addError(namespace);
 				AerospikeException ae = new AerospikeException(t);
 				prepareException(node, ae, subExceptions);
 				throw ae;
@@ -268,7 +269,7 @@ public abstract class SyncCommand extends Command {
 				}
 			}
 
-			cluster.addRetry();
+			cluster.addRetry(namespace);
 		}
 
 		// Retries have been exhausted.  Throw last exception.

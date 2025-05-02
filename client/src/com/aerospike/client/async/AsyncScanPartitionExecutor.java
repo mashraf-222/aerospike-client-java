@@ -55,7 +55,7 @@ public final class AsyncScanPartitionExecutor extends AsyncMultiExecutor {
 		this.tracker = tracker;
 		this.random = new RandomShift();
 
-		cluster.addCommandCount();
+		cluster.addCommandCount(namespace);
 		tracker.setSleepBetweenRetries(0);
 		scanPartitions();
 	}

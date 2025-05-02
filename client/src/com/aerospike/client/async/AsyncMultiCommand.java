@@ -39,7 +39,7 @@ public abstract class AsyncMultiCommand extends AsyncCommand {
 	 * Batch constructor.
 	 */
 	public AsyncMultiCommand(Node node, Policy policy, boolean isOperation) {
-		super(policy, false);
+		super(policy, false, null);
 		this.node = node;
 		this.isOperation = isOperation;
 	}
@@ -48,7 +48,7 @@ public abstract class AsyncMultiCommand extends AsyncCommand {
 	 * Scan/Query constructor.
 	 */
 	public AsyncMultiCommand(Node node, Policy policy, int socketTimeout, int totalTimeout) {
-		super(policy, socketTimeout, totalTimeout);
+		super(policy, socketTimeout, totalTimeout, null);
 		this.node = node;
 		this.isOperation = false;
 	}

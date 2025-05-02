@@ -50,7 +50,7 @@ public abstract class MultiCommand extends SyncCommand {
 	 * Batch and server execute constructor.
 	 */
 	protected MultiCommand(Cluster cluster, Policy policy, Node node, boolean isOperation) {
-		super(cluster, policy);
+		super(cluster, policy, null);
 		this.node = node;
 		this.isOperation = isOperation;
 		this.namespace = null;

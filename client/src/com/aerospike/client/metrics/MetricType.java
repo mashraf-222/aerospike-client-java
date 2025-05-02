@@ -17,30 +17,17 @@
 package com.aerospike.client.metrics;
 
 /**
- * Latency group type.
+ * Metric "types".
  */
 public enum MetricType {
-	CONN,
-	WRITE,
-	READ,
-	BATCH,
-	QUERY,
-	NONE;
-
-	public static int getMax() {
-		return MetricType.NONE.ordinal();
-	}
-
-	private static String[] TypeStrings = new String[] {
-		"conn",
-		"write",
-		"read",
-		"batch",
-		"query",
-		"none"
-	};
-
-	public static String getString(int i) {
-		return TypeStrings[i];
-	}
+	RETRY_COUNT,
+	COMMAND_COUNT,
+	CPU,
+	MEM,
+	DELAY_Q_TIMEOUT_COUNT,
+	ERROR_COUNT,
+	TIMEOUT_COUNT,
+	CONNS_OPENED,
+	CONNS_CLOSED,
+	LATENCY;
 }

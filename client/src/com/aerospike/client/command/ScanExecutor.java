@@ -37,7 +37,7 @@ public final class ScanExecutor {
 		ScanCallback callback,
 		PartitionTracker tracker
 	) {
-		cluster.addCommandCount();
+		cluster.addCommandCount(namespace);
 
 		RandomShift random = new RandomShift();
 

@@ -50,7 +50,7 @@ public abstract class QueryExecutor implements IQueryExecutor {
 
 		// Initialize maximum number of nodes to query in parallel.
 		this.maxConcurrentNodes = (policy.maxConcurrentNodes == 0 || policy.maxConcurrentNodes >= threads.length) ? threads.length : policy.maxConcurrentNodes;
-		cluster.addCommandCount();
+		cluster.addCommandCount(statement.getNamespace());
 	}
 
 	protected final void initializeThreads() {
