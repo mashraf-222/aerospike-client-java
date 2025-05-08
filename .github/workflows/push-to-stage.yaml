@@ -4,7 +4,8 @@ on:
   push:
     branches:
       - dev/versioning-from-ci
-      #- stage-jdk8
+      - stage
+      - stage-jdk8
   workflow_dispatch:
 
 jobs:
