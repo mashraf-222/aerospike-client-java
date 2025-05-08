@@ -46,7 +46,7 @@ public class TestAsync extends TestBase {
 	@AfterClass
 	public static void destroy() {
 		if (DestroyClient) {
-			SuiteSync.destroy();
+			SuiteAsync.destroy();
 		}
 	}
 
