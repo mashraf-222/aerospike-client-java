@@ -109,14 +109,15 @@ public abstract class SyncCommand extends Command {
 					commandSentCounter++;
 
 					// Parse results.
-					parseResult(conn);
+					parseResult(node, conn);
 
 					// Put connection back in pool.
 					node.putConnection(conn);
 
 					if (latencyType != LatencyType.NONE) {
 						long elapsed = System.nanoTime() - begin;
-						node.addLatency(latencyType, elapsed);
+						node.addLatency(namespace, latencyType, elapsed);
+						node.addBytesOut(namespace, dataOffset);
 					}
 
 					// Command has completed successfully.  Exit method.
@@ -146,6 +147,12 @@ public abstract class SyncCommand extends Command {
 						isClientTimeout = false;
 						node.incrErrorRate();
 						node.addError(namespace);
+					}
+					else if (ae.getResultCode() == ResultCode.KEY_BUSY) {
+						exception = ae;
+						isClientTimeout = false;
+						node.incrErrorRate();
+						node.addKeyBusy(namespace);
 					}
 					else {
 						node.addError(namespace);
@@ -333,6 +340,6 @@ public abstract class SyncCommand extends Command {
 	protected abstract Node getNode();
 	protected abstract LatencyType getLatencyType();
 	protected abstract void writeBuffer();
-	protected abstract void parseResult(Connection conn) throws AerospikeException, IOException;
+	protected abstract void parseResult(Node node, Connection conn) throws AerospikeException, IOException;
 	protected abstract boolean prepareRetry(boolean timeout);
 }

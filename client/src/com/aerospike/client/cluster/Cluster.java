@@ -29,7 +29,6 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
 import com.aerospike.client.AerospikeClient;
@@ -203,9 +202,9 @@ public class Cluster implements Runnable, Closeable {
 	public boolean metricsEnabled;
 	MetricsPolicy metricsPolicy;
 	private volatile MetricsListener metricsListener;
-	private Counter retryCounter = new Counter(MetricType.RETRY_COUNT);
-	private Counter commandCounter = new Counter(MetricType.COMMAND_COUNT);
-	private Counter delayQtimeoutCounter = new Counter(MetricType.DELAY_Q_TIMEOUT_COUNT);
+	private Counter retryCounter = new Counter();
+	private Counter commandCounter = new Counter();
+	private Counter delayQtimeoutCounter = new Counter();
 
 	public Cluster(AerospikeClient client, ClientPolicy policy, Host[] hosts) {
 		this.client = client;
@@ -632,6 +631,11 @@ public class Cluster implements Runnable, Closeable {
 			if (client.getConfigProvider().loadConfiguration()) {
 				config = client.getConfigProvider().fetchConfiguration();
 				client.mergeDefaultPoliciesWithConfig();
+				this.metricsPolicy = mergeMetricsPolicyWithConfig(metricsPolicy);
+				if (metricsEnabled && metricsPolicy.isMetricsRestartRequired()) {
+					restartMetrics();
+					return;
+				}
 				if (config != null && config.dynamicConfiguration.dynamicMetricsConfig.enable != null ) {
 					if (!metricsEnabled && config.dynamicConfiguration.dynamicMetricsConfig.enable.value ) {
 						enableMetrics(this.metricsPolicy);
@@ -650,7 +654,7 @@ public class Cluster implements Runnable, Closeable {
 		}
 
 		if (metricsEnabled && (tendCount % metricsPolicy.interval) == 0) {
-			metricsListener.onSnapshot(this);
+			metricsListener.onSnapshot(this, metricsPolicy);
 		}
 
 		processRecoverQueue();
@@ -1078,16 +1082,26 @@ public class Cluster implements Runnable, Closeable {
 		}
 	}
 
-	public final void enableMetrics(MetricsPolicy policy) {
+	private void restartMetrics() {
+		disableMetrics();
+		enableMetrics(metricsPolicy);
+		metricsPolicy.setMetricsRestartRequired(false);
+	}
 
-		MetricsListener listener = policy.listener;
+	private MetricsPolicy mergeMetricsPolicyWithConfig(MetricsPolicy mp) {
+        return new MetricsPolicy(mp, config);
+	}
+
+	public final void enableMetrics(MetricsPolicy policy) {
+		MetricsPolicy mergedMP = mergeMetricsPolicyWithConfig(policy);
+		MetricsListener listener = mergedMP.listener;
 
 		if (listener == null) {
-			listener = new MetricsWriter(policy.reportDir);
+			listener = new MetricsWriter(mergedMP.reportDir);
 		}
 
 		this.metricsListener = listener;
-		this.metricsPolicy = policy;
+		this.metricsPolicy = mergedMP;
 
 		if (config != null) {
 			if (config.dynamicConfiguration.dynamicMetricsConfig.enable != null) {
@@ -1103,7 +1117,7 @@ public class Cluster implements Runnable, Closeable {
 
 	private void finalizeMetricsEnablement() {
 		if (metricsEnabled) {
-			this.metricsListener.onDisable(this);
+			this.metricsListener.onDisable(this, metricsPolicy);
 		}
 
 		Node[] nodeArray = nodes;
@@ -1114,15 +1128,13 @@ public class Cluster implements Runnable, Closeable {
 
 		this.metricsListener.onEnable(this, this.metricsPolicy);
 		metricsEnabled = true;
-		Log.debug("Metrics Enabled!");
 	}
 
 	public final void disableMetrics() {
 		if (metricsEnabled) {
 			metricsEnabled = false;
-			metricsListener.onDisable(this);
+			metricsListener.onDisable(this, metricsPolicy);
 		}
-		Log.debug("Metrics Disabled!");
 	}
 
 	public EventLoop[] getEventLoopArray() {
@@ -1467,6 +1479,10 @@ public class Cluster implements Runnable, Closeable {
 	 */
 	public final int getInvalidNodeCount() {
 		return invalidNodeCount;
+	}
+
+	private MetricsPolicy getMetricsPolicy() {
+		return metricsPolicy;
 	}
 
 	public void close() {

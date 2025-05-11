@@ -16,12 +16,18 @@
  */
 package com.aerospike.client.metrics;
 
+
 /**
  * Optional extended node metrics. Used when extended metrics is enabled
  * (See {@link com.aerospike.client.AerospikeClient#enableMetrics(MetricsPolicy)}).
  */
 public final class NodeMetrics {
-	private final LatencyBuckets[] latency;
+	private final Histograms histograms;
+	public final Counter errorCounter;
+	public final Counter timeoutCounter;
+	public final Counter keyBusyCounter;
+	public final Counter bytesInCounter;
+	public final Counter bytesOutCounter;
 
 	/**
 	 * Initialize extended node metrics.
@@ -29,26 +35,23 @@ public final class NodeMetrics {
 	public NodeMetrics(MetricsPolicy policy) {
 		int latencyColumns = policy.latencyColumns;
 		int latencyShift = policy.latencyShift;
-		int max = LatencyType.getMax();
+		this.errorCounter = new Counter();
+		this.timeoutCounter = new Counter();
+		this.keyBusyCounter = new Counter();
+		this.bytesInCounter = new Counter();
+		this.bytesOutCounter = new Counter();
 
-		latency = new LatencyBuckets[max];
-
-		for (int i = 0; i < max; i++) {
-			latency[i] = new LatencyBuckets(latencyColumns, latencyShift);
-		}
+		histograms = new Histograms(latencyColumns, latencyShift);
 	}
 
 	/**
-	 * Add elapsed time in nanoseconds to latency buckets corresponding to latency type.
+	 * Add elapsed time in nanoseconds to histogram map buckets corresponding to namespace & latency type.
 	 */
-	public void addLatency(LatencyType type, long elapsed) {
-		latency[type.ordinal()].add(elapsed);
+	public void addLatency(String namespace, LatencyType type, long elapsed) {
+		histograms.addLatency(namespace, type, elapsed);
 	}
 
-	/**
-	 * Return latency buckets given type.
-	 */
-	public LatencyBuckets getLatencyBuckets(int type) {
-		return latency[type];
+	public Histograms getHistograms() {
+		return histograms;
 	}
 }

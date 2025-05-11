@@ -21,6 +21,7 @@ import com.aerospike.client.Key;
 import com.aerospike.client.ResultCode;
 import com.aerospike.client.Txn;
 import com.aerospike.client.cluster.Cluster;
+import com.aerospike.client.cluster.Node;
 import com.aerospike.client.listener.DeleteListener;
 import com.aerospike.client.policy.WritePolicy;
 
@@ -46,8 +47,8 @@ public final class AsyncTxnClose extends AsyncWriteBase {
 	}
 
 	@Override
-	protected boolean parseResult() {
-		int resultCode = parseHeader();
+	protected boolean parseResult(Node node) {
+		int resultCode = parseHeader(node);
 
 		if (resultCode == ResultCode.OK || resultCode == ResultCode.KEY_NOT_FOUND_ERROR) {
 			return true;

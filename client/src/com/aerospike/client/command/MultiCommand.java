@@ -111,7 +111,7 @@ public abstract class MultiCommand extends SyncCommand {
 	}
 
 	@Override
-	protected final void parseResult(Connection conn) throws IOException {
+	protected final void parseResult(Node node, Connection conn) throws IOException {
 		// Read blocks of records.  Do not use thread local receive buffer because each
 		// block will likely be too big for a cache.  Also, scan callbacks can nest
 		// further database commands which would contend with the thread local receive buffer.
@@ -119,11 +119,13 @@ public abstract class MultiCommand extends SyncCommand {
 		byte[] buf = null;
 		byte[] ubuf = null;
 		int receiveSize;
+		int bytesIn = 0;
 
 		while (true) {
 			// Read header
 			byte[] protoBuf = new byte[8];
 			conn.readFully(protoBuf, 8, Command.STATE_READ_HEADER);
+			bytesIn += 8;
 
 			long proto = Buffer.bytesToLong(protoBuf, 0);
 			int size = (int)(proto & 0xFFFFFFFFFFFFL);
@@ -147,6 +149,10 @@ public abstract class MultiCommand extends SyncCommand {
 			// Read remaining message bytes in group.
 			try {
 				conn.readFully(buf, size, Command.STATE_READ_DETAIL);
+				bytesIn += size;
+				if (node.areMetricsEnabled()) {
+					node.addBytesIn(namespace, bytesIn);
+				}
 				conn.updateLastUsed();
 			}
 			catch (ReadTimeout rt) {

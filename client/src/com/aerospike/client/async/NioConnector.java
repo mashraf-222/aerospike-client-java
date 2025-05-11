@@ -113,6 +113,9 @@ public final class NioConnector extends AsyncConnector implements INioCommand {
 
 	protected final void write() throws IOException {
 		if (conn.write(byteBuffer)) {
+			if (node.areMetricsEnabled()) {
+				node.addBytesOut(null, byteBuffer.limit());
+			}
 			byteBuffer.clear();
 			byteBuffer.limit(8);
 			state = AsyncCommand.AUTH_READ_HEADER;
@@ -121,14 +124,14 @@ public final class NioConnector extends AsyncConnector implements INioCommand {
 	}
 
 	protected final void read() throws IOException {
-		if (! conn.read(byteBuffer)) {
+		if (! conn.read(byteBuffer, node, null)) {
 			return;
 		}
 
 		switch (state) {
 		case AsyncCommand.AUTH_READ_HEADER:
 			readAuthHeader();
-			if (! conn.read(byteBuffer)) {
+			if (! conn.read(byteBuffer, node, null)) {
 				return;
 			}
 			// Fall through to AUTH_READ_BODY

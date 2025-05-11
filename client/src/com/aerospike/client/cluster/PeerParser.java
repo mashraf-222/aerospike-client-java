@@ -33,14 +33,14 @@ public final class PeerParser {
 	private final int portDefault;
 	public final int generation;
 
-	public PeerParser(Cluster cluster, Connection conn, List<Peer> peers) {
+	public PeerParser(Cluster cluster, Node node, Connection conn, List<Peer> peers) {
 		this.cluster = cluster;
 
 		String command = (cluster.tlsPolicy != null)?
 				cluster.useServicesAlternate ? "peers-tls-alt" : "peers-tls-std" :
 				cluster.useServicesAlternate ? "peers-clear-alt" : "peers-clear-std";
 
-		parser = new Info(conn, command);
+		parser = new Info(node, conn, command);
 
 		if (parser.length == 0) {
 			throw new AerospikeException.Parse(command + " response is empty");

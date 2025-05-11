@@ -16,7 +16,7 @@
  */
 package com.aerospike.client.async;
 
-import com.aerospike.client.Key;
+import com.aerospike.client.*;
 import com.aerospike.client.cluster.Cluster;
 import com.aerospike.client.cluster.Node;
 import com.aerospike.client.cluster.Partition;
@@ -65,9 +65,15 @@ public abstract class AsyncWriteBase extends AsyncCommand {
 		}
 	}
 
-	protected int parseHeader() {
+	protected int parseHeader(Node node) {
 		RecordParser rp = new RecordParser(dataBuffer, dataOffset, receiveSize);
 		rp.parseFields(policy.txn, key, true);
+		if (node.areMetricsEnabled()) {
+			node.addBytesIn(namespace, rp.bytesIn);
+			if (rp.resultCode == ResultCode.KEY_BUSY) {
+				node.addKeyBusy(namespace);
+			}
+		}
 		return rp.resultCode;
 	}
 }

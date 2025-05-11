@@ -20,6 +20,7 @@ import com.aerospike.client.AerospikeException;
 import com.aerospike.client.Key;
 import com.aerospike.client.ResultCode;
 import com.aerospike.client.cluster.Cluster;
+import com.aerospike.client.cluster.Node;
 import com.aerospike.client.command.RecordParser;
 import com.aerospike.client.listener.ExistsListener;
 import com.aerospike.client.policy.Policy;
@@ -39,9 +40,15 @@ public final class AsyncExists extends AsyncReadBase {
 	}
 
 	@Override
-	protected boolean parseResult() {
+	protected boolean parseResult(Node node) {
 		RecordParser rp = new RecordParser(dataBuffer, dataOffset, receiveSize);
 		rp.parseFields(policy.txn, key, false);
+		if (node.areMetricsEnabled()) {
+			node.addBytesIn(namespace, rp.bytesIn);
+			if (rp.resultCode == ResultCode.KEY_BUSY) {
+				node.addKeyBusy(namespace);
+			}
+		}
 
 		if (rp.resultCode == ResultCode.OK) {
 			exists = true;

@@ -1,37 +1,20 @@
 package com.aerospike.client.metrics;
 
-import java.util.*;
 import java.util.concurrent.atomic.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class Counter implements Metric{
+public class Counter {
 
-    private final ConcurrentHashMap<String, AtomicLong> map = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, AtomicLong> counterMap = new ConcurrentHashMap<>();
 
-    private final MetricType type;
     private AtomicLong total = new AtomicLong(0);
 
-    public Counter(MetricType type) {
-        this.type = type;
+    public Counter() {
     }
 
-    @Override
-    public void increment() {
-        String namespace = "_";
-        map.compute(namespace, (k, v) -> {
-            if (v == null) {
-                return new AtomicLong(1);
-            } else {
-                v.incrementAndGet();
-                return v;
-            }
-        });
-    }
-
-    @Override
     public void increment(String ns) {
         String namespace = (ns == null)? "_" : ns;
-        map.compute(namespace, (k, v) -> {
+        counterMap.compute(namespace, (k, v) -> {
             if (v == null) {
                 return new AtomicLong(1);
             } else {
@@ -42,10 +25,9 @@ public class Counter implements Metric{
         total.incrementAndGet();
     }
 
-    @Override
-    public void increment(String ns, int count) {
+    public void increment(String ns, long count) {
         String namespace = (ns == null)? "_" : ns;
-        map.compute(namespace, (k, v) -> {
+        counterMap.compute(namespace, (k, v) -> {
             if (v == null) {
                 return new AtomicLong(count);
             } else {
@@ -61,7 +43,15 @@ public class Counter implements Metric{
         return total.get();
     }
 
+    public long getCountByNS(String namespace) {
+        AtomicLong count = counterMap.get(namespace);
+        if (count == null) {
+            return 0;
+        }
+        return counterMap.get(namespace).longValue();
+    }
+
     public ConcurrentHashMap<String, AtomicLong> getNSmap() {
-        return map;
+        return counterMap;
     }
 }

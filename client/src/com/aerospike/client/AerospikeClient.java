@@ -152,6 +152,11 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	// Member variables.
 	//-------------------------------------------------------
 
+	/**
+	 * Client version, to be read from manifest
+	 */
+	public String version;
+
 	private ConfigurationProvider configProvider;
 
 	protected Cluster cluster;
@@ -339,6 +344,10 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 			policy = new ClientPolicy(policy, configProvider);
 		}
 		mergeDefaultPoliciesWithConfig();
+		version = this.getClass().getPackage().getImplementationVersion();
+		if (version == null) {
+			version = "development";
+		}
 		cluster = new Cluster(this, policy, hosts);
 	}
 
@@ -5197,7 +5206,7 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		Info info;
 
 		try {
-			info = new Info(conn, command);
+			info = new Info(node, conn, command);
 			node.putConnection(conn);
 		}
 		catch (Throwable e) {

@@ -23,6 +23,7 @@ import com.aerospike.client.Key;
 import com.aerospike.client.ResultCode;
 import com.aerospike.client.cluster.Cluster;
 import com.aerospike.client.cluster.Connection;
+import com.aerospike.client.cluster.Node;
 import com.aerospike.client.policy.WritePolicy;
 
 public final class TouchCommand extends SyncWriteCommand {
@@ -40,8 +41,8 @@ public final class TouchCommand extends SyncWriteCommand {
 	}
 
 	@Override
-	protected void parseResult(Connection conn) throws IOException {
-		int resultCode = parseHeader(conn);
+	protected void parseResult(Node node, Connection conn) throws IOException {
+		int resultCode = parseHeader(node, conn);
 
 		if (resultCode == ResultCode.OK) {
 			touched = true;

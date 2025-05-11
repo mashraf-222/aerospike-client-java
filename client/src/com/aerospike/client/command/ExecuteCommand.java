@@ -23,6 +23,7 @@ import com.aerospike.client.ResultCode;
 import com.aerospike.client.Value;
 import com.aerospike.client.cluster.Cluster;
 import com.aerospike.client.cluster.Connection;
+import com.aerospike.client.cluster.Node;
 import com.aerospike.client.policy.WritePolicy;
 import java.io.IOException;
 
@@ -52,9 +53,15 @@ public final class ExecuteCommand extends SyncWriteCommand {
 	}
 
 	@Override
-	protected void parseResult(Connection conn) throws IOException {
+	protected void parseResult(Node node, Connection conn) throws IOException {
 		RecordParser rp = new RecordParser(conn, dataBuffer);
 		rp.parseFields(policy.txn, key, true);
+		if (node.areMetricsEnabled()) {
+			node.addBytesIn(namespace, rp.bytesIn);
+			if (rp.resultCode == ResultCode.KEY_BUSY) {
+				node.addKeyBusy(namespace);
+			}
+		}
 
 		if (rp.resultCode == ResultCode.OK) {
 			record = rp.parseRecord(false);

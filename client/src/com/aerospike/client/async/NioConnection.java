@@ -28,6 +28,7 @@ import java.nio.channels.SocketChannel;
 
 import com.aerospike.client.AerospikeException;
 import com.aerospike.client.Log;
+import com.aerospike.client.cluster.Node;
 import com.aerospike.client.util.Util;
 
 /**
@@ -98,9 +99,12 @@ public final class NioConnection extends AsyncConnection implements Closeable {
 	/**
 	 * Read till byteBuffer limit reached or received would-block.
 	 */
-	public boolean read(ByteBuffer byteBuffer) throws IOException {
+	public boolean read(ByteBuffer byteBuffer, Node node, String namespace) throws IOException {
 		while (byteBuffer.hasRemaining()) {
 			int len = socketChannel.read(byteBuffer);
+			if (node.areMetricsEnabled()) {
+				node.addBytesIn(namespace, len);
+			}
 
 			if (len == 0) {
 				// Got would-block.

@@ -18,7 +18,7 @@ package com.aerospike.client.command;
 
 import java.io.IOException;
 
-import com.aerospike.client.Key;
+import com.aerospike.client.*;
 import com.aerospike.client.cluster.Cluster;
 import com.aerospike.client.cluster.Connection;
 import com.aerospike.client.cluster.Node;
@@ -67,9 +67,15 @@ public abstract class SyncWriteCommand extends SyncCommand {
 		}
 	}
 
-	protected int parseHeader(Connection conn) throws IOException {
+	protected int parseHeader(Node node, Connection conn) throws IOException {
 		RecordParser rp = new RecordParser(conn, dataBuffer);
 		rp.parseFields(policy.txn, key, true);
+		if (node.areMetricsEnabled()) {
+			node.addBytesIn(namespace, rp.bytesIn);
+			if (rp.resultCode == ResultCode.KEY_BUSY) {
+				node.addKeyBusy(namespace);
+			}
+		}
 		return rp.resultCode;
 	}
 }

@@ -91,10 +91,15 @@ public final class BatchSingle {
 		}
 
 		@Override
-		protected void parseResult(Connection conn) throws IOException {
+		protected void parseResult(Node node, Connection conn) throws IOException {
 			RecordParser rp = new RecordParser(conn, dataBuffer);
 			rp.parseFields(policy.txn, key, false);
-
+			if (node.areMetricsEnabled()) {
+				node.addBytesIn(namespace, rp.bytesIn);
+				if (rp.resultCode == ResultCode.KEY_BUSY) {
+					node.addKeyBusy(namespace);
+				}
+			}
 			if (rp.resultCode == ResultCode.OK) {
 				records[index] = rp.parseRecord(isOperation);
 			}
@@ -127,9 +132,15 @@ public final class BatchSingle {
 		}
 
 		@Override
-		protected void parseResult(Connection conn) throws IOException {
+		protected void parseResult(Node node, Connection conn) throws IOException {
 			RecordParser rp = new RecordParser(conn, dataBuffer);
 			rp.parseFields(policy.txn, key, false);
+			if (node.areMetricsEnabled()) {
+				node.addBytesIn(namespace, rp.bytesIn);
+				if (rp.resultCode == ResultCode.KEY_BUSY) {
+					node.addKeyBusy(namespace);
+				}
+			}
 
 			if (rp.resultCode == 0) {
 				records[index] = new Record(null, rp.generation, rp.expiration);
@@ -157,9 +168,15 @@ public final class BatchSingle {
 		}
 
 		@Override
-		protected void parseResult(Connection conn) throws IOException {
+		protected void parseResult(Node node, Connection conn) throws IOException {
 			RecordParser rp = new RecordParser(conn, dataBuffer);
 			rp.parseFields(policy.txn, key, false);
+			if (node.areMetricsEnabled()) {
+				node.addBytesIn(namespace, rp.bytesIn);
+				if (rp.resultCode == ResultCode.KEY_BUSY) {
+					node.addKeyBusy(namespace);
+				}
+			}
 
 			if (rp.resultCode == ResultCode.OK) {
 				record.setRecord(rp.parseRecord(true));
@@ -197,9 +214,15 @@ public final class BatchSingle {
 		}
 
 		@Override
-		protected void parseResult(Connection conn) throws IOException {
+		protected void parseResult(Node node, Connection conn) throws IOException {
 			RecordParser rp = new RecordParser(conn, dataBuffer);
 			rp.parseFields(policy.txn, key, false);
+			if (node.areMetricsEnabled()) {
+				node.addBytesIn(namespace, rp.bytesIn);
+				if (rp.resultCode == ResultCode.KEY_BUSY) {
+					node.addKeyBusy(namespace);
+				}
+			}
 			existsArray[index] = rp.resultCode == 0;
 		}
 	}
@@ -230,9 +253,15 @@ public final class BatchSingle {
 		}
 
 		@Override
-		protected void parseResult(Connection conn) throws IOException {
+		protected void parseResult(Node node, Connection conn) throws IOException {
 			RecordParser rp = new RecordParser(conn, dataBuffer);
 			rp.parseFields(policy.txn, key, record.hasWrite);
+			if (node.areMetricsEnabled()) {
+				node.addBytesIn(namespace, rp.bytesIn);
+				if (rp.resultCode == ResultCode.KEY_BUSY) {
+					node.addKeyBusy(namespace);
+				}
+			}
 
 			if (rp.resultCode == ResultCode.OK) {
 				record.setRecord(rp.parseRecord(true));
@@ -274,9 +303,15 @@ public final class BatchSingle {
 		}
 
 		@Override
-		protected void parseResult(Connection conn) throws IOException {
+		protected void parseResult(Node node, Connection conn) throws IOException {
 			RecordParser rp = new RecordParser(conn, dataBuffer);
 			rp.parseFields(policy.txn, key, true);
+			if (node.areMetricsEnabled()) {
+				node.addBytesIn(namespace, rp.bytesIn);
+				if (rp.resultCode == ResultCode.KEY_BUSY) {
+					node.addKeyBusy(namespace);
+				}
+			}
 
 			if (rp.resultCode == ResultCode.OK) {
 				record.setRecord(new Record(null, rp.generation, rp.expiration));
@@ -329,10 +364,15 @@ public final class BatchSingle {
 		}
 
 		@Override
-		protected void parseResult(Connection conn) throws IOException {
+		protected void parseResult(Node node, Connection conn) throws IOException {
 			RecordParser rp = new RecordParser(conn, dataBuffer);
 			rp.parseFields(policy.txn, key, true);
-
+			if (node.areMetricsEnabled()) {
+				node.addBytesIn(namespace, rp.bytesIn);
+				if (rp.resultCode == ResultCode.KEY_BUSY) {
+					node.addKeyBusy(namespace);
+				}
+			}
 			if (rp.resultCode == ResultCode.OK) {
 				record.setRecord(rp.parseRecord(false));
 			}
@@ -389,9 +429,14 @@ public final class BatchSingle {
 		}
 
 		@Override
-		protected void parseResult(Connection conn) throws IOException {
+		protected void parseResult(Node node, Connection conn) throws IOException {
 			RecordParser rp = new RecordParser(conn, dataBuffer);
-
+			if (node.areMetricsEnabled()) {
+				node.addBytesIn(namespace, rp.bytesIn);
+				if (rp.resultCode == ResultCode.KEY_BUSY) {
+					node.addKeyBusy(namespace);
+				}
+			}
 			if (rp.resultCode == ResultCode.OK) {
 				record.resultCode = rp.resultCode;
 			}
@@ -428,8 +473,14 @@ public final class BatchSingle {
 		}
 
 		@Override
-		protected void parseResult(Connection conn) throws IOException {
+		protected void parseResult(Node node, Connection conn) throws IOException {
 			RecordParser rp = new RecordParser(conn, dataBuffer);
+			if (node.areMetricsEnabled()) {
+				node.addBytesIn(namespace, rp.bytesIn);
+				if (rp.resultCode == ResultCode.KEY_BUSY) {
+					node.addKeyBusy(namespace);
+				}
+			}
 
 			if (rp.resultCode == ResultCode.OK) {
 				record.resultCode = rp.resultCode;

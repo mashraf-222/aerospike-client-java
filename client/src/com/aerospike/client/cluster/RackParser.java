@@ -32,9 +32,9 @@ public final class RackParser extends Info {
 	private final HashMap<String,Integer> racks;
 	private final int generation;
 
-	public RackParser(Connection conn) {
+	public RackParser(Node node, Connection conn) {
 		// Send format: rebalance-generation\nrack-ids\n
-		super(conn, RebalanceGeneration, RackIds);
+		super(node, conn, RebalanceGeneration, RackIds);
 
 		if (length == 0) {
 			throw new AerospikeException.Parse("rack-ids response is empty");

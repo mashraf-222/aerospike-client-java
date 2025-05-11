@@ -142,7 +142,7 @@ public abstract class AsyncCommand extends Command {
 		}
 	}
 
-	boolean parseCommandResult() {
+	boolean parseCommandResult(Node node) {
 		if (compressed) {
 			int usize = (int)Buffer.bytesToLong(dataBuffer, 0);
 			byte[] buf = new byte[usize];
@@ -173,7 +173,7 @@ public abstract class AsyncCommand extends Command {
 		else {
 			dataOffset = 0;
 		}
-		return parseResult();
+		return parseResult(node);
 	}
 
 	final void stop() {
@@ -226,7 +226,7 @@ public abstract class AsyncCommand extends Command {
 	abstract Node getNode(Cluster cluster);
 	abstract LatencyType getLatencyType();
 	abstract void writeBuffer();
-	abstract boolean parseResult();
+	abstract boolean parseResult(Node node);
 	abstract boolean prepareRetry(boolean timeout);
 	abstract void onSuccess();
 	abstract void onFailure(AerospikeException ae);

@@ -407,6 +407,9 @@ public final class NioCommand implements INioCommand, Runnable, TimerTask {
 		command.putBuffer();
 
 		if (conn.write(byteBuffer)) {
+			if (node.areMetricsEnabled()) {
+				node.addBytesOut(command.namespace, command.dataOffset);
+			}
 			byteBuffer.clear();
 			byteBuffer.limit(8);
 			state = AsyncCommand.AUTH_READ_HEADER;
@@ -437,6 +440,9 @@ public final class NioCommand implements INioCommand, Runnable, TimerTask {
 		command.putBuffer();
 
 		if (conn.write(byteBuffer)) {
+			if (node.areMetricsEnabled()) {
+				node.addBytesOut(command.namespace, command.dataOffset);
+			}
 			byteBuffer.clear();
 			byteBuffer.limit(8);
 			state = AsyncCommand.COMMAND_READ_HEADER;
@@ -451,6 +457,9 @@ public final class NioCommand implements INioCommand, Runnable, TimerTask {
 
 	protected final void write() throws IOException {
 		if (conn.write(byteBuffer)) {
+			if (node.areMetricsEnabled()) {
+				node.addBytesOut(command.namespace, command.dataOffset);
+			}
 			byteBuffer.clear();
 			byteBuffer.limit(8);
 
@@ -469,14 +478,14 @@ public final class NioCommand implements INioCommand, Runnable, TimerTask {
 	protected final void read() throws IOException {
 		eventReceived = true;
 
-		if (! conn.read(byteBuffer)) {
+		if (! conn.read(byteBuffer, node, command.namespace)) {
 			return;
 		}
 
 		switch (state) {
 		case AsyncCommand.AUTH_READ_HEADER:
 			readAuthHeader();
-			if (! conn.read(byteBuffer)) {
+			if (! conn.read(byteBuffer, node, command.namespace)) {
 				return;
 			}
 			// Fall through to AUTH_READ_BODY
@@ -550,7 +559,7 @@ public final class NioCommand implements INioCommand, Runnable, TimerTask {
 		byteBuffer.limit(receiveSize);
 		state = AsyncCommand.COMMAND_READ_BODY;
 
-		if (conn.read(byteBuffer)) {
+		if (conn.read(byteBuffer, node, command.namespace)) {
 			readSingleBody();
 		}
 	}
@@ -561,7 +570,7 @@ public final class NioCommand implements INioCommand, Runnable, TimerTask {
 		byteBuffer.position(0);
 		byteBuffer.get(command.dataBuffer, 0, command.receiveSize);
 		conn.updateLastUsed();
-		command.parseCommandResult();
+		command.parseCommandResult(node);
 		command.putBuffer();
 		finish();
 	}
@@ -575,7 +584,7 @@ public final class NioCommand implements INioCommand, Runnable, TimerTask {
 			return;
 		}
 
-		if (! conn.read(byteBuffer)) {
+		if (! conn.read(byteBuffer, node, command.namespace)) {
 			return;
 		}
 
@@ -596,7 +605,7 @@ public final class NioCommand implements INioCommand, Runnable, TimerTask {
 		// group that only has one dummy record header.  Therefore, we continue to read
 		// this small group in order to avoid having to wait one more async iteration just
 		// to find out the batch/scan/query has already ended.
-		if (! conn.read(byteBuffer)) {
+		if (! conn.read(byteBuffer, node, command.namespace)) {
 			return;
 		}
 
@@ -606,7 +615,7 @@ public final class NioCommand implements INioCommand, Runnable, TimerTask {
 
 		if (command.receiveSize == Command.MSG_REMAINING_HEADER_SIZE) {
 			// We may be at end.  Read ahead and parse.
-			if (! conn.read(byteBuffer)) {
+			if (! conn.read(byteBuffer, node, command.namespace)) {
 				return;
 			}
 			parseGroupBody();
@@ -648,7 +657,7 @@ public final class NioCommand implements INioCommand, Runnable, TimerTask {
 			if (command.dataOffset >= command.receiveSize) {
 				conn.updateLastUsed();
 
-				if (command.parseCommandResult()) {
+				if (command.parseCommandResult(node)) {
 					finish();
 					return false;
 				}
@@ -665,7 +674,7 @@ public final class NioCommand implements INioCommand, Runnable, TimerTask {
 					byteBuffer.limit(remaining);
 				}
 
-				if (! conn.read(byteBuffer)) {
+				if (! conn.read(byteBuffer, node, command.namespace)) {
 					return false;
 				}
 			}
@@ -830,7 +839,7 @@ public final class NioCommand implements INioCommand, Runnable, TimerTask {
 
 	private void addLatency(LatencyType type) {
 		long elapsed = System.nanoTime() - begin;
-		node.addLatency(type, elapsed);
+		node.addLatency(command.namespace, type, elapsed);
 	}
 
 	protected final void onNetworkError(AerospikeException ae, boolean queueCommand) {

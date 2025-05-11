@@ -938,8 +938,14 @@ public final class AsyncBatchSingle {
 		}
 
 		@Override
-		protected boolean parseResult() {
+		protected boolean parseResult(Node node) {
 			RecordParser rp = new RecordParser(dataBuffer, dataOffset, receiveSize);
+			if (node.areMetricsEnabled()) {
+				node.addBytesIn(namespace, rp.bytesIn);
+				if (rp.resultCode == ResultCode.KEY_BUSY) {
+					node.addKeyBusy(namespace);
+				}
+			}
 
 			if (rp.resultCode == ResultCode.OK) {
 				record.resultCode = rp.resultCode;
@@ -982,8 +988,14 @@ public final class AsyncBatchSingle {
 		}
 
 		@Override
-		protected boolean parseResult() {
+		protected boolean parseResult(Node node) {
 			RecordParser rp = new RecordParser(dataBuffer, dataOffset, receiveSize);
+			if (node.areMetricsEnabled()) {
+				node.addBytesIn(namespace, rp.bytesIn);
+				if (rp.resultCode == ResultCode.KEY_BUSY) {
+					node.addKeyBusy(namespace);
+				}
+			}
 
 			if (rp.resultCode == ResultCode.OK) {
 				record.resultCode = rp.resultCode;
@@ -1049,9 +1061,15 @@ public final class AsyncBatchSingle {
 		}
 
 		@Override
-		protected boolean parseResult() {
+		protected boolean parseResult(Node node) {
 			RecordParser rp = new RecordParser(dataBuffer, dataOffset, receiveSize);
 			rp.parseFields(policy.txn, key, hasWrite);
+			if (node.areMetricsEnabled()) {
+				node.addBytesIn(namespace, rp.bytesIn);
+				if (rp.resultCode == ResultCode.KEY_BUSY) {
+					node.addKeyBusy(namespace);
+				}
+			}
 			parseResult(rp);
 			return true;
 		}

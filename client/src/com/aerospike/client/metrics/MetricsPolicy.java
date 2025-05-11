@@ -16,7 +16,12 @@
  */
 package com.aerospike.client.metrics;
 
-import com.aerospike.client.policy.ClientPolicy;
+import com.aerospike.client.*;
+import com.aerospike.client.configuration.serializers.*;
+import com.aerospike.client.configuration.serializers.dynamicconfig.*;
+import com.aerospike.client.policy.*;
+
+import java.util.*;
 
 /**
  * Client periodic metrics configuration.
@@ -82,6 +87,49 @@ public final class MetricsPolicy {
 	public int latencyShift = 1;
 
 	/**
+	 * Application ID.  Metrics are loosely tied to this.  Changing the app_ID will not reset the metric counters, as
+	 * specified by PM team
+	 */
+	public String app_ID;
+
+	/**
+	 * Labels that can be sent to the metrics output
+	 */
+	public List<Map<String, String>> labels;
+
+	private boolean metricsRestartRequired = false;
+
+	/**
+	 * Copy batch policy from another batch policy AND override certain policy attributes if they exist in the
+	 * configProvider.
+	 */
+	public MetricsPolicy(MetricsPolicy other, Configuration config) {
+		this(other);
+		if ( config == null) {
+			return;
+		}
+		DynamicMetricsConfig dynMC = config.dynamicConfiguration.dynamicMetricsConfig;
+		if (dynMC.app_id != null) this.app_ID = dynMC.app_id.value;
+		if (dynMC.labels != null) this.labels = dynMC.labels;
+		if (dynMC.latencyShift != null)  {
+			if (dynMC.latencyShift.value != this.latencyShift) {
+				metricsRestartRequired = true;
+			}
+			this.latencyShift = dynMC.latencyShift.value;
+		}
+		if (dynMC.latencyColumns != null) {
+			if (dynMC.latencyColumns.value != this.latencyColumns) {
+				metricsRestartRequired = true;
+			}
+			this.latencyColumns = dynMC.latencyColumns.value;
+		}
+		if (latencyColumns < 1) {
+			Log.error("An invalid # of latency columns was provided. Setting latency columns to default (7).");
+			latencyColumns = 7;
+		}
+	}
+
+	/**
 	 * Copy constructor.
 	 */
 	public MetricsPolicy(MetricsPolicy other) {
@@ -91,6 +139,8 @@ public final class MetricsPolicy {
 		this.interval = other.interval;
 		this.latencyColumns = other.latencyColumns;
 		this.latencyShift = other.latencyShift;
+		this.app_ID = other.app_ID;
+		this.labels = other.labels;
 	}
 
 	/**
@@ -121,7 +171,17 @@ public final class MetricsPolicy {
 		this.latencyColumns = latencyColumns;
 	}
 
-	public void setLatencyShift(int latencyShift) {
-		this.latencyShift = latencyShift;
+	public void setLatencyShift(int latencyShift) { this.latencyShift = latencyShift; }
+
+	public void setApp_ID(String app_ID) { this.app_ID = app_ID; }
+
+	public void setLabels(List<Map<String, String>> labels) { this.labels = labels; }
+
+	public boolean isMetricsRestartRequired() {
+		return metricsRestartRequired;
+	}
+
+	public void setMetricsRestartRequired(boolean metricsRestartRequired) {
+		this.metricsRestartRequired = metricsRestartRequired;
 	}
 }

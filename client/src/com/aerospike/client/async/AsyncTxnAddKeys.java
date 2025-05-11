@@ -21,6 +21,7 @@ import com.aerospike.client.Key;
 import com.aerospike.client.ResultCode;
 import com.aerospike.client.Txn;
 import com.aerospike.client.cluster.Cluster;
+import com.aerospike.client.cluster.Node;
 import com.aerospike.client.command.OperateArgs;
 import com.aerospike.client.command.RecordParser;
 import com.aerospike.client.listener.RecordListener;
@@ -43,9 +44,15 @@ public final class AsyncTxnAddKeys extends AsyncWriteBase {
 	}
 
 	@Override
-	protected boolean parseResult() {
+	protected boolean parseResult(Node node) {
 		RecordParser rp = new RecordParser(dataBuffer, dataOffset, receiveSize);
 		rp.parseTranDeadline(txn);
+		if (node.areMetricsEnabled()) {
+			node.addBytesIn(namespace, rp.bytesIn);
+			if (rp.resultCode == ResultCode.KEY_BUSY) {
+				node.addKeyBusy(namespace);
+			}
+		}
 
 		if (rp.resultCode == ResultCode.OK) {
 			return true;

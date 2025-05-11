@@ -31,7 +31,7 @@ public interface MetricsListener {
 	/**
 	 * A metrics snapshot has been requested for the given cluster.
 	 */
-	public void onSnapshot(Cluster cluster);
+	public void onSnapshot(Cluster cluster, MetricsPolicy policy);
 
 	/**
 	 * A node is being dropped from the cluster.
@@ -41,5 +41,5 @@ public interface MetricsListener {
 	/**
 	 * Periodic extended metrics has been disabled for the given cluster.
 	 */
-	public void onDisable(Cluster cluster);
+	public void onDisable(Cluster cluster, MetricsPolicy policy);
 }

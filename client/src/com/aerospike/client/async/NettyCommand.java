@@ -471,6 +471,10 @@ public final class NettyCommand implements Runnable, TimerTask {
 		ByteBuf byteBuffer = PooledByteBufAllocator.DEFAULT.directBuffer(command.dataOffset);
 		byteBuffer.clear();
 		byteBuffer.writeBytes(command.dataBuffer, 0, command.dataOffset);
+		if (node.areMetricsEnabled()) {
+			node.addBytesOut(command.namespace, command.dataOffset);
+
+		}
 
 		ChannelFuture cf = conn.channel.writeAndFlush(byteBuffer);
 		cf.addListener(new ChannelFutureListener() {
@@ -540,6 +544,9 @@ public final class NettyCommand implements Runnable, TimerTask {
 			}
 		}
 		finally {
+			if (node.areMetricsEnabled()) {
+				node.addBytesIn(command.namespace, byteBuffer.readableBytes());
+			}
 			byteBuffer.release();
 		}
 	}
@@ -649,7 +656,7 @@ public final class NettyCommand implements Runnable, TimerTask {
 
 	private void parseSingleBody() {
 		conn.updateLastUsed();
-		command.parseCommandResult();
+		command.parseCommandResult(node);
 		finish();
 	}
 
@@ -700,7 +707,7 @@ public final class NettyCommand implements Runnable, TimerTask {
 
 			conn.updateLastUsed();
 
-			if (command.parseCommandResult()) {
+			if (command.parseCommandResult(node)) {
 				finish();
 				return;
 			}
@@ -729,7 +736,7 @@ public final class NettyCommand implements Runnable, TimerTask {
 
 		conn.updateLastUsed();
 
-		if (command.parseCommandResult()) {
+		if (command.parseCommandResult(node)) {
 			finish();
 			return;
 		}
@@ -912,7 +919,7 @@ public final class NettyCommand implements Runnable, TimerTask {
 
 	private void addLatency(LatencyType type) {
 		long elapsed = System.nanoTime() - begin;
-		node.addLatency(type, elapsed);
+		node.addLatency(command.namespace, type, elapsed);
 	}
 
 	private void onNetworkError(AerospikeException ae) {

@@ -96,10 +96,11 @@ public final class Expression implements Serializable {
 	 * Write expression in wire protocol.
 	 * For internal use only.
 	 */
-	public void write(Command cmd) {
+	public long write(Command cmd) {
 		cmd.writeExpHeader(bytes.length);
 		System.arraycopy(bytes, 0, cmd.dataBuffer, cmd.dataOffset, bytes.length);
 		cmd.dataOffset += bytes.length;
+		return bytes.length;
 	}
 
 	@Override

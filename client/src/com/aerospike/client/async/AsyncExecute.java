@@ -24,6 +24,7 @@ import com.aerospike.client.Record;
 import com.aerospike.client.ResultCode;
 import com.aerospike.client.Value;
 import com.aerospike.client.cluster.Cluster;
+import com.aerospike.client.cluster.Node;
 import com.aerospike.client.command.RecordParser;
 import com.aerospike.client.listener.ExecuteListener;
 import com.aerospike.client.policy.WritePolicy;
@@ -57,9 +58,15 @@ public final class AsyncExecute extends AsyncWriteBase {
 	}
 
 	@Override
-	protected boolean parseResult() {
+	protected boolean parseResult(Node node) {
 		RecordParser rp = new RecordParser(dataBuffer, dataOffset, receiveSize);
 		rp.parseFields(policy.txn, key, true);
+		if (node.areMetricsEnabled()) {
+			node.addBytesIn(namespace, rp.bytesIn);
+			if (rp.resultCode == ResultCode.KEY_BUSY) {
+				node.addKeyBusy(namespace);
+			}
+		}
 
 		if (rp.resultCode == ResultCode.OK) {
 			record = rp.parseRecord(false);

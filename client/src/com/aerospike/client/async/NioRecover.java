@@ -161,7 +161,7 @@ public final class NioRecover implements INioCommand, TimerTask {
 	}
 
 	private final void drainSingleHeader() throws IOException {
-		if (! conn.read(byteBuffer)) {
+		if (! conn.read(byteBuffer, node, null)) {
 			return;
 		}
 
@@ -180,7 +180,7 @@ public final class NioRecover implements INioCommand, TimerTask {
 
 	private final void drainSingleBody() throws IOException {
 		while (true) {
-			if (! conn.read(byteBuffer)) {
+			if (! conn.read(byteBuffer, node, null)) {
 				return;
 			}
 
@@ -206,7 +206,7 @@ public final class NioRecover implements INioCommand, TimerTask {
 
 	private final boolean drainMultiHeader() throws IOException {
 		while (true) {
-			if (! conn.read(byteBuffer)) {
+			if (! conn.read(byteBuffer, node, null)) {
 				return false;
 			}
 
@@ -245,7 +245,7 @@ public final class NioRecover implements INioCommand, TimerTask {
 
 	private final void drainMultiBody() throws IOException {
 		while (true) {
-			if (! conn.read(byteBuffer)) {
+			if (! conn.read(byteBuffer, node, null)) {
 				return;
 			}
 

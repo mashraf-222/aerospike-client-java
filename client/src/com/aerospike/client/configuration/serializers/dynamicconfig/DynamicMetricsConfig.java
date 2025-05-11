@@ -28,7 +28,7 @@ public class DynamicMetricsConfig {
     public IntProperty latencyShift;
     public IntProperty latencyColumns;
     public StringProperty app_id;
-    public List<Map<String, Object>> labels;
+    public List<Map<String, String>> labels;
 
     public DynamicMetricsConfig() {}
 
@@ -40,7 +40,7 @@ public class DynamicMetricsConfig {
 
     public void setApp_id(StringProperty app_id) { this.app_id = app_id; }
 
-    public void setLabels(List<Map<String, Object>> labels) { this.labels = labels; }
+    public void setLabels(List<Map<String, String>> labels) { this.labels = labels; }
 
     public BooleanProperty getEnable() { return enable; }
 
@@ -50,7 +50,7 @@ public class DynamicMetricsConfig {
 
     public StringProperty getApp_id() { return app_id; }
 
-    public List<Map<String, Object>> getLabels() { return labels; }
+    public List<Map<String, String>> getLabels() { return labels; }
 
     @Override
     public String toString() {
