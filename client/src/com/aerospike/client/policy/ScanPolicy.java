@@ -19,7 +19,6 @@ package com.aerospike.client.policy;
 import com.aerospike.client.configuration.ConfigurationProvider;
 import com.aerospike.client.configuration.serializers.Configuration;
 import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicScanConfig;
-import com.aerospike.client.Log;
 
 /**
  * Container object for optional parameters used in scan operations.

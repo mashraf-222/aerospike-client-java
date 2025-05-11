@@ -1,14 +1,12 @@
 package com.aerospike.client.metrics;
 
-import java.util.concurrent.atomic.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Counter {
 
     private final ConcurrentHashMap<String, AtomicLong> counterMap = new ConcurrentHashMap<>();
-
-    private AtomicLong total = new AtomicLong(0);
-
+    private final AtomicLong total = new AtomicLong(0);
     public Counter() {
     }
 
@@ -37,7 +35,6 @@ public class Counter {
         });
         total.incrementAndGet();
     }
-
 
     public long getTotal() {
         return total.get();

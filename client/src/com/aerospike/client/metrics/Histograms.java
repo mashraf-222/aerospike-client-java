@@ -1,6 +1,6 @@
 package com.aerospike.client.metrics;
 
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Histograms {
     private static final long NS_TO_MS = 1000000;
@@ -47,7 +47,6 @@ public class Histograms {
         }
         buckets[type.ordinal()].add(elapsed);
     }
-
 
     /**
      * Return number of buckets.
