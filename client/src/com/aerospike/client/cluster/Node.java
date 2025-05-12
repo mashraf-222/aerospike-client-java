@@ -77,6 +77,8 @@ public class Node implements Closeable {
 	final AtomicInteger connsOpened;
 	final AtomicInteger connsClosed;
 	private final AtomicInteger errorRateCount;
+	private final Counter errorCounter;
+	private final Counter timeoutCounter;
 	protected int connectionIter;
 	private int peersGeneration;
 	int partitionGeneration;
@@ -108,6 +110,8 @@ public class Node implements Closeable {
 		this.connsOpened = new AtomicInteger(1);
 		this.connsClosed = new AtomicInteger(0);
 		this.errorRateCount = new AtomicInteger(0);
+		this.errorCounter = new Counter();
+		this.timeoutCounter = new Counter();
 		this.peersGeneration = -1;
 		this.partitionGeneration = -1;
 		this.rebalanceGeneration = -1;
@@ -1119,7 +1123,7 @@ public class Node implements Closeable {
 	 * transaction may occur.
 	 */
 	public void addError(String namespace) {
-		metrics.errorCounter.increment(namespace);
+		errorCounter.increment(namespace);
 	}
 
 	/**
@@ -1127,7 +1131,7 @@ public class Node implements Closeable {
 	 * multiple timeouts per transaction may occur.
 	 */
 	public void addTimeout(String namespace) {
-		metrics.timeoutCounter.increment(namespace);
+		timeoutCounter.increment(namespace);
 	}
 
 	/**
@@ -1155,14 +1159,14 @@ public class Node implements Closeable {
 	 * Return transaction error count. The value is cumulative and not reset per metrics interval.
 	 */
 	public long getErrorCount() {
-        return metrics.errorCounter.getTotal();
+        return errorCounter.getTotal();
 	}
 
 	/**
 	 * Return transaction error count by namespace. The value is cumulative and not reset per metrics interval.
 	 */
 	public long getErrorCountByNS(String namespace) {
-		return metrics.errorCounter.getCountByNS(namespace);
+		return errorCounter.getCountByNS(namespace);
 	}
 
 	/**
@@ -1183,14 +1187,14 @@ public class Node implements Closeable {
 	 * Return key busy error count for a given namespace. The value is cumulative and not reset per metrics interval.
 	 */
 	public long getKeyBusyCountByNS(String namespace) {
-		return metrics.errorCounter.getCountByNS(namespace);
+		return metrics.keyBusyCounter.getCountByNS(namespace);
 	}
 
 	/**
 	 * Return transaction timeout count. The value is cumulative and not reset per metrics interval.
 	 */
 	public long getTimeoutCount() {
-        return metrics.timeoutCounter.getTotal();
+        return timeoutCounter.getTotal();
 	}
 
 	/**
@@ -1198,7 +1202,7 @@ public class Node implements Closeable {
 	 * interval.
 	 */
 	public long getTimeoutCountbyNS(String namespace) {
-		return metrics.timeoutCounter.getTotal();
+		return timeoutCounter.getTotal();
 	}
 
 	/**

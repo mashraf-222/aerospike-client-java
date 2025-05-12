@@ -11,7 +11,8 @@ public class Histograms {
     private final int max;
 
     /**
-     * In our context, a Histogram is a map of namespaces to LatencyBuckets
+     * A Histograms object is a container for a map of namespaces to histograms (as defined by their associated
+     *  LatencyBuckets) & their histogram properties
      *
      * @param columnCount	number of histogram columns or "buckets"
      * @param shift		power of 2 multiple between each range bucket in histogram starting at bucket 3.
@@ -49,21 +50,14 @@ public class Histograms {
     }
 
     /**
-     * Return number of buckets.
-     */
-    public int getColumnCount() {
-        return columnCount;
-    }
-
-    /**
-     * Return the LatencyBuckets for a given namespace and LatencyType ordinal
+     * Return the LatencyBuckets for a given namespace
      */
     public LatencyBuckets[] getBuckets(String namespace) {
         return histoMap.get(namespace);
     }
 
     /**
-     * Return the histogram map
+     * Return the histograms map
      */
     public ConcurrentHashMap<String, LatencyBuckets[]> getMap () {
         return histoMap;

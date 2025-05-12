@@ -23,8 +23,6 @@ package com.aerospike.client.metrics;
  */
 public final class NodeMetrics {
 	private final Histograms histograms;
-	public final Counter errorCounter;
-	public final Counter timeoutCounter;
 	public final Counter keyBusyCounter;
 	public final Counter bytesInCounter;
 	public final Counter bytesOutCounter;
@@ -35,8 +33,6 @@ public final class NodeMetrics {
 	public NodeMetrics(MetricsPolicy policy) {
 		int latencyColumns = policy.latencyColumns;
 		int latencyShift = policy.latencyShift;
-		this.errorCounter = new Counter();
-		this.timeoutCounter = new Counter();
 		this.keyBusyCounter = new Counter();
 		this.bytesInCounter = new Counter();
 		this.bytesOutCounter = new Counter();
@@ -51,6 +47,10 @@ public final class NodeMetrics {
 		histograms.addLatency(namespace, type, elapsed);
 	}
 
+	/**
+	 * Returns the available Histograms (Containers for namespace-aggregated latency buckets)
+	 * @return the Histograms object
+	 */
 	public Histograms getHistograms() {
 		return histograms;
 	}
