@@ -4182,7 +4182,7 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 
 		statement.setAggregateFunction(packageName, functionName, functionArgs);
 
-		cluster.addCommandCount(statement.getNamespace());
+		cluster.addCommandCount();
 
 		long taskId = statement.prepareTaskId();
 		Node[] nodes = cluster.validateNodes();
@@ -4223,7 +4223,7 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 			statement.setOperations(operations);
 		}
 
-		cluster.addCommandCount(statement.getNamespace());
+		cluster.addCommandCount();
 
 		long taskId = statement.prepareTaskId();
 		Node[] nodes = cluster.validateNodes();

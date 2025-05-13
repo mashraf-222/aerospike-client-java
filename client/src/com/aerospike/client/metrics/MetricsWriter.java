@@ -144,10 +144,10 @@ public final class MetricsWriter implements MetricsListener {
 		// Must use separate StringBuilder instance to avoid conflicting with metrics detail write.
 		sb.setLength(0);
 		sb.append(now.format(TimestampFormat));
-		sb.append(" header(1)");
-		sb.append(" cluster[name,clientType,clientVersion,appId,label[],cpu,mem,recoverQueueSize,invalidNodeCount,commandCount,retryCount,delayQueueTimeoutCount,eventloop[],node[]]");
+		sb.append(" header(2)");
+		sb.append(" cluster[name,clientType,clientVersion,appId,label[name,value],cpu,mem,recoverQueueSize,invalidNodeCount,commandCount,retryCount,delayQueueTimeoutCount,eventloop[],node[]]");
 		sb.append(" eventloop[processSize,queueSize]");
-		sb.append(" node[name,address,port,syncConn,asyncConn,errors,timeouts,namespace[]]");
+		sb.append(" node[name,address,port,syncConn,asyncConn,namespace[]]");
 		sb.append(" conn[inUse,inPool,opened,closed]");
 		sb.append(" namespace[name,errors,timeouts,keyBusy,bytesIn,bytesOut,latency[]]");
 		sb.append(" latency(");
@@ -188,7 +188,9 @@ public final class MetricsWriter implements MetricsListener {
 		}
 		sb.append(',');
 		if (policy.labels != null) {
-			sb.append(policy.labels);
+			String labels = policy.labels.toString();
+			labels = labels.replace(" ","").replace('{', '[').replace('}', ']').replace('=', ',');
+			sb.append(labels);
 		}
 		sb.append(',');
 		sb.append((int)cpu);
@@ -254,11 +256,6 @@ public final class MetricsWriter implements MetricsListener {
 		writeConn(node.getConnectionStats());
 		sb.append(',');
 		writeConn(node.getAsyncConnectionStats());
-		sb.append(',');
-
-		sb.append(node.getErrorCount());   // Cumulative. Not reset on each interval.
-		sb.append(',');
-		sb.append(node.getTimeoutCount()); // Cumulative. Not reset on each interval.
 		sb.append(",[");
 
 		Histograms hGrams = node.getMetrics().getHistograms();

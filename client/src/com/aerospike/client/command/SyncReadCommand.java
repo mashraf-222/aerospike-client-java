@@ -31,7 +31,7 @@ public abstract class SyncReadCommand extends SyncCommand {
 		super(cluster, policy, key.namespace);
 		this.key = key;
 		this.partition = Partition.read(cluster, policy, key);
-		cluster.addCommandCount(key.namespace);
+		cluster.addCommandCount();
 	}
 
 	@Override

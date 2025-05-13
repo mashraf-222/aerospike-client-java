@@ -26,7 +26,7 @@ import com.aerospike.client.policy.BatchPolicy;
 public final class BatchExecutor {
 
 	public static void execute(Cluster cluster, BatchPolicy policy, IBatchCommand[] commands, BatchStatus status) {
-		cluster.addCommandCount(null);
+		cluster.addCommandCount();
 
 		if (commands.length <= 1) {
 			// Run batch request in same thread.

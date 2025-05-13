@@ -151,9 +151,9 @@ public class Info {
 	 * @param name					name of value to retrieve
 	 * @return						info value
 	 */
-	public static String request(Node node, String hostname, int port, String name)
+	public static String request(String hostname, int port, String name)
 		throws AerospikeException {
-		return request(node, new InetSocketAddress(hostname, port), name);
+		return request(null, new InetSocketAddress(hostname, port), name);
 	}
 
 	/**

@@ -19,6 +19,7 @@ package com.aerospike.client.policy;
 import com.aerospike.client.configuration.ConfigurationProvider;
 import com.aerospike.client.configuration.serializers.Configuration;
 import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicTxnVerifyConfig;
+import com.aerospike.client.Log;
 
 /**
  * Transaction policy fields used to batch verify record versions on commit.

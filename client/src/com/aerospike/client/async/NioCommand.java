@@ -767,7 +767,7 @@ public final class NioCommand implements INioCommand, Runnable, TimerTask {
 			}
 		}
 
-		cluster.addRetry(command.namespace);
+		cluster.addRetry();
 		executeCommand(deadline, TimeoutState.TIMEOUT);
 	}
 
@@ -777,7 +777,7 @@ public final class NioCommand implements INioCommand, Runnable, TimerTask {
 		if (state == AsyncCommand.DELAY_QUEUE) {
 			// Command timed out in delay queue.
 			if (metricsEnabled) {
-				cluster.addDelayQueueTimeout(command.namespace);
+				cluster.addDelayQueueTimeout();
 			}
 			closeFromDelayQueue();
 			notifyFailure(ae);
@@ -955,7 +955,7 @@ public final class NioCommand implements INioCommand, Runnable, TimerTask {
 			}
 		}
 
-		cluster.addRetry(command.namespace);
+		cluster.addRetry();
 		executeCommand(deadline, TimeoutState.RETRY);
 	}
 

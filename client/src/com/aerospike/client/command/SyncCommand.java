@@ -276,7 +276,7 @@ public abstract class SyncCommand extends Command {
 				}
 			}
 
-			cluster.addRetry(namespace);
+			cluster.addRetry();
 		}
 
 		// Retries have been exhausted.  Throw last exception.

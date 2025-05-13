@@ -747,7 +747,7 @@ public final class Batch {
 					command.commandSentCounter = commandSentCounter;
 					command.deadline = deadline;
 
-					cluster.addRetry(this.namespace);
+					cluster.addRetry();
 					es.execute(command);
 				}
 			}

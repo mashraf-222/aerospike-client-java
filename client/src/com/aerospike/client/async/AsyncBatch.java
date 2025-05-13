@@ -1127,7 +1127,7 @@ public final class AsyncBatch {
 				return false;
 			}
 
-			parent.cluster.addRetries(namespace, batchNodes.size());
+			parent.cluster.addRetries(batchNodes.size());
 
 			AsyncBatchCommand[] cmds = new AsyncBatchCommand[batchNodes.size()];
 			int count = 0;

@@ -33,7 +33,7 @@ public final class QueryListenerExecutor {
 		QueryListener listener,
 		PartitionTracker tracker
 	) {
-		cluster.addCommandCount(statement.namespace);
+		cluster.addCommandCount();
 
 		TaskGen task = new TaskGen(statement);
 		long taskId = task.getId();
