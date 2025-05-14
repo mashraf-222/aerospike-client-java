@@ -655,7 +655,7 @@ public class Cluster implements Runnable, Closeable {
 		}
 
 		if (metricsEnabled && (tendCount % metricsPolicy.interval) == 0) {
-			metricsListener.onSnapshot(this, metricsPolicy);
+			metricsListener.onSnapshot(this);
 		}
 
 		processRecoverQueue();
@@ -1118,7 +1118,7 @@ public class Cluster implements Runnable, Closeable {
 
 	private void finalizeMetricsEnablement() {
 		if (metricsEnabled) {
-			this.metricsListener.onDisable(this, metricsPolicy);
+			this.metricsListener.onDisable(this);
 		}
 
 		Node[] nodeArray = nodes;
@@ -1134,7 +1134,7 @@ public class Cluster implements Runnable, Closeable {
 	public final void disableMetrics() {
 		if (metricsEnabled) {
 			metricsEnabled = false;
-			metricsListener.onDisable(this, metricsPolicy);
+			metricsListener.onDisable(this);
 		}
 	}
 
@@ -1482,7 +1482,10 @@ public class Cluster implements Runnable, Closeable {
 		return invalidNodeCount;
 	}
 
-	private MetricsPolicy getMetricsPolicy() {
+	/**
+	 * Return the current Metrics Policy
+	 */
+	public MetricsPolicy getMetricsPolicy() {
 		return metricsPolicy;
 	}
 

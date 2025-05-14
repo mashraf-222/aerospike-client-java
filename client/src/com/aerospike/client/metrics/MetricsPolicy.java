@@ -90,12 +90,12 @@ public final class MetricsPolicy {
 	 * Application ID.  Metrics are loosely tied to this.  Changing the app_ID will not reset the metric counters, as
 	 * specified by PM team
 	 */
-	public String app_ID;
+	public String appId;
 
 	/**
 	 * Labels that can be sent to the metrics output
 	 */
-	public List<Map<String, String>> labels;
+	public Map<String,String> labels;
 
 	private boolean metricsRestartRequired = false;
 
@@ -109,7 +109,7 @@ public final class MetricsPolicy {
 			return;
 		}
 		DynamicMetricsConfig dynMC = config.dynamicConfiguration.dynamicMetricsConfig;
-		if (dynMC.app_id != null) this.app_ID = dynMC.app_id.value;
+		if (dynMC.app_id != null) this.appId = dynMC.app_id.value;
 		if (dynMC.labels != null) this.labels = dynMC.labels;
 		if (dynMC.latencyShift != null)  {
 			if (dynMC.latencyShift.value != this.latencyShift) {
@@ -139,7 +139,7 @@ public final class MetricsPolicy {
 		this.interval = other.interval;
 		this.latencyColumns = other.latencyColumns;
 		this.latencyShift = other.latencyShift;
-		this.app_ID = other.app_ID;
+		this.appId = other.appId;
 		this.labels = other.labels;
 	}
 
@@ -173,9 +173,9 @@ public final class MetricsPolicy {
 
 	public void setLatencyShift(int latencyShift) { this.latencyShift = latencyShift; }
 
-	public void setApp_ID(String app_ID) { this.app_ID = app_ID; }
+	public void setAppId(String appId) { this.appId = appId; }
 
-	public void setLabels(List<Map<String, String>> labels) { this.labels = labels; }
+	public void setLabels(Map<String, String> labels) { this.labels = labels; }
 
 	public boolean isMetricsRestartRequired() {
 		return metricsRestartRequired;

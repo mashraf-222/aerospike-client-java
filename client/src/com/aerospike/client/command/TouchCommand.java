@@ -65,6 +65,12 @@ public final class TouchCommand extends SyncWriteCommand {
 			return;
 		}
 
+		if (node.areMetricsEnabled()) {
+			if (resultCode == ResultCode.KEY_BUSY) {
+				node.addKeyBusy(namespace);
+			}
+		}
+
 		throw new AerospikeException(resultCode);
 	}
 

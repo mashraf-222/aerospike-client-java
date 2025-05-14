@@ -243,7 +243,7 @@ public class Node implements Closeable {
 			}
 
 			String[] commands = cluster.rackAware ? INFO_PERIODIC_REB : INFO_PERIODIC;
-			HashMap<String,String> infoMap = Info.request(this, tendConnection, commands);
+			HashMap<String,String> infoMap = infoRequest(tendConnection, commands);
 
 			verifyNodeName(infoMap);
 			verifyPeersGeneration(infoMap, peers);
@@ -266,6 +266,11 @@ public class Node implements Closeable {
 			peers.genChanged = true;
 			refreshFailed(e);
 		}
+	}
+
+	private HashMap<String,String> infoRequest(Connection conn, String... names) {
+		Info info = new Info(this, conn, names);
+		return info.parseMultiResponse();
 	}
 
 	private boolean shouldLogin() {

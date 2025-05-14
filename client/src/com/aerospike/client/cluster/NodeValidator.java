@@ -229,7 +229,7 @@ public final class NodeValidator {
 			}
 
 			// Issue commands.
-			HashMap<String,String> map = Info.request(null, conn, commands);
+			HashMap<String,String> map = Info.request(conn, commands);
 
 			// Node returned results.
 			this.primaryHost = new Host(address.getHostAddress(), tlsName, port);
@@ -428,7 +428,7 @@ public final class NodeValidator {
 		private SwitchClear(Cluster cluster, Connection conn, byte[] sessionToken) throws Exception {
 			// Obtain non-TLS addresses.
 			String command = cluster.useServicesAlternate ? "service-clear-alt" : "service-clear-std";
-			String result = Info.request(null, conn, command);
+			String result = Info.request(conn, command);
 			List<Host> hosts = Host.parseServiceHosts(result);
 			Host clearHost;
 

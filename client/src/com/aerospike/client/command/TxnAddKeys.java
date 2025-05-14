@@ -45,15 +45,16 @@ public final class TxnAddKeys extends SyncWriteCommand {
 	protected void parseResult(Node node, Connection conn) throws IOException {
 		RecordParser rp = new RecordParser(conn, dataBuffer);
 		rp.parseTranDeadline(txn);
+
+		if (rp.resultCode == ResultCode.OK) {
+			return;
+		}
+
 		if (node.areMetricsEnabled()) {
 			node.addBytesIn(namespace, rp.bytesIn);
 			if (rp.resultCode == ResultCode.KEY_BUSY) {
 				node.addKeyBusy(namespace);
 			}
-		}
-
-		if (rp.resultCode == ResultCode.OK) {
-			return;
 		}
 
 		throw new AerospikeException(rp.resultCode);

@@ -92,10 +92,10 @@ public final class MetricsWriter implements MetricsListener {
 	 * Write cluster metrics snapshot to file.
 	 */
 	@Override
-	public void onSnapshot(Cluster cluster, MetricsPolicy policy) {
+	public void onSnapshot(Cluster cluster) {
 		synchronized(this) {
 			if (enabled) {
-				writeCluster(cluster, policy);
+				writeCluster(cluster);
 			}
 		}
 	}
@@ -120,12 +120,12 @@ public final class MetricsWriter implements MetricsListener {
 	 * Write final cluster metrics snapshot to file and then close the file.
 	 */
 	@Override
-	public void onDisable(Cluster cluster, MetricsPolicy policy) {
+	public void onDisable(Cluster cluster) {
 		synchronized(this) {
 			if (enabled) {
 				try {
 					enabled = false;
-					writeCluster(cluster,policy);
+					writeCluster(cluster);
 					writer.close();
 				}
 				catch (Throwable e) {
@@ -145,7 +145,8 @@ public final class MetricsWriter implements MetricsListener {
 		sb.setLength(0);
 		sb.append(now.format(TimestampFormat));
 		sb.append(" header(2)");
-		sb.append(" cluster[name,clientType,clientVersion,appId,label[name,value],cpu,mem,recoverQueueSize,invalidNodeCount,commandCount,retryCount,delayQueueTimeoutCount,eventloop[],node[]]");
+		sb.append(" cluster[name,clientType,clientVersion,appId,label[],cpu,mem,recoverQueueSize,invalidNodeCount,commandCount,retryCount,delayQueueTimeoutCount,eventloop[],node[]]");
+		sb.append(" label[name,value]");
 		sb.append(" eventloop[processSize,queueSize]");
 		sb.append(" node[name,address,port,syncConn,asyncConn,namespace[]]");
 		sb.append(" conn[inUse,inPool,opened,closed]");
@@ -159,7 +160,8 @@ public final class MetricsWriter implements MetricsListener {
 		writeLine();
 	}
 
-	private void writeCluster(Cluster cluster, MetricsPolicy policy) {
+	private void writeCluster(Cluster cluster) {
+		MetricsPolicy policy = cluster.getMetricsPolicy();
 		String clusterName = cluster.getClusterName();
 		if (clusterName == null) {
 			clusterName = "";
@@ -177,8 +179,8 @@ public final class MetricsWriter implements MetricsListener {
 		sb.append(',');
 		sb.append(cluster.client.version);
 		sb.append(',');
-		if (policy.app_ID != null) {
-			sb.append(policy.app_ID);
+		if (policy.appId != null) {
+			sb.append(policy.appId);
 		} else {
 			byte[] userBytes = cluster.getUser();
 			if (userBytes != null && userBytes.length > 0) {
@@ -188,9 +190,12 @@ public final class MetricsWriter implements MetricsListener {
 		}
 		sb.append(',');
 		if (policy.labels != null) {
-			String labels = policy.labels.toString();
-			labels = labels.replace(" ","").replace('{', '[').replace('}', ']').replace('=', ',');
-			sb.append(labels);
+			sb.append("[");
+			for (String key : policy.labels.keySet()) {
+				sb.append("[").append(key).append(",").append(policy.labels.get(key)).append("],");
+			}
+			sb.deleteCharAt(sb.length() - 1);
+			sb.append("]");
 		}
 		sb.append(',');
 		sb.append((int)cpu);

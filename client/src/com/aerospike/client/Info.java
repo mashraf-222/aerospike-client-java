@@ -59,7 +59,7 @@ public class Info {
 		Connection conn = node.getConnection(DEFAULT_TIMEOUT);
 
 		try	{
-			String response = Info.request(node, conn, name);
+			String response = Info.request(conn, name);
 			node.putConnection(conn);
 			return response;
 		}
@@ -82,7 +82,7 @@ public class Info {
 		Connection conn = node.getConnection(timeout);
 
 		try {
-			String result = request(node, conn, name);
+			String result = request(conn, name);
 			node.putConnection(conn);
 			return result;
 		}
@@ -105,7 +105,7 @@ public class Info {
 		Connection conn = node.getConnection(timeout);
 
 		try {
-			Map<String,String> result = request(node, conn, names);
+			Map<String,String> result = request(conn, names);
 			node.putConnection(conn);
 			return result;
 		}
@@ -127,7 +127,7 @@ public class Info {
 		Connection conn = node.getConnection(timeout);
 
 		try {
-			Map<String,String> result = request(node, conn);
+			Map<String,String> result = request(conn);
 			node.putConnection(conn);
 			return result;
 		}
@@ -153,7 +153,7 @@ public class Info {
 	 */
 	public static String request(String hostname, int port, String name)
 		throws AerospikeException {
-		return request(null, new InetSocketAddress(hostname, port), name);
+		return request(new InetSocketAddress(hostname, port), name);
 	}
 
 	/**
@@ -166,9 +166,9 @@ public class Info {
 	 * @param names					names of values to retrieve
 	 * @return						info name/value pairs
 	 */
-	public static HashMap<String,String> request(Node node, String hostname, int port, String... names)
+	public static HashMap<String,String> request(String hostname, int port, String... names)
 		throws AerospikeException {
-		return request(node, new InetSocketAddress(hostname, port), names);
+		return request(new InetSocketAddress(hostname, port), names);
 	}
 
 	/**
@@ -179,9 +179,9 @@ public class Info {
 	 * @param port					host port
 	 * @return						info name/value pairs
 	 */
-	public static HashMap<String,String> request(Node node, String hostname, int port)
+	public static HashMap<String,String> request(String hostname, int port)
 		throws AerospikeException {
-		return request(node, new InetSocketAddress(hostname, port));
+		return request(new InetSocketAddress(hostname, port));
 	}
 
 	//-------------------------------------------------------
@@ -196,12 +196,12 @@ public class Info {
 	 * @param name					name of value to retrieve
 	 * @return						info value
 	 */
-	public static String request(Node node, InetSocketAddress socketAddress, String name)
+	public static String request(InetSocketAddress socketAddress, String name)
 		throws AerospikeException {
 		Connection conn = new Connection(socketAddress, DEFAULT_TIMEOUT);
 
 		try {
-			return request(node, conn, name);
+			return request(conn, name);
 		}
 		finally {
 			conn.close();
@@ -216,12 +216,12 @@ public class Info {
 	 * @param names					names of values to retrieve
 	 * @return						info name/value pairs
 	 */
-	public static HashMap<String,String> request(Node node, InetSocketAddress socketAddress, String... names)
+	public static HashMap<String,String> request(InetSocketAddress socketAddress, String... names)
 		throws AerospikeException {
 		Connection conn = new Connection(socketAddress, DEFAULT_TIMEOUT);
 
 		try {
-			return request(node, conn, names);
+			return request(conn, names);
 		}
 		finally {
 			conn.close();
@@ -235,12 +235,12 @@ public class Info {
 	 * @param socketAddress			<code>InetSocketAddress</code> of server node
 	 * @return						info name/value pairs
 	 */
-	public static HashMap<String,String> request(Node node, InetSocketAddress socketAddress)
+	public static HashMap<String,String> request(InetSocketAddress socketAddress)
 		throws AerospikeException {
 		Connection conn = new Connection(socketAddress, DEFAULT_TIMEOUT);
 
 		try {
-			return request(node, conn);
+			return request(conn);
 		}
 		finally {
 			conn.close();
@@ -258,10 +258,10 @@ public class Info {
 	 * @param name					name of value to retrieve
 	 * @return						info value
 	 */
-	public static String request(Node node, Connection conn, String name)
+	public static String request(Connection conn, String name)
 		throws AerospikeException {
 
-		Info info = new Info(node, conn, name);
+		Info info = new Info(null, conn, name);
 		return info.parseSingleResponse(name);
 	}
 
@@ -272,10 +272,10 @@ public class Info {
 	 * @param names					names of values to retrieve
 	 * @return						info name/value pairs
 	 */
-	public static HashMap<String,String> request(Node node, Connection conn, String... names)
+	public static HashMap<String,String> request(Connection conn, String... names)
 		throws AerospikeException {
 
-		Info info = new Info(node, conn, names);
+		Info info = new Info(null, conn, names);
 		return info.parseMultiResponse();
 	}
 
@@ -286,10 +286,10 @@ public class Info {
 	 * @param names					names of values to retrieve
 	 * @return						info name/value pairs
 	 */
-	public static HashMap<String,String> request(Node node, Connection conn, List<String> names)
+	public static HashMap<String,String> request(Connection conn, List<String> names)
 		throws AerospikeException {
 
-		Info info = new Info(node, conn, names);
+		Info info = new Info(conn, names);
 		return info.parseMultiResponse();
 	}
 
@@ -299,9 +299,9 @@ public class Info {
 	 * @param conn					socket connection to server node
 	 * @return						info name/value pairs
 	 */
-	public static HashMap<String,String> request(Node node, Connection conn)
+	public static HashMap<String,String> request(Connection conn)
 		throws AerospikeException {
-		Info info = new Info(node, conn);
+		Info info = new Info(conn);
 		return info.parseMultiResponse();
 	}
 
@@ -351,6 +351,28 @@ public class Info {
 	 * @param conn			connection to server node
 	 * @param command		command sent to server
 	 */
+	public Info(Connection conn, String command) throws AerospikeException {
+		int size = Buffer.estimateSizeUtf8Quick(command) + 9;
+
+		buffer = new byte[size];
+		offset = 8; // Skip size field.
+
+		// The command format is: <name1>\n<name2>\n...
+		offset += Buffer.stringToUtf8(command, buffer, offset);
+		buffer[offset++] = '\n';
+
+		sendCommand(null, conn);
+	}
+
+	/**
+	 * Send single command to server and store results.
+	 * This constructor is used internally.
+	 * The static request methods should be used instead.
+	 *
+	 * @param node			server node
+	 * @param conn			connection to server node
+	 * @param command		command sent to server
+	 */
 	public Info(Node node, Connection conn, String command) throws AerospikeException {
 		int size = Buffer.estimateSizeUtf8Quick(command) + 9;
 
@@ -369,6 +391,33 @@ public class Info {
 	 * This constructor is used internally.
 	 * The static request methods should be used instead.
 	 *
+	 * @param conn			connection to server node
+	 * @param commands		commands sent to server
+	 */
+	public Info(Connection conn, String... commands) throws AerospikeException {
+		int size = 8;
+
+		for (String command : commands) {
+			size += Buffer.estimateSizeUtf8Quick(command) + 1;
+		}
+
+		buffer = new byte[size];
+		offset = 8; // Skip size field.
+
+		// The command format is: <name1>\n<name2>\n...
+		for (String command : commands) {
+			offset += Buffer.stringToUtf8(command, buffer, offset);
+			buffer[offset++] = '\n';
+		}
+		sendCommand(null, conn);
+	}
+
+	/**
+	 * Send multiple commands to server and store results.
+	 * This constructor is used internally.
+	 * The static request methods should be used instead.
+	 *
+	 * @param node			server node
 	 * @param conn			connection to server node
 	 * @param commands		commands sent to server
 	 */
@@ -395,10 +444,10 @@ public class Info {
 	 * This constructor is used internally.
 	 * The static request methods should be used instead.
 	 *
-	 * @param conn			connection to server node
-	 * @param commands		commands sent to server
+	 * @param conn     connection to server node
+	 * @param commands commands sent to server
 	 */
-	public Info(Node node, Connection conn, List<String> commands) throws AerospikeException {
+	public Info(Connection conn, List<String> commands) throws AerospikeException {
 		int size = 8;
 
 		for (String command : commands) {
@@ -413,7 +462,7 @@ public class Info {
 			offset += Buffer.stringToUtf8(command, buffer, offset);
 			buffer[offset++] = '\n';
 		}
-		sendCommand(node, conn);
+		sendCommand(null, conn);
 	}
 
 	/**
@@ -421,12 +470,12 @@ public class Info {
 	 * This constructor is used internally.
 	 * The static request methods should be used instead.
 	 *
-	 * @param conn			connection to server node
+	 * @param conn connection to server node
 	 */
-	public Info(Node node, Connection conn) throws AerospikeException {
+	public Info(Connection conn) throws AerospikeException {
 		buffer = new byte[8];
 		offset = 8;  // Skip size field.
-		sendCommand(node, conn);
+		sendCommand(null, conn);
 	}
 
 	/**
