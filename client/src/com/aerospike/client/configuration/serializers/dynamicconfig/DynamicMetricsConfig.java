@@ -17,13 +17,12 @@
 
 package com.aerospike.client.configuration.serializers.dynamicconfig;
 
+import java.util.Map;
 
-import com.aerospike.client.Log;
 import com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops.BooleanProperty;
 import com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops.IntProperty;
 import com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops.StringProperty;
-
-import java.util.Map;
+import com.aerospike.client.Log;
 
 public class DynamicMetricsConfig {
     public BooleanProperty enable;
@@ -65,8 +64,7 @@ public class DynamicMetricsConfig {
             propsString.append(" labels=").append(getLabels().toString()).append(", ");
         } catch (Exception e) {
             Log.error(e.toString());
-        } finally {
-            return propsString.append("}").toString();
         }
+        return propsString.append("}").toString();
     }
 }
