@@ -87,9 +87,9 @@ public class TxnRollPolicy extends BatchPolicy {
 		}
 	}
 
-		/**
-         * Default constructor.
-         */
+	/**
+     * Default constructor.
+     */
 	public TxnRollPolicy() {
 		replica = Replica.MASTER;
 		maxRetries = 5;
