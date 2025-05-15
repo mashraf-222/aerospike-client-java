@@ -17,9 +17,8 @@
 
 package com.aerospike.client.configuration.serializers.dynamicconfig;
 
-
-import com.aerospike.client.Log;
 import com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops.BooleanProperty;
+import com.aerospike.client.Log;
 
 public class DynamicBatchDeleteConfig {
     public BooleanProperty sendKey;
@@ -43,8 +42,7 @@ public class DynamicBatchDeleteConfig {
             propsString.append(" durable_delete=").append(durableDelete.value).append(", ");
         } catch (Exception e) {
             Log.error(e.toString());
-        } finally {
-            return propsString.append("}").toString();
         }
+        return propsString.append("}").toString();
     }
 }
