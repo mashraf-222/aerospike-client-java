@@ -16,12 +16,12 @@
  */
 package com.aerospike.client.metrics;
 
+import java.util.Map;
+
+import com.aerospike.client.Log;
 import com.aerospike.client.configuration.serializers.Configuration;
 import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicMetricsConfig;
-import com.aerospike.client.Log;
 import com.aerospike.client.policy.ClientPolicy;
-
-import java.util.*;
 
 /**
  * Client periodic metrics configuration.
@@ -87,8 +87,7 @@ public final class MetricsPolicy {
 	public int latencyShift = 1;
 
 	/**
-	 * Application ID.  Metrics are loosely tied to this.  Changing the app_ID will not reset the metric counters, as
-	 * specified by PM team
+	 * Application ID. Metrics are loosely tied to this. Changing the appId will not reset the metric counters.
 	 */
 	public String appId;
 
@@ -109,8 +108,12 @@ public final class MetricsPolicy {
 			return;
 		}
 		DynamicMetricsConfig dynMC = config.dynamicConfiguration.dynamicMetricsConfig;
-		if (dynMC.app_id != null) this.appId = dynMC.app_id.value;
-		if (dynMC.labels != null) this.labels = dynMC.labels;
+		if (dynMC.app_id != null) {
+			this.appId = dynMC.app_id.value;
+		}
+		if (dynMC.labels != null) {
+			this.labels = dynMC.labels;
+		}
 		if (dynMC.latencyShift != null)  {
 			if (dynMC.latencyShift.value != this.latencyShift) {
 				metricsRestartRequired = true;
