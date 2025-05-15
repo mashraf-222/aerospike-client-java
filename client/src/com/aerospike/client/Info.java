@@ -470,7 +470,7 @@ public class Info {
 	 * This constructor is used internally.
 	 * The static request methods should be used instead.
 	 *
-	 * @param conn connection to server node
+	 * @param conn			connection to server node
 	 */
 	public Info(Connection conn) throws AerospikeException {
 		buffer = new byte[8];

@@ -70,9 +70,6 @@ public abstract class AsyncWriteBase extends AsyncCommand {
 		rp.parseFields(policy.txn, key, true);
 		if (node.areMetricsEnabled()) {
 			node.addBytesIn(namespace, rp.bytesIn);
-			if (rp.resultCode == ResultCode.KEY_BUSY) {
-				node.addKeyBusy(namespace);
-			}
 		}
 		return rp.resultCode;
 	}

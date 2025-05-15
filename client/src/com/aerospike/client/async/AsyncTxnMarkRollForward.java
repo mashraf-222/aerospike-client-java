@@ -52,6 +52,10 @@ public final class AsyncTxnMarkRollForward extends AsyncWriteBase {
 			return true;
 		}
 
+		if (node.areMetricsEnabled() && resultCode == ResultCode.KEY_BUSY) {
+			node.addKeyBusy(namespace);
+		}
+
 		throw new AerospikeException(resultCode);
 	}
 
