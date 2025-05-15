@@ -59,7 +59,8 @@ public class Info {
 		Connection conn = node.getConnection(DEFAULT_TIMEOUT);
 
 		try	{
-			String response = Info.request(conn, name);
+			Info info = new Info(node, conn, name);
+			String response = info.parseSingleResponse(name);
 			node.putConnection(conn);
 			return response;
 		}
@@ -82,7 +83,8 @@ public class Info {
 		Connection conn = node.getConnection(timeout);
 
 		try {
-			String result = request(conn, name);
+			Info info = new Info(node, conn, name);
+			String result = info.parseSingleResponse(name);
 			node.putConnection(conn);
 			return result;
 		}
@@ -105,7 +107,8 @@ public class Info {
 		Connection conn = node.getConnection(timeout);
 
 		try {
-			Map<String,String> result = request(conn, names);
+			Info info = new Info(node, conn, names);
+			Map<String,String> result = info.parseMultiResponse();
 			node.putConnection(conn);
 			return result;
 		}
@@ -127,7 +130,8 @@ public class Info {
 		Connection conn = node.getConnection(timeout);
 
 		try {
-			Map<String,String> result = request(conn);
+			Info info = new Info(node, conn);
+			Map<String,String> result = info.parseMultiResponse();
 			node.putConnection(conn);
 			return result;
 		}
@@ -479,6 +483,20 @@ public class Info {
 	}
 
 	/**
+	 * Send default empty command to server and store results.
+	 * This constructor is used internally.
+	 * The static request methods should be used instead.
+	 *
+	 * @param node			server node
+	 * @param conn			connection to server node
+	 */
+	public Info(Node node, Connection conn) throws AerospikeException {
+		buffer = new byte[8];
+		offset = 8;  // Skip size field.
+		sendCommand(node, conn);
+	}
+
+	/**
 	 * Internal constructor.  Do not use.
 	 */
 	public Info(byte[] buffer, int length) {
@@ -495,7 +513,7 @@ public class Info {
 			long bytesIn = 0;
 
 			// Write size field.
-			long size = ((long)offset - 8L) | (2L << 56) | (1L << 48);
+			long size = (offset - 8L) | (2L << 56) | (1L << 48);
 			Buffer.longToBytes(size, buffer, 0);
 
 			// Write.
