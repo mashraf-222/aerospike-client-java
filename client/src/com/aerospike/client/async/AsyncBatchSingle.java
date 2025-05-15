@@ -129,6 +129,12 @@ public final class AsyncBatchSingle {
 				record.setError(rp.resultCode, false);
 				executor.setRowError();
 			}
+			if (node.areMetricsEnabled()) {
+				node.addBytesIn(namespace, rp.bytesIn);
+				if (rp.resultCode == ResultCode.KEY_BUSY) {
+					node.addKeyBusy(namespace);
+				}
+			}
 		}
 	}
 
@@ -193,6 +199,12 @@ public final class AsyncBatchSingle {
 			if (rp.resultCode == ResultCode.OK) {
 				records[index] = rp.parseRecord(isOperation);
 			}
+			if (node.areMetricsEnabled()) {
+				node.addBytesIn(namespace, rp.bytesIn);
+				if (rp.resultCode == ResultCode.KEY_BUSY) {
+					node.addKeyBusy(namespace);
+				}
+			}
 		}
 	}
 
@@ -252,6 +264,12 @@ public final class AsyncBatchSingle {
 				record = rp.parseRecord(isOperation);
 			}
 			AsyncBatch.onRecord(listener, key, record);
+			if (node.areMetricsEnabled()) {
+				node.addBytesIn(namespace, rp.bytesIn);
+				if (rp.resultCode == ResultCode.KEY_BUSY) {
+					node.addKeyBusy(namespace);
+				}
+			}
 		}
 	}
 
@@ -287,6 +305,12 @@ public final class AsyncBatchSingle {
 				record = rp.parseRecord(false);
 			}
 			AsyncBatch.onRecord(listener, key, record);
+			if (node.areMetricsEnabled()) {
+				node.addBytesIn(namespace, rp.bytesIn);
+				if (rp.resultCode == ResultCode.KEY_BUSY) {
+					node.addKeyBusy(namespace);
+				}
+			}
 		}
 	}
 
@@ -317,6 +341,12 @@ public final class AsyncBatchSingle {
 		protected void parseResult(RecordParser rp) {
 			if (rp.resultCode == ResultCode.OK) {
 				records[index] = rp.parseRecord(false);
+			}
+			if (node.areMetricsEnabled()) {
+				node.addBytesIn(namespace, rp.bytesIn);
+				if (rp.resultCode == ResultCode.KEY_BUSY) {
+					node.addKeyBusy(namespace);
+				}
 			}
 		}
 	}
@@ -434,6 +464,12 @@ public final class AsyncBatchSingle {
 			}
 			parent.setSent(index);
 			AsyncBatch.onRecord(listener, record, index);
+			if (node.areMetricsEnabled()) {
+				node.addBytesIn(namespace, rp.bytesIn);
+				if (rp.resultCode == ResultCode.KEY_BUSY) {
+					node.addKeyBusy(namespace);
+				}
+			}
 		}
 
 		@Override
@@ -478,6 +514,12 @@ public final class AsyncBatchSingle {
 			else {
 				record.setError(rp.resultCode, Command.batchInDoubt(attr.hasWrite, commandSentCounter));
 				executor.setRowError();
+			}
+			if (node.areMetricsEnabled()) {
+				node.addBytesIn(namespace, rp.bytesIn);
+				if (rp.resultCode == ResultCode.KEY_BUSY) {
+					node.addKeyBusy(namespace);
+				}
 			}
 		}
 
@@ -552,6 +594,12 @@ public final class AsyncBatchSingle {
 			else {
 				record.setError(rp.resultCode, Command.batchInDoubt(true, commandSentCounter));
 				executor.setRowError();
+			}
+			if (node.areMetricsEnabled()) {
+				node.addBytesIn(namespace, rp.bytesIn);
+				if (rp.resultCode == ResultCode.KEY_BUSY) {
+					node.addKeyBusy(namespace);
+				}
 			}
 		}
 
@@ -639,6 +687,12 @@ public final class AsyncBatchSingle {
 				record.setError(rp.resultCode, Command.batchInDoubt(true, commandSentCounter));
 				executor.setRowError();
 			}
+			if (node.areMetricsEnabled()) {
+				node.addBytesIn(namespace, rp.bytesIn);
+				if (rp.resultCode == ResultCode.KEY_BUSY) {
+					node.addKeyBusy(namespace);
+				}
+			}
 		}
 
 		@Override
@@ -712,6 +766,12 @@ public final class AsyncBatchSingle {
 			}
 			parent.setSent(index);
 			AsyncBatch.onRecord(listener, record, index);
+			if (node.areMetricsEnabled()) {
+				node.addBytesIn(namespace, rp.bytesIn);
+				if (rp.resultCode == ResultCode.KEY_BUSY) {
+					node.addKeyBusy(namespace);
+				}
+			}
 		}
 
 		@Override
@@ -775,6 +835,12 @@ public final class AsyncBatchSingle {
 				record.setError(rp.resultCode, Command.batchInDoubt(true, commandSentCounter));
 				executor.setRowError();
 			}
+			if (node.areMetricsEnabled()) {
+				node.addBytesIn(namespace, rp.bytesIn);
+				if (rp.resultCode == ResultCode.KEY_BUSY) {
+					node.addKeyBusy(namespace);
+				}
+			}
 		}
 
 		@Override
@@ -830,6 +896,12 @@ public final class AsyncBatchSingle {
 			}
 			parent.setSent(index);
 			AsyncBatch.onRecord(listener, record, index);
+			if (node.areMetricsEnabled()) {
+				node.addBytesIn(namespace, rp.bytesIn);
+				if (rp.resultCode == ResultCode.KEY_BUSY) {
+					node.addKeyBusy(namespace);
+				}
+			}
 		}
 
 		@Override
@@ -901,6 +973,12 @@ public final class AsyncBatchSingle {
 				record.setError(rp.resultCode, Command.batchInDoubt(true, commandSentCounter));
 				executor.setRowError();
 			}
+			if (node.areMetricsEnabled()) {
+				node.addBytesIn(namespace, rp.bytesIn);
+				if (rp.resultCode == ResultCode.KEY_BUSY) {
+					node.addKeyBusy(namespace);
+				}
+			}
 		}
 
 		@Override
@@ -940,12 +1018,6 @@ public final class AsyncBatchSingle {
 		@Override
 		protected boolean parseResult(Node node) {
 			RecordParser rp = new RecordParser(dataBuffer, dataOffset, receiveSize);
-			if (node.areMetricsEnabled()) {
-				node.addBytesIn(namespace, rp.bytesIn);
-				if (rp.resultCode == ResultCode.KEY_BUSY) {
-					node.addKeyBusy(namespace);
-				}
-			}
 
 			if (rp.resultCode == ResultCode.OK) {
 				record.resultCode = rp.resultCode;
@@ -953,6 +1025,12 @@ public final class AsyncBatchSingle {
 			else {
 				record.setError(rp.resultCode, false);
 				executor.setRowError();
+			}
+			if (node.areMetricsEnabled()) {
+				node.addBytesIn(namespace, rp.bytesIn);
+				if (rp.resultCode == ResultCode.KEY_BUSY) {
+					node.addKeyBusy(namespace);
+				}
 			}
 			return true;
 		}
@@ -990,12 +1068,6 @@ public final class AsyncBatchSingle {
 		@Override
 		protected boolean parseResult(Node node) {
 			RecordParser rp = new RecordParser(dataBuffer, dataOffset, receiveSize);
-			if (node.areMetricsEnabled()) {
-				node.addBytesIn(namespace, rp.bytesIn);
-				if (rp.resultCode == ResultCode.KEY_BUSY) {
-					node.addKeyBusy(namespace);
-				}
-			}
 
 			if (rp.resultCode == ResultCode.OK) {
 				record.resultCode = rp.resultCode;
@@ -1003,6 +1075,12 @@ public final class AsyncBatchSingle {
 			else {
 				record.setError(rp.resultCode, Command.batchInDoubt(true, commandSentCounter));
 				executor.setRowError();
+			}
+			if (node.areMetricsEnabled()) {
+				node.addBytesIn(namespace, rp.bytesIn);
+				if (rp.resultCode == ResultCode.KEY_BUSY) {
+					node.addKeyBusy(namespace);
+				}
 			}
 			return true;
 		}
@@ -1064,13 +1142,13 @@ public final class AsyncBatchSingle {
 		protected boolean parseResult(Node node) {
 			RecordParser rp = new RecordParser(dataBuffer, dataOffset, receiveSize);
 			rp.parseFields(policy.txn, key, hasWrite);
+			parseResult(rp);
 			if (node.areMetricsEnabled()) {
 				node.addBytesIn(namespace, rp.bytesIn);
 				if (rp.resultCode == ResultCode.KEY_BUSY) {
 					node.addKeyBusy(namespace);
 				}
 			}
-			parseResult(rp);
 			return true;
 		}
 

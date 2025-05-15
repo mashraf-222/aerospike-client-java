@@ -19,9 +19,11 @@ package com.aerospike.client.configuration.serializers.dynamicconfig;
 
 
 import com.aerospike.client.Log;
-import com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops.*;
+import com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops.BooleanProperty;
+import com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops.IntProperty;
+import com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops.StringProperty;
 
-import java.util.*;
+import java.util.Map;
 
 public class DynamicMetricsConfig {
     public BooleanProperty enable;
@@ -40,13 +42,9 @@ public class DynamicMetricsConfig {
 
     public void setApp_id(StringProperty app_id) { this.app_id = app_id; }
 
-    public Map<String, String> getLabels() {
-        return labels;
-    }
+    public Map<String, String> getLabels() { return labels; }
 
-    public void setLabels(Map<String, String> labels) {
-        this.labels = labels;
-    }
+    public void setLabels(Map<String, String> labels) { this.labels = labels; }
 
     public BooleanProperty getEnable() { return enable; }
 
@@ -55,7 +53,6 @@ public class DynamicMetricsConfig {
     public IntProperty getLatencyColumns() { return latencyColumns; }
 
     public StringProperty getApp_id() { return app_id; }
-
 
     @Override
     public String toString() {

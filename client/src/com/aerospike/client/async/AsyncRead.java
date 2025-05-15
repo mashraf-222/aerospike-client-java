@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 Aerospike, Inc.
+ * Copyright 2012-2025 Aerospike, Inc.
  *
  * Portions may be licensed to Aerospike, Inc. under one or more contributor
  * license agreements WHICH ARE COMPATIBLE WITH THE APACHE LICENSE, VERSION 2.0.
@@ -55,12 +55,6 @@ public class AsyncRead extends AsyncReadBase {
 	protected final boolean parseResult(Node node) {
 		RecordParser rp = new RecordParser(dataBuffer, dataOffset, receiveSize);
 		rp.parseFields(policy.txn, key, false);
-		if (node.areMetricsEnabled()) {
-			node.addBytesIn(namespace, rp.bytesIn);
-			if (rp.resultCode == ResultCode.KEY_BUSY) {
-				node.addKeyBusy(namespace);
-			}
-		}
 
 		if (rp.resultCode == ResultCode.OK) {
 			this.record = rp.parseRecord(isOperation);
@@ -76,6 +70,13 @@ public class AsyncRead extends AsyncReadBase {
 				throw new AerospikeException(rp.resultCode);
 			}
 			return true;
+		}
+
+		if (node.areMetricsEnabled()) {
+			node.addBytesIn(namespace, rp.bytesIn);
+			if (rp.resultCode == ResultCode.KEY_BUSY) {
+				node.addKeyBusy(namespace);
+			}
 		}
 
 		throw new AerospikeException(rp.resultCode);

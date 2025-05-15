@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 Aerospike, Inc.
+ * Copyright 2012-2025 Aerospike, Inc.
  *
  * Portions may be licensed to Aerospike, Inc. under one or more contributor
  * license agreements WHICH ARE COMPATIBLE WITH THE APACHE LICENSE, VERSION 2.0.
@@ -23,8 +23,9 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 import com.aerospike.client.AerospikeException;
 import com.aerospike.client.Host;
@@ -163,6 +164,7 @@ public final class MetricsWriter implements MetricsListener {
 	private void writeCluster(Cluster cluster) {
 		MetricsPolicy policy = cluster.getMetricsPolicy();
 		String clusterName = cluster.getClusterName();
+
 		if (clusterName == null) {
 			clusterName = "";
 		}
@@ -336,11 +338,13 @@ public final class MetricsWriter implements MetricsListener {
 		}
 		catch (IOException ioe) {
 			enabled = false;
+
 			try {
 				writer.close();
 			}
 			catch (Throwable t) {
 			}
+
 			throw new AerospikeException(ioe);
 		}
 	}

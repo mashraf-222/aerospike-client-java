@@ -48,7 +48,6 @@ public class AerospikeException extends RuntimeException {
 	public AerospikeException(int resultCode) {
 		super();
 		this.resultCode = resultCode;
-
 	}
 
 	public AerospikeException(int resultCode, boolean inDoubt) {
