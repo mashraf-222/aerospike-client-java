@@ -152,10 +152,7 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	// Member variables.
 	//-------------------------------------------------------
 
-	/**
-	 * Client version, to be read from manifest
-	 */
-	public String version;
+	private String version;
 
 	private ConfigurationProvider configProvider;
 
@@ -690,6 +687,13 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	 */
 	public final Cluster getCluster() {
 		return cluster;
+	}
+
+	/**
+	 * Return the client version
+	 */
+	public String getVersion() {
+		return version;
 	}
 
 	//-------------------------------------------------------

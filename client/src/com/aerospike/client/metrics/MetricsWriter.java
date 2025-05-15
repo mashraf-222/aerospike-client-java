@@ -179,7 +179,7 @@ public final class MetricsWriter implements MetricsListener {
 		sb.append(',');
 		sb.append("java");
 		sb.append(',');
-		sb.append(cluster.client.version);
+		sb.append(cluster.client.getVersion());
 		sb.append(',');
 		if (policy.appId != null) {
 			sb.append(policy.appId);
