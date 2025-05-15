@@ -20,7 +20,6 @@ package com.aerospike.client.metrics;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Histograms {
-	private static final long NS_TO_MS = 1000000;
 	private final ConcurrentHashMap<String, LatencyBuckets[]> histoMap = new ConcurrentHashMap<>();
 	private final int histoShift;
 	private final int columnCount;
