@@ -35,6 +35,7 @@ public class TxnRollPolicy extends BatchPolicy {
 	/**
 	 * Copy policy from another policy AND apply config overrides
 	 */
+	@SuppressWarnings("deprecation")
 	public TxnRollPolicy(TxnRollPolicy other, ConfigurationProvider configProvider) {
 		super(other);
 		if (configProvider == null) {

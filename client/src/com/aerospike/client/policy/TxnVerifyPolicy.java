@@ -35,6 +35,7 @@ public class TxnVerifyPolicy extends BatchPolicy {
 	/**
 	 * Copy policy from another policy AND apply config overrides
 	 */
+	@SuppressWarnings("deprecation")
 	public TxnVerifyPolicy(TxnVerifyPolicy other, ConfigurationProvider configProvider) {
 		super(other);
 		if (configProvider == null){
