@@ -169,7 +169,7 @@ public final class WritePolicy extends Policy {
 		}
 		if (dynWC.maxRetries != null) {
 			this.maxRetries = dynWC.maxRetries.value;
-		};
+		}
 		if (dynWC.durableDelete != null) {
 			this.durableDelete = dynWC.durableDelete.value;
 		}
