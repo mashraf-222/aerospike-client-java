@@ -16,10 +16,10 @@
  */
 package com.aerospike.client.metrics;
 
-import com.aerospike.client.*;
-import com.aerospike.client.configuration.serializers.*;
-import com.aerospike.client.configuration.serializers.dynamicconfig.*;
-import com.aerospike.client.policy.*;
+import com.aerospike.client.configuration.serializers.Configuration;
+import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicMetricsConfig;
+import com.aerospike.client.Log;
+import com.aerospike.client.policy.ClientPolicy;
 
 import java.util.*;
 

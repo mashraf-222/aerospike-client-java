@@ -42,7 +42,10 @@ import com.aerospike.client.async.EventState;
 import com.aerospike.client.async.Monitor;
 import com.aerospike.client.async.NettyConnection;
 import com.aerospike.client.command.SyncCommand;
-import com.aerospike.client.metrics.*;
+import com.aerospike.client.metrics.Counter;
+import com.aerospike.client.metrics.LatencyType;
+import com.aerospike.client.metrics.MetricsPolicy;
+import com.aerospike.client.metrics.NodeMetrics;
 import com.aerospike.client.util.Util;
 
 /**
