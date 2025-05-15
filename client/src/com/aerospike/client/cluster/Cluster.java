@@ -49,7 +49,9 @@ import com.aerospike.client.cluster.Node.AsyncPool;
 import com.aerospike.client.command.Buffer;
 import com.aerospike.client.configuration.serializers.Configuration;
 import com.aerospike.client.listener.ClusterStatsListener;
-import com.aerospike.client.metrics.*;
+import com.aerospike.client.metrics.MetricsListener;
+import com.aerospike.client.metrics.MetricsPolicy;
+import com.aerospike.client.metrics.MetricsWriter;
 import com.aerospike.client.policy.AuthMode;
 import com.aerospike.client.policy.ClientPolicy;
 import com.aerospike.client.policy.TCPKeepAlive;
@@ -61,7 +63,7 @@ public class Cluster implements Runnable, Closeable {
 	// Client back pointer.
 	public final AerospikeClient client;
 
-	// Config created from a ConfigProvder, if available
+	// Config created from a ConfigProvider, if available
 	private Configuration config;
 
 	// Expected cluster name.
