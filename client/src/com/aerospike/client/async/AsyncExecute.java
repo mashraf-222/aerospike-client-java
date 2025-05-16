@@ -62,6 +62,13 @@ public final class AsyncExecute extends AsyncWriteBase {
 		RecordParser rp = new RecordParser(dataBuffer, dataOffset, receiveSize);
 		rp.parseFields(policy.txn, key, true);
 
+		if (node.areMetricsEnabled()) {
+			node.addBytesIn(namespace, rp.bytesIn);
+			if (rp.resultCode == ResultCode.KEY_BUSY) {
+				node.addKeyBusy(namespace);
+			}
+		}
+
 		if (rp.resultCode == ResultCode.OK) {
 			record = rp.parseRecord(false);
 			return true;
@@ -78,13 +85,6 @@ public final class AsyncExecute extends AsyncWriteBase {
 				throw new AerospikeException(rp.resultCode);
 			}
 			return true;
-		}
-
-		if (node.areMetricsEnabled()) {
-			node.addBytesIn(namespace, rp.bytesIn);
-			if (rp.resultCode == ResultCode.KEY_BUSY) {
-				node.addKeyBusy(namespace);
-			}
 		}
 
 		throw new AerospikeException(rp.resultCode);

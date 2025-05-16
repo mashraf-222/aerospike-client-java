@@ -42,6 +42,10 @@ public final class AsyncDelete extends AsyncWriteBase {
 	protected boolean parseResult(Node node) {
 		int resultCode = parseHeader(node);
 
+		if (node.areMetricsEnabled() && resultCode == ResultCode.KEY_BUSY) {
+			node.addKeyBusy(namespace);
+		}
+
 		if (resultCode == ResultCode.OK) {
 			existed = true;
 			return true;
@@ -58,10 +62,6 @@ public final class AsyncDelete extends AsyncWriteBase {
 			}
 			existed = true;
 			return true;
-		}
-
-		if (node.areMetricsEnabled() && resultCode == ResultCode.KEY_BUSY) {
-			node.addKeyBusy(namespace);
 		}
 
 		throw new AerospikeException(resultCode);

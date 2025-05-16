@@ -44,6 +44,10 @@ public final class TouchCommand extends SyncWriteCommand {
 	protected void parseResult(Node node, Connection conn) throws IOException {
 		int resultCode = parseHeader(node, conn);
 
+		if (node.areMetricsEnabled() && resultCode == ResultCode.KEY_BUSY) {
+			node.addKeyBusy(namespace);
+		}
+
 		if (resultCode == ResultCode.OK) {
 			touched = true;
 			return;
@@ -63,12 +67,6 @@ public final class TouchCommand extends SyncWriteCommand {
 			}
 			touched = false;
 			return;
-		}
-
-		if (node.areMetricsEnabled()) {
-			if (resultCode == ResultCode.KEY_BUSY) {
-				node.addKeyBusy(namespace);
-			}
 		}
 
 		throw new AerospikeException(resultCode);

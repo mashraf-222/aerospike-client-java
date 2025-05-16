@@ -473,7 +473,6 @@ public final class NettyCommand implements Runnable, TimerTask {
 		byteBuffer.writeBytes(command.dataBuffer, 0, command.dataOffset);
 		if (node.areMetricsEnabled()) {
 			node.addBytesOut(command.namespace, command.dataOffset);
-
 		}
 
 		ChannelFuture cf = conn.channel.writeAndFlush(byteBuffer);

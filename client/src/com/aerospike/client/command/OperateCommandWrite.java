@@ -45,6 +45,13 @@ public final class OperateCommandWrite extends SyncWriteCommand {
 		RecordParser rp = new RecordParser(conn, dataBuffer);
 		rp.parseFields(policy.txn, key, true);
 
+		if (node.areMetricsEnabled()) {
+			node.addBytesIn(namespace, rp.bytesIn);
+			if (rp.resultCode == ResultCode.KEY_BUSY) {
+				node.addKeyBusy(namespace);
+			}
+		}
+
 		if (rp.resultCode == ResultCode.OK) {
 			record = rp.parseRecord(true);
 			return;
@@ -55,13 +62,6 @@ public final class OperateCommandWrite extends SyncWriteCommand {
 				throw new AerospikeException(rp.resultCode);
 			}
 			return;
-		}
-
-		if (node.areMetricsEnabled()) {
-			node.addBytesIn(namespace, rp.bytesIn);
-			if (rp.resultCode == ResultCode.KEY_BUSY) {
-				node.addKeyBusy(namespace);
-			}
 		}
 
 		throw new AerospikeException(rp.resultCode);

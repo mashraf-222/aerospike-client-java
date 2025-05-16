@@ -50,12 +50,12 @@ public final class AsyncTxnClose extends AsyncWriteBase {
 	protected boolean parseResult(Node node) {
 		int resultCode = parseHeader(node);
 
-		if (resultCode == ResultCode.OK || resultCode == ResultCode.KEY_NOT_FOUND_ERROR) {
-			return true;
-		}
-
 		if (node.areMetricsEnabled() && resultCode == ResultCode.KEY_BUSY) {
 			node.addKeyBusy(namespace);
+		}
+
+		if (resultCode == ResultCode.OK || resultCode == ResultCode.KEY_NOT_FOUND_ERROR) {
+			return true;
 		}
 
 		throw new AerospikeException(resultCode);

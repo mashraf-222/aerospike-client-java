@@ -44,6 +44,13 @@ public final class ReadHeaderCommand extends SyncReadCommand {
 		RecordParser rp = new RecordParser(conn, dataBuffer);
 		rp.parseFields(policy.txn, key, false);
 
+		if (node.areMetricsEnabled()) {
+			node.addBytesIn(namespace, rp.bytesIn);
+			if (rp.resultCode == ResultCode.KEY_BUSY) {
+				node.addKeyBusy(namespace);
+			}
+		}
+
 		if (rp.resultCode == ResultCode.OK) {
 			record = new Record(null, rp.generation, rp.expiration);
 			return;
@@ -58,13 +65,6 @@ public final class ReadHeaderCommand extends SyncReadCommand {
 				throw new AerospikeException(rp.resultCode);
 			}
 			return;
-		}
-
-		if (node.areMetricsEnabled()) {
-			node.addBytesIn(namespace, rp.bytesIn);
-			if (rp.resultCode == ResultCode.KEY_BUSY) {
-				node.addKeyBusy(namespace);
-			}
 		}
 
 		throw new AerospikeException(rp.resultCode);

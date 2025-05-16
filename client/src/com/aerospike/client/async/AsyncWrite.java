@@ -54,6 +54,10 @@ public final class AsyncWrite extends AsyncWriteBase {
 	protected boolean parseResult(Node node) {
 		int resultCode = parseHeader(node);
 
+		if (node.areMetricsEnabled() && resultCode == ResultCode.KEY_BUSY) {
+			node.addKeyBusy(namespace);
+		}
+
 		if (resultCode == ResultCode.OK) {
 			return true;
 		}
@@ -63,10 +67,6 @@ public final class AsyncWrite extends AsyncWriteBase {
 				throw new AerospikeException(resultCode);
 			}
 			return true;
-		}
-
-		if (node.areMetricsEnabled() && resultCode == ResultCode.KEY_BUSY) {
-			node.addKeyBusy(namespace);
 		}
 
 		throw new AerospikeException(resultCode);

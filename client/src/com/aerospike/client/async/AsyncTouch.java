@@ -51,6 +51,10 @@ public final class AsyncTouch extends AsyncWriteBase {
 	protected boolean parseResult(Node node) {
 		int resultCode = parseHeader(node);
 
+		if (node.areMetricsEnabled() && resultCode == ResultCode.KEY_BUSY) {
+			node.addKeyBusy(namespace);
+		}
+
 		if (resultCode == ResultCode.OK) {
 			touched = true;
 			return true;
@@ -70,10 +74,6 @@ public final class AsyncTouch extends AsyncWriteBase {
 			}
 			touched = false;
 			return true;
-		}
-
-		if (node.areMetricsEnabled() && resultCode == ResultCode.KEY_BUSY) {
-			node.addKeyBusy(namespace);
 		}
 
 		throw new AerospikeException(resultCode);
