@@ -341,6 +341,9 @@ public final class NioCommand implements INioCommand, Runnable, TimerTask {
 			else if (ae.getResultCode() == ResultCode.DEVICE_OVERLOAD) {
 				onDeviceOverload(ae);
 			}
+			else if (ae.getResultCode() == ResultCode.KEY_BUSY) {
+				onKeyBusy();
+			}
 			else {
 				onApplicationError(ae);
 			}
@@ -871,6 +874,18 @@ public final class NioCommand implements INioCommand, Runnable, TimerTask {
 		conn.unregister();
 		node.putAsyncConnection(conn, eventLoop.index);
 		node.incrErrorRate();
+		retry(ae, false);
+	}
+
+	protected final void onKeyBusy() {
+		if (state == AsyncCommand.COMPLETE) {
+			return;
+		}
+		node.addKeyBusy(command.namespace);
+		conn.unregister();
+		node.putAsyncConnection(conn, eventLoop.index);
+
+		AerospikeException ae = new AerospikeException.Timeout(command.policy, false);
 		retry(ae, false);
 	}
 

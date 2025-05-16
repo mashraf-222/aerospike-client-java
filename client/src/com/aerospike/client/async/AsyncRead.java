@@ -52,16 +52,10 @@ public class AsyncRead extends AsyncReadBase {
 	}
 
 	@Override
-	protected final boolean parseResult(Node node) {
+	protected final boolean parseResult() {
 		RecordParser rp = new RecordParser(dataBuffer, dataOffset, receiveSize);
 		rp.parseFields(policy.txn, key, false);
 
-		if (node.areMetricsEnabled()) {
-			node.addBytesIn(namespace, rp.bytesIn);
-			if (rp.resultCode == ResultCode.KEY_BUSY) {
-				node.addKeyBusy(namespace);
-			}
-		}
 		if (rp.resultCode == ResultCode.OK) {
 			this.record = rp.parseRecord(isOperation);
 			return true;

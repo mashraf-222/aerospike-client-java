@@ -64,7 +64,7 @@ public abstract class AsyncMultiCommand extends AsyncCommand {
 	}
 
 	@Override
-	final boolean parseResult(Node node) {
+	final boolean parseResult() {
 		while (dataOffset < receiveSize) {
 			dataOffset += 3;
 			info3 = dataBuffer[dataOffset] & 0xFF;

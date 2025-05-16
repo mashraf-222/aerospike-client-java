@@ -44,16 +44,10 @@ public final class AsyncTxnAddKeys extends AsyncWriteBase {
 	}
 
 	@Override
-	protected boolean parseResult(Node node) {
+	protected boolean parseResult() {
 		RecordParser rp = new RecordParser(dataBuffer, dataOffset, receiveSize);
 		rp.parseTranDeadline(txn);
 
-		if (node.areMetricsEnabled()) {
-			node.addBytesIn(namespace, rp.bytesIn);
-			if (rp.resultCode == ResultCode.KEY_BUSY) {
-				node.addKeyBusy(namespace);
-			}
-		}
 		if (rp.resultCode == ResultCode.OK) {
 			return true;
 		}

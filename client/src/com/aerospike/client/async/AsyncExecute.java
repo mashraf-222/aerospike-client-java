@@ -58,16 +58,9 @@ public final class AsyncExecute extends AsyncWriteBase {
 	}
 
 	@Override
-	protected boolean parseResult(Node node) {
+	protected boolean parseResult() {
 		RecordParser rp = new RecordParser(dataBuffer, dataOffset, receiveSize);
 		rp.parseFields(policy.txn, key, true);
-
-		if (node.areMetricsEnabled()) {
-			node.addBytesIn(namespace, rp.bytesIn);
-			if (rp.resultCode == ResultCode.KEY_BUSY) {
-				node.addKeyBusy(namespace);
-			}
-		}
 
 		if (rp.resultCode == ResultCode.OK) {
 			record = rp.parseRecord(false);

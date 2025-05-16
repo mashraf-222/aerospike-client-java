@@ -173,7 +173,7 @@ public abstract class AsyncCommand extends Command {
 		else {
 			dataOffset = 0;
 		}
-		return parseResult(node);
+		return parseResult();
 	}
 
 	final void stop() {
@@ -226,7 +226,7 @@ public abstract class AsyncCommand extends Command {
 	abstract Node getNode(Cluster cluster);
 	abstract LatencyType getLatencyType();
 	abstract void writeBuffer();
-	abstract boolean parseResult(Node node);
+	abstract boolean parseResult();
 	abstract boolean prepareRetry(boolean timeout);
 	abstract void onSuccess();
 	abstract void onFailure(AerospikeException ae);

@@ -51,12 +51,8 @@ public final class AsyncWrite extends AsyncWriteBase {
 	}
 
 	@Override
-	protected boolean parseResult(Node node) {
-		int resultCode = parseHeader(node);
-
-		if (node.areMetricsEnabled() && resultCode == ResultCode.KEY_BUSY) {
-			node.addKeyBusy(namespace);
-		}
+	protected boolean parseResult() {
+		int resultCode = parseHeader();
 
 		if (resultCode == ResultCode.OK) {
 			return true;

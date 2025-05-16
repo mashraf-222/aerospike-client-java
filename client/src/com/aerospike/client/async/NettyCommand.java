@@ -80,6 +80,7 @@ public final class NettyCommand implements Runnable, TimerTask {
 	boolean usingSocketTimeout;
 	boolean eventReceived;
 	boolean connectInProgress;
+	private String namespace;
 
 	public NettyCommand(NettyEventLoop loop, Cluster cluster, AsyncCommand command) {
 		this.eventLoop = loop;
@@ -90,6 +91,7 @@ public final class NettyCommand implements Runnable, TimerTask {
 		command.bufferQueue = loop.bufferQueue;
 		this.metricsEnabled = cluster.metricsEnabled;
 		this.hasTotalTimeout = command.totalTimeout > 0;
+		this.namespace = command.namespace;
 
 		if (eventLoop.eventLoop.inEventLoop() && eventState.errors < 5) {
 			// We are already in event loop thread, so start processing.
@@ -956,6 +958,11 @@ public final class NettyCommand implements Runnable, TimerTask {
 		retryServerError(ae);
 	}
 
+	private void onKeyBusy() {
+		node.addKeyBusy(command.namespace);
+	}
+
+
 	private void retryServerError(AerospikeException ae) {
 		if (state == AsyncCommand.COMPLETE) {
 			return;
@@ -1278,6 +1285,9 @@ public final class NettyCommand implements Runnable, TimerTask {
 				}
 				else if (ae.getResultCode() == ResultCode.DEVICE_OVERLOAD) {
 					command.onDeviceOverload(ae);
+				}
+				else if (ae.getResultCode() == ResultCode.KEY_BUSY) {
+					command.onKeyBusy();
 				}
 				else {
 					command.onApplicationError(ae);

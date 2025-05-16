@@ -43,12 +43,8 @@ public final class AsyncTxnMarkRollForward extends AsyncWriteBase {
 	}
 
 	@Override
-	protected boolean parseResult(Node node) {
-		int resultCode = parseHeader(node);
-
-		if (node.areMetricsEnabled() && resultCode == ResultCode.KEY_BUSY) {
-			node.addKeyBusy(namespace);
-		}
+	protected boolean parseResult() {
+		int resultCode = parseHeader();
 
 		// MRT_COMMITTED is considered a success because it means a previous attempt already
 		// succeeded in notifying the server that the transaction will be rolled forward.

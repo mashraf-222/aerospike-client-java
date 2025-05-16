@@ -91,7 +91,7 @@ public final class AsyncInfoCommand extends AsyncCommand {
 	}
 
 	@Override
-	protected final boolean parseResult(Node node) {
+	protected final boolean parseResult() {
 		Info info = new Info(dataBuffer, receiveSize);
 		map = info.parseMultiResponse();
 		return true;
