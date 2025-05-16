@@ -49,7 +49,7 @@ public final class RegisterCommand {
 		Connection conn = node.getConnection(policy.socketTimeout);
 
 		try {
-			Info info = new Info(null, conn, command);
+			Info info = new Info(node, conn, command);
 			NameValueParser parser = info.getNameValueParser();
 			String error = null;
 			String file = null;
