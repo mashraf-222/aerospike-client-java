@@ -454,11 +454,7 @@ public class Cluster implements Runnable, Closeable {
 
 		if (config != null && config.dynamicConfiguration.dynamicMetricsConfig.enable != null &&
 				config.dynamicConfiguration.dynamicMetricsConfig.enable.value) {
-			try {
-				enableMetrics(metricsPolicy);
-			} catch (AerospikeException ae) {
-				Log.error(ae.getMessage());
-			}
+			enableMetrics(metricsPolicy);
 		}
 
 		// Run cluster tend thread.
@@ -1113,24 +1109,24 @@ public class Cluster implements Runnable, Closeable {
 
 	public final void enableMetrics(MetricsPolicy policy) {
 		MetricsPolicy mergedMP = mergeMetricsPolicyWithConfig(policy);
-		MetricsListener listener = mergedMP.listener;
-		mergedMP.interval = 3;
-		mergedMP.reportDir = "/tmp";
-		if (listener == null) {
-			listener = new MetricsWriter(mergedMP.reportDir);
-		}
-
-		this.metricsListener = listener;
-		this.metricsPolicy = mergedMP;
-
 		if (config != null) {
 			if (config.dynamicConfiguration.dynamicMetricsConfig.enable != null) {
 				if (!config.dynamicConfiguration.dynamicMetricsConfig.enable.value) {
-					throw new AerospikeException("When a config exists, metrics can not be enabled via enableMetrics unless they" +
+					Log.warn("When a config exists, metrics can not be enabled via enableMetrics unless they" +
 							" are enabled in the config provider.");
+					return;
 				}
 			}
 		}
+		mergedMP.interval = 3;
+		mergedMP.reportDir = "/tmp";
+		MetricsListener listener = mergedMP.listener;
+		if (listener == null) {
+			listener = new MetricsWriter(mergedMP.reportDir);
+		}
+		this.metricsListener = listener;
+		this.metricsPolicy = mergedMP;
+
 		finalizeMetricsEnablement();
 	}
 
@@ -1151,14 +1147,15 @@ public class Cluster implements Runnable, Closeable {
 
 	public final void disableMetrics() {
 		if (metricsEnabled) {
-			metricsEnabled = false;
-			metricsListener.onDisable(this);
 			if (config != null) {
 				if (config.dynamicConfiguration.dynamicMetricsConfig.enable != null &&
-					config.dynamicConfiguration.dynamicMetricsConfig.enable.value ) {
-						Log.warn("Metrics have been disabled, but the metrics enable flag is set to true.");
+						config.dynamicConfiguration.dynamicMetricsConfig.enable.value ) {
+					Log.warn("Metrics can not be disabled via disableMetrics() when they are enabled via config.");
+					return;
 				}
 			}
+			metricsEnabled = false;
+			metricsListener.onDisable(this);
 		}
 	}
 
