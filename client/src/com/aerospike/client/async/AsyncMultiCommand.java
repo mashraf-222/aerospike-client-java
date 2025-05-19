@@ -47,8 +47,8 @@ public abstract class AsyncMultiCommand extends AsyncCommand {
 	/**
 	 * Scan/Query constructor.
 	 */
-	public AsyncMultiCommand(Node node, Policy policy, int socketTimeout, int totalTimeout) {
-		super(policy, socketTimeout, totalTimeout, null);
+	public AsyncMultiCommand(Node node, Policy policy, int socketTimeout, int totalTimeout, String namespace) {
+		super(policy, socketTimeout, totalTimeout, namespace);
 		this.node = node;
 		this.isOperation = false;
 	}

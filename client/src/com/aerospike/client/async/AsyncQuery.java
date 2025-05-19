@@ -39,7 +39,7 @@ public final class AsyncQuery extends AsyncMultiCommand {
 		Statement statement,
 		long taskId
 	) {
-		super(node, policy, policy.socketTimeout, policy.totalTimeout);
+		super(node, policy, policy.socketTimeout, policy.totalTimeout, statement.getNamespace());
 		this.parent = parent;
 		this.listener = listener;
 		this.statement = statement;

@@ -48,7 +48,7 @@ public final class AsyncScanPartition extends AsyncMultiCommand {
 		PartitionTracker tracker,
 		NodePartitions nodePartitions
 	) {
-		super(nodePartitions.node, scanPolicy, tracker.socketTimeout, tracker.totalTimeout);
+		super(nodePartitions.node, scanPolicy, tracker.socketTimeout, tracker.totalTimeout, namespace);
 		this.parent = parent;
 		this.scanPolicy = scanPolicy;
 		this.listener = listener;

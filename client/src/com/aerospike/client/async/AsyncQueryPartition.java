@@ -45,7 +45,7 @@ public final class AsyncQueryPartition extends AsyncMultiCommand {
 		PartitionTracker tracker,
 		NodePartitions nodePartitions
 	) {
-		super(nodePartitions.node, policy, tracker.socketTimeout, tracker.totalTimeout);
+		super(nodePartitions.node, policy, tracker.socketTimeout, tracker.totalTimeout, statement.getNamespace());
 		this.parent = parent;
 		this.listener = listener;
 		this.statement = statement;
