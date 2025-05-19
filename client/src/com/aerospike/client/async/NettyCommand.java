@@ -655,7 +655,7 @@ public final class NettyCommand implements Runnable, TimerTask {
 
 	private void parseSingleBody() {
 		conn.updateLastUsed();
-		command.parseCommandResult(node);
+		command.parseCommandResult();
 		finish();
 	}
 
@@ -706,7 +706,7 @@ public final class NettyCommand implements Runnable, TimerTask {
 
 			conn.updateLastUsed();
 
-			if (command.parseCommandResult(node)) {
+			if (command.parseCommandResult()) {
 				finish();
 				return;
 			}
@@ -735,7 +735,7 @@ public final class NettyCommand implements Runnable, TimerTask {
 
 		conn.updateLastUsed();
 
-		if (command.parseCommandResult(node)) {
+		if (command.parseCommandResult()) {
 			finish();
 			return;
 		}

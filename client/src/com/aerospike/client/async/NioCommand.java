@@ -573,7 +573,7 @@ public final class NioCommand implements INioCommand, Runnable, TimerTask {
 		byteBuffer.position(0);
 		byteBuffer.get(command.dataBuffer, 0, command.receiveSize);
 		conn.updateLastUsed();
-		command.parseCommandResult(node);
+		command.parseCommandResult();
 		command.putBuffer();
 		finish();
 	}
@@ -660,7 +660,7 @@ public final class NioCommand implements INioCommand, Runnable, TimerTask {
 			if (command.dataOffset >= command.receiveSize) {
 				conn.updateLastUsed();
 
-				if (command.parseCommandResult(node)) {
+				if (command.parseCommandResult()) {
 					finish();
 					return false;
 				}

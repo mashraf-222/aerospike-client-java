@@ -142,7 +142,7 @@ public abstract class AsyncCommand extends Command {
 		}
 	}
 
-	boolean parseCommandResult(Node node) {
+	boolean parseCommandResult() {
 		if (compressed) {
 			int usize = (int)Buffer.bytesToLong(dataBuffer, 0);
 			byte[] buf = new byte[usize];
