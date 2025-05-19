@@ -62,7 +62,7 @@ public abstract class MultiCommand extends SyncCommand {
 	 * Partition scan/query constructor.
 	 */
 	protected MultiCommand(Cluster cluster, Policy policy, Node node, String namespace, int socketTimeout, int totalTimeout) {
-		super(cluster, policy, socketTimeout, totalTimeout);
+		super(cluster, policy, socketTimeout, totalTimeout, namespace);
 		this.node = node;
 		this.isOperation = false;
 		this.namespace = namespace;
@@ -74,7 +74,7 @@ public abstract class MultiCommand extends SyncCommand {
 	 * Legacy scan/query constructor.
 	 */
 	protected MultiCommand(Cluster cluster, Policy policy, Node node, String namespace, long clusterKey, boolean first) {
-		super(cluster, policy, policy.socketTimeout, policy.totalTimeout);
+		super(cluster, policy, policy.socketTimeout, policy.totalTimeout, namespace);
 		this.node = node;
 		this.isOperation = false;
 		this.namespace = namespace;

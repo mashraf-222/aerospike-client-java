@@ -55,10 +55,11 @@ public abstract class SyncCommand extends Command {
 	/**
 	 * Scan/Query constructor.
 	 */
-	public SyncCommand(Cluster cluster, Policy policy, int socketTimeout, int totalTimeout) {
+	public SyncCommand(Cluster cluster, Policy policy, int socketTimeout, int totalTimeout, String namespace) {
 		super(socketTimeout, totalTimeout, 0);
 		this.cluster = cluster;
 		this.policy = policy;
+		this.namespace = namespace;
 	}
 
 	public void execute() {
