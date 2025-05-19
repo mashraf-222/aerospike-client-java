@@ -48,6 +48,7 @@ public abstract class AsyncCommand extends Command {
 	static final int COMPLETE = 12;
 
 	Policy policy;
+	String namespace;
 	ArrayDeque<byte[]> bufferQueue;
 	ArrayList<AerospikeException> subExceptions;
 	int receiveSize;
@@ -55,7 +56,6 @@ public abstract class AsyncCommand extends Command {
 	final boolean isSingle;
 	boolean compressed;
 	boolean valid = true;
-	String namespace;
 
 	/**
 	 * Default constructor.
@@ -201,16 +201,16 @@ public abstract class AsyncCommand extends Command {
 		ae.setIteration(iteration);
 		ae.setInDoubt(isWrite(), commandSentCounter);
 		ae.setSubExceptions(subExceptions);
-		
+
 		if (ae.getInDoubt()) {
 			onInDoubt();
 		}
 
 		onFailure(ae);
 	}
-	
+
 	void onInDoubt() {
-        // Write commands will override this method.		
+		// Write commands will override this method.
 	}
 
 	boolean retryBatch(Runnable command, long deadline) {
