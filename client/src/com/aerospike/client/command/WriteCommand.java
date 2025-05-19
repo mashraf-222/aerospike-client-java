@@ -57,10 +57,6 @@ public final class WriteCommand extends SyncWriteCommand {
 			return;
 		}
 
-		if (node.areMetricsEnabled() && resultCode == ResultCode.KEY_BUSY) {
-			node.addKeyBusy(namespace);
-		}
-
 		throw new AerospikeException(resultCode);
 	}
 }

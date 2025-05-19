@@ -46,9 +46,6 @@ public final class ReadHeaderCommand extends SyncReadCommand {
 
 		if (node.areMetricsEnabled()) {
 			node.addBytesIn(namespace, rp.bytesIn);
-			if (rp.resultCode == ResultCode.KEY_BUSY) {
-				node.addKeyBusy(namespace);
-			}
 		}
 
 		if (rp.resultCode == ResultCode.OK) {

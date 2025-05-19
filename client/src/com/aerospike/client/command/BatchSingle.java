@@ -100,9 +100,6 @@ public final class BatchSingle {
 			}
 			if (node.areMetricsEnabled()) {
 				node.addBytesIn(namespace, rp.bytesIn);
-				if (rp.resultCode == ResultCode.KEY_BUSY) {
-					node.addKeyBusy(namespace);
-				}
 			}
 		}
 	}
@@ -142,9 +139,6 @@ public final class BatchSingle {
 			}
 			if (node.areMetricsEnabled()) {
 				node.addBytesIn(namespace, rp.bytesIn);
-				if (rp.resultCode == ResultCode.KEY_BUSY) {
-					node.addKeyBusy(namespace);
-				}
 			}
 		}
 	}
@@ -174,9 +168,6 @@ public final class BatchSingle {
 			rp.parseFields(policy.txn, key, false);
 			if (node.areMetricsEnabled()) {
 				node.addBytesIn(namespace, rp.bytesIn);
-				if (rp.resultCode == ResultCode.KEY_BUSY) {
-					node.addKeyBusy(namespace);
-				}
 			}
 
 			if (rp.resultCode == ResultCode.OK) {
@@ -220,9 +211,6 @@ public final class BatchSingle {
 			rp.parseFields(policy.txn, key, false);
 			if (node.areMetricsEnabled()) {
 				node.addBytesIn(namespace, rp.bytesIn);
-				if (rp.resultCode == ResultCode.KEY_BUSY) {
-					node.addKeyBusy(namespace);
-				}
 			}
 			existsArray[index] = rp.resultCode == 0;
 		}
@@ -259,9 +247,6 @@ public final class BatchSingle {
 			rp.parseFields(policy.txn, key, record.hasWrite);
 			if (node.areMetricsEnabled()) {
 				node.addBytesIn(namespace, rp.bytesIn);
-				if (rp.resultCode == ResultCode.KEY_BUSY) {
-					node.addKeyBusy(namespace);
-				}
 			}
 
 			if (rp.resultCode == ResultCode.OK) {
@@ -310,9 +295,6 @@ public final class BatchSingle {
 
 			if (node.areMetricsEnabled()) {
 				node.addBytesIn(namespace, rp.bytesIn);
-				if (rp.resultCode == ResultCode.KEY_BUSY) {
-					node.addKeyBusy(namespace);
-				}
 			}
 			if (rp.resultCode == ResultCode.OK) {
 				record.setRecord(new Record(null, rp.generation, rp.expiration));
@@ -370,9 +352,6 @@ public final class BatchSingle {
 			rp.parseFields(policy.txn, key, true);
 			if (node.areMetricsEnabled()) {
 				node.addBytesIn(namespace, rp.bytesIn);
-				if (rp.resultCode == ResultCode.KEY_BUSY) {
-					node.addKeyBusy(namespace);
-				}
 			}
 			if (rp.resultCode == ResultCode.OK) {
 				record.setRecord(rp.parseRecord(false));
@@ -434,9 +413,6 @@ public final class BatchSingle {
 			RecordParser rp = new RecordParser(conn, dataBuffer);
 			if (node.areMetricsEnabled()) {
 				node.addBytesIn(namespace, rp.bytesIn);
-				if (rp.resultCode == ResultCode.KEY_BUSY) {
-					node.addKeyBusy(namespace);
-				}
 			}
 			if (rp.resultCode == ResultCode.OK) {
 				record.resultCode = rp.resultCode;
@@ -478,9 +454,6 @@ public final class BatchSingle {
 			RecordParser rp = new RecordParser(conn, dataBuffer);
 			if (node.areMetricsEnabled()) {
 				node.addBytesIn(namespace, rp.bytesIn);
-				if (rp.resultCode == ResultCode.KEY_BUSY) {
-					node.addKeyBusy(namespace);
-				}
 			}
 			if (rp.resultCode == ResultCode.OK) {
 				record.resultCode = rp.resultCode;

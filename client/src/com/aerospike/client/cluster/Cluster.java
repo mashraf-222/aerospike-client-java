@@ -452,6 +452,15 @@ public class Cluster implements Runnable, Closeable {
 			addSeeds(seedsToAdd.toArray(new Host[seedsToAdd.size()]));
 		}
 
+		if (config != null && config.dynamicConfiguration.dynamicMetricsConfig.enable != null &&
+				config.dynamicConfiguration.dynamicMetricsConfig.enable.value) {
+			try {
+				enableMetrics(metricsPolicy);
+			} catch (AerospikeException ae) {
+				Log.error(ae.getMessage());
+			}
+		}
+
 		// Run cluster tend thread.
 		tendValid = true;
 		tendThread = new Thread(this);
@@ -641,7 +650,11 @@ public class Cluster implements Runnable, Closeable {
 				}
 				if (config != null && config.dynamicConfiguration.dynamicMetricsConfig.enable != null ) {
 					if (!metricsEnabled && config.dynamicConfiguration.dynamicMetricsConfig.enable.value ) {
-						enableMetrics(this.metricsPolicy);
+						try {
+							enableMetrics(this.metricsPolicy);
+						} catch (AerospikeException ae) {
+							Log.error(ae.getMessage());
+						}
 					} else if (metricsEnabled && !config.dynamicConfiguration.dynamicMetricsConfig.enable.value ) {
 						disableMetrics();
 					}
@@ -1092,13 +1105,17 @@ public class Cluster implements Runnable, Closeable {
 	}
 
 	private MetricsPolicy mergeMetricsPolicyWithConfig(MetricsPolicy mp) {
+		if (mp == null) {
+			mp = new MetricsPolicy();
+		}
         return new MetricsPolicy(mp, config);
 	}
 
 	public final void enableMetrics(MetricsPolicy policy) {
 		MetricsPolicy mergedMP = mergeMetricsPolicyWithConfig(policy);
 		MetricsListener listener = mergedMP.listener;
-
+		mergedMP.interval = 3;
+		mergedMP.reportDir = "/tmp";
 		if (listener == null) {
 			listener = new MetricsWriter(mergedMP.reportDir);
 		}
@@ -1109,9 +1126,8 @@ public class Cluster implements Runnable, Closeable {
 		if (config != null) {
 			if (config.dynamicConfiguration.dynamicMetricsConfig.enable != null) {
 				if (!config.dynamicConfiguration.dynamicMetricsConfig.enable.value) {
-					Log.error("When a config exists, metrics can not be enabled via enableMetrics unless they" +
+					throw new AerospikeException("When a config exists, metrics can not be enabled via enableMetrics unless they" +
 							" are enabled in the config provider.");
-					return;
 				}
 			}
 		}
@@ -1137,6 +1153,12 @@ public class Cluster implements Runnable, Closeable {
 		if (metricsEnabled) {
 			metricsEnabled = false;
 			metricsListener.onDisable(this);
+			if (config != null) {
+				if (config.dynamicConfiguration.dynamicMetricsConfig.enable != null &&
+					config.dynamicConfiguration.dynamicMetricsConfig.enable.value ) {
+						Log.warn("Metrics have been disabled, but the metrics enable flag is set to true.");
+				}
+			}
 		}
 	}
 
