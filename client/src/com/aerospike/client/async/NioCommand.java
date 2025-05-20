@@ -45,6 +45,7 @@ public final class NioCommand implements INioCommand, Runnable, TimerTask {
 	ByteBuffer byteBuffer;
 	long begin;
 	long totalDeadline;
+	long bytesOut;
 	int state;
 	int iteration;
 	final boolean metricsEnabled;
@@ -222,6 +223,7 @@ public final class NioCommand implements INioCommand, Runnable, TimerTask {
 
 	protected final void executeCommand(long deadline, int tstate) {
 		state = AsyncCommand.CONNECT;
+		bytesOut = 0;
 		iteration++;
 
 		try {
@@ -410,9 +412,7 @@ public final class NioCommand implements INioCommand, Runnable, TimerTask {
 		command.putBuffer();
 
 		if (conn.write(byteBuffer)) {
-			if (node.areMetricsEnabled()) {
-				node.addBytesOut(command.namespace, command.dataOffset);
-			}
+			bytesOut += command.dataOffset;
 			byteBuffer.clear();
 			byteBuffer.limit(8);
 			state = AsyncCommand.AUTH_READ_HEADER;
@@ -443,9 +443,7 @@ public final class NioCommand implements INioCommand, Runnable, TimerTask {
 		command.putBuffer();
 
 		if (conn.write(byteBuffer)) {
-			if (node.areMetricsEnabled()) {
-				node.addBytesOut(command.namespace, command.dataOffset);
-			}
+			bytesOut += command.dataOffset;
 			byteBuffer.clear();
 			byteBuffer.limit(8);
 			state = AsyncCommand.COMMAND_READ_HEADER;
@@ -460,9 +458,7 @@ public final class NioCommand implements INioCommand, Runnable, TimerTask {
 
 	protected final void write() throws IOException {
 		if (conn.write(byteBuffer)) {
-			if (node.areMetricsEnabled()) {
-				node.addBytesOut(command.namespace, command.dataOffset);
-			}
+			bytesOut += command.dataOffset;
 			byteBuffer.clear();
 			byteBuffer.limit(8);
 
@@ -481,14 +477,14 @@ public final class NioCommand implements INioCommand, Runnable, TimerTask {
 	protected final void read() throws IOException {
 		eventReceived = true;
 
-		if (! conn.read(byteBuffer, node, command.namespace)) {
+		if (! conn.read(byteBuffer)) {
 			return;
 		}
 
 		switch (state) {
 		case AsyncCommand.AUTH_READ_HEADER:
 			readAuthHeader();
-			if (! conn.read(byteBuffer, node, command.namespace)) {
+			if (! conn.read(byteBuffer)) {
 				return;
 			}
 			// Fall through to AUTH_READ_BODY
@@ -562,7 +558,7 @@ public final class NioCommand implements INioCommand, Runnable, TimerTask {
 		byteBuffer.limit(receiveSize);
 		state = AsyncCommand.COMMAND_READ_BODY;
 
-		if (conn.read(byteBuffer, node, command.namespace)) {
+		if (conn.read(byteBuffer)) {
 			readSingleBody();
 		}
 	}
@@ -587,7 +583,7 @@ public final class NioCommand implements INioCommand, Runnable, TimerTask {
 			return;
 		}
 
-		if (! conn.read(byteBuffer, node, command.namespace)) {
+		if (! conn.read(byteBuffer)) {
 			return;
 		}
 
@@ -608,7 +604,7 @@ public final class NioCommand implements INioCommand, Runnable, TimerTask {
 		// group that only has one dummy record header.  Therefore, we continue to read
 		// this small group in order to avoid having to wait one more async iteration just
 		// to find out the batch/scan/query has already ended.
-		if (! conn.read(byteBuffer, node, command.namespace)) {
+		if (! conn.read(byteBuffer)) {
 			return;
 		}
 
@@ -618,7 +614,7 @@ public final class NioCommand implements INioCommand, Runnable, TimerTask {
 
 		if (command.receiveSize == Command.MSG_REMAINING_HEADER_SIZE) {
 			// We may be at end.  Read ahead and parse.
-			if (! conn.read(byteBuffer, node, command.namespace)) {
+			if (! conn.read(byteBuffer)) {
 				return;
 			}
 			parseGroupBody();
@@ -677,7 +673,7 @@ public final class NioCommand implements INioCommand, Runnable, TimerTask {
 					byteBuffer.limit(remaining);
 				}
 
-				if (! conn.read(byteBuffer, node, command.namespace)) {
+				if (! conn.read(byteBuffer)) {
 					return false;
 				}
 			}
@@ -859,6 +855,7 @@ public final class NioCommand implements INioCommand, Runnable, TimerTask {
 			return;
 		}
 		node.addTimeout(command.namespace);
+		addBytesInOut();
 		conn.unregister();
 		node.putAsyncConnection(conn, eventLoop.index);
 
@@ -871,6 +868,7 @@ public final class NioCommand implements INioCommand, Runnable, TimerTask {
 			return;
 		}
 		addError();
+		addBytesInOut();
 		conn.unregister();
 		node.putAsyncConnection(conn, eventLoop.index);
 		node.incrErrorRate();
@@ -1005,6 +1003,7 @@ public final class NioCommand implements INioCommand, Runnable, TimerTask {
 
 	private final void complete() {
 		conn.unregister();
+		addBytesInOut();
 		node.putAsyncConnection(conn, eventLoop.index);
 		close();
 	}
@@ -1016,9 +1015,18 @@ public final class NioCommand implements INioCommand, Runnable, TimerTask {
 
 	private final void closeConnection() {
 		if (conn != null) {
+			addBytesInOut();
 			node.closeAsyncConnection(conn, eventLoop.index);
 			conn = null;
 		}
+	}
+
+	private final void addBytesInOut() {
+		if (node.areMetricsEnabled()) {
+			node.addBytesIn(command.namespace, conn.resetBytesIn());
+			node.addBytesOut(command.namespace, bytesOut);
+		}
+		bytesOut = 0;
 	}
 
 	private final void closeFromDelayQueue() {

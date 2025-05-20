@@ -161,7 +161,7 @@ public final class NioRecover implements INioCommand, TimerTask {
 	}
 
 	private final void drainSingleHeader() throws IOException {
-		if (! conn.read(byteBuffer, node, null)) {
+		if (! conn.read(byteBuffer)) {
 			return;
 		}
 
@@ -180,7 +180,7 @@ public final class NioRecover implements INioCommand, TimerTask {
 
 	private final void drainSingleBody() throws IOException {
 		while (true) {
-			if (! conn.read(byteBuffer, node, null)) {
+			if (! conn.read(byteBuffer)) {
 				return;
 			}
 
@@ -206,7 +206,7 @@ public final class NioRecover implements INioCommand, TimerTask {
 
 	private final boolean drainMultiHeader() throws IOException {
 		while (true) {
-			if (! conn.read(byteBuffer, node, null)) {
+			if (! conn.read(byteBuffer)) {
 				return false;
 			}
 
@@ -245,7 +245,7 @@ public final class NioRecover implements INioCommand, TimerTask {
 
 	private final void drainMultiBody() throws IOException {
 		while (true) {
-			if (! conn.read(byteBuffer, node, null)) {
+			if (! conn.read(byteBuffer)) {
 				return;
 			}
 
@@ -303,6 +303,7 @@ public final class NioRecover implements INioCommand, TimerTask {
 
 		try {
 			conn.unregister();
+			conn.addBytesIn(node, null);
 			conn.updateLastUsed();
 			node.putAsyncConnection(conn, eventLoop.index);
 			close(true);
@@ -321,6 +322,7 @@ public final class NioRecover implements INioCommand, TimerTask {
 		state = AsyncCommand.COMPLETE;
 
 		try {
+			conn.addBytesIn(node, null);
 			node.closeAsyncConnection(conn, eventLoop.index);
 			close(cancelTimeout);
 		}

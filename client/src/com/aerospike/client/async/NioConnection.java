@@ -37,6 +37,7 @@ import com.aerospike.client.util.Util;
 public final class NioConnection extends AsyncConnection implements Closeable {
 	private final SocketChannel socketChannel;
 	private SelectionKey key;
+	private long bytesIn;
 
 	public NioConnection(InetSocketAddress address) {
 		try {
@@ -81,6 +82,7 @@ public final class NioConnection extends AsyncConnection implements Closeable {
 
 	public void attach(INioCommand command) {
 		key.attach(command);
+		bytesIn = 0;
 	}
 
 	public void registerWrite() {
@@ -99,12 +101,9 @@ public final class NioConnection extends AsyncConnection implements Closeable {
 	/**
 	 * Read till byteBuffer limit reached or received would-block.
 	 */
-	public boolean read(ByteBuffer byteBuffer, Node node, String namespace) throws IOException {
+	public boolean read(ByteBuffer byteBuffer) throws IOException {
 		while (byteBuffer.hasRemaining()) {
 			int len = socketChannel.read(byteBuffer);
-			if (node.areMetricsEnabled()) {
-				node.addBytesIn(namespace, len);
-			}
 
 			if (len == 0) {
 				// Got would-block.
@@ -115,6 +114,8 @@ public final class NioConnection extends AsyncConnection implements Closeable {
 				// Server has shutdown socket.
 				throw new EOFException();
 			}
+
+			bytesIn += len;
 		}
 		return true;
 	}
@@ -144,6 +145,19 @@ public final class NioConnection extends AsyncConnection implements Closeable {
 	public void unregister() {
 		key.interestOps(0);
 		key.attach(null);
+	}
+
+	public void addBytesIn(Node node, String namespace) {
+		if (node.areMetricsEnabled()) {
+			node.addBytesIn(namespace, bytesIn);
+		}
+		bytesIn = 0;
+	}
+
+	public long resetBytesIn() {
+		long tmp = bytesIn;
+		bytesIn = 0;
+		return tmp;
 	}
 
 	/**

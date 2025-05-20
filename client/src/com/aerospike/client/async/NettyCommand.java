@@ -73,6 +73,7 @@ public final class NettyCommand implements Runnable, TimerTask {
 	NettyConnection conn;
 	long begin;
 	long totalDeadline;
+	long bytesIn;
 	int state;
 	int iteration;
 	final boolean metricsEnabled;
@@ -250,6 +251,7 @@ public final class NettyCommand implements Runnable, TimerTask {
 
 	private void executeCommand(long deadline, int tstate) {
 		state = AsyncCommand.CHANNEL_INIT;
+		bytesIn = 0;
 		iteration++;
 
 		try {
@@ -507,6 +509,7 @@ public final class NettyCommand implements Runnable, TimerTask {
 	}
 
 	private void read(ByteBuf byteBuffer) {
+		bytesIn += byteBuffer.readableBytes();
 		eventReceived = true;
 
 		try {
@@ -543,9 +546,6 @@ public final class NettyCommand implements Runnable, TimerTask {
 			}
 		}
 		finally {
-			if (node.areMetricsEnabled()) {
-				node.addBytesIn(command.namespace, byteBuffer.readableBytes());
-			}
 			byteBuffer.release();
 		}
 	}
@@ -1164,6 +1164,9 @@ public final class NettyCommand implements Runnable, TimerTask {
 	}
 
 	private void close() {
+		if (bytesIn > 0 && node.areMetricsEnabled()) {
+			node.addBytesIn(command.namespace, bytesIn);
+		}
 		timeoutTask.cancel();
 		command.putBuffer();
 		state = AsyncCommand.COMPLETE;
