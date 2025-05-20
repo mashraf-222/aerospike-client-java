@@ -74,7 +74,8 @@ public abstract class SyncCommand extends Command {
 		Node node;
 		AerospikeException exception = null;
 		long begin = 0;
-		LatencyType latencyType = cluster.metricsEnabled? getLatencyType() : LatencyType.NONE;
+		boolean metricsEnabled = cluster.metricsEnabled;
+		LatencyType latencyType = metricsEnabled? getLatencyType() : LatencyType.NONE;
 		boolean isClientTimeout;
 
 		// Execute command until successful, timed out or maximum iterations have been reached.
@@ -110,6 +111,10 @@ public abstract class SyncCommand extends Command {
 					conn.write(dataBuffer, dataOffset);
 					commandSentCounter++;
 
+					if (metricsEnabled) {
+						node.addBytesOut(namespace, dataOffset);
+					}
+
 					// Parse results.
 					parseResult(node, conn);
 
@@ -119,7 +124,6 @@ public abstract class SyncCommand extends Command {
 					if (latencyType != LatencyType.NONE) {
 						long elapsed = System.nanoTime() - begin;
 						node.addLatency(namespace, latencyType, elapsed);
-						node.addBytesOut(namespace, dataOffset);
 					}
 
 					// Command has completed successfully.  Exit method.
@@ -300,12 +304,12 @@ public abstract class SyncCommand extends Command {
 		ae.setIteration(iteration);
 		ae.setInDoubt(isWrite(), commandSentCounter);
 		ae.setSubExceptions(subExceptions);
-		
+
 		if (ae.getInDoubt()) {
 			onInDoubt();
 		}
 	}
-	
+
 	protected void onInDoubt() {
 		// Write commands will override this method.
 	}
