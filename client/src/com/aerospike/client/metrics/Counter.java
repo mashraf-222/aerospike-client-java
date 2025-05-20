@@ -65,7 +65,7 @@ public class Counter {
 				return v;
 			}
 		});
-		total.incrementAndGet();
+		total.getAndAdd(count);
 	}
 
 	/**

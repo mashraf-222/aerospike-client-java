@@ -1210,7 +1210,7 @@ public class Node implements Closeable {
 	 * interval.
 	 */
 	public long getTimeoutCountbyNS(String namespace) {
-		return timeoutCounter.getTotal();
+		return timeoutCounter.getCountByNS(namespace);
 	}
 
 	/**
