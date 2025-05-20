@@ -22,7 +22,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class Counter {
 	private final ConcurrentHashMap<String, AtomicLong> counterMap = new ConcurrentHashMap<>();
-	private final AtomicLong total = new AtomicLong(0);
 	private final static String noNSLabel = "";
 
 	/**
@@ -46,7 +45,6 @@ public class Counter {
 				return v;
 			}
 		});
-		total.incrementAndGet();
 	}
 
 	/**
@@ -65,7 +63,6 @@ public class Counter {
 				return v;
 			}
 		});
-		total.getAndAdd(count);
 	}
 
 	/**
@@ -74,6 +71,10 @@ public class Counter {
 	 * @return the total
 	 */
 	public long getTotal() {
+		AtomicLong total = new AtomicLong();
+		counterMap.forEach((k,v)-> {
+			total.getAndAdd(v.longValue());
+		});
 		return total.get();
 	}
 
