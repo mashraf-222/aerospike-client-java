@@ -33,7 +33,6 @@ public abstract class MultiCommand extends SyncCommand {
 	private static final int MAX_BUFFER_SIZE = 1024 * 1024 * 128;  // 128 MB
 
 	private final Node node;
-	protected final String namespace;
 	private final long clusterKey;
 	protected int info3;
 	protected int resultCode;
@@ -53,7 +52,6 @@ public abstract class MultiCommand extends SyncCommand {
 		super(cluster, policy, null);
 		this.node = node;
 		this.isOperation = isOperation;
-		this.namespace = null;
 		this.clusterKey = 0;
 		this.first = false;
 	}
@@ -65,7 +63,6 @@ public abstract class MultiCommand extends SyncCommand {
 		super(cluster, policy, socketTimeout, totalTimeout, namespace);
 		this.node = node;
 		this.isOperation = false;
-		this.namespace = namespace;
 		this.clusterKey = 0;
 		this.first = false;
 	}
@@ -77,7 +74,6 @@ public abstract class MultiCommand extends SyncCommand {
 		super(cluster, policy, policy.socketTimeout, policy.totalTimeout, namespace);
 		this.node = node;
 		this.isOperation = false;
-		this.namespace = namespace;
 		this.clusterKey = clusterKey;
 		this.first = first;
 	}
