@@ -25,7 +25,6 @@ import com.aerospike.client.Key;
 import com.aerospike.client.Record;
 import com.aerospike.client.async.EventLoop;
 import com.aerospike.test.SuiteAsync;
-import com.aerospike.test.SuiteSync;
 import com.aerospike.test.util.TestBase;
 
 public class TestAsync extends TestBase {
