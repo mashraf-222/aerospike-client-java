@@ -634,30 +634,6 @@ public class Cluster implements Runnable, Closeable {
 			}
 		}
 
-		// Check YAML config file for updates.
-		if (configInterval > 0 && tendCount % configInterval == 0) {
-			if (client.getConfigProvider().loadConfiguration()) {
-				config = client.getConfigProvider().fetchConfiguration();
-				client.mergeDefaultPoliciesWithConfig();
-				this.metricsPolicy = mergeMetricsPolicyWithConfig(metricsPolicy);
-				if (metricsEnabled && metricsPolicy.isMetricsRestartRequired()) {
-					restartMetrics();
-					return;
-				}
-				if (config != null && config.dynamicConfiguration.dynamicMetricsConfig.enable != null ) {
-					if (!metricsEnabled && config.dynamicConfiguration.dynamicMetricsConfig.enable.value ) {
-						try {
-							enableMetrics(this.metricsPolicy);
-						} catch (AerospikeException ae) {
-							Log.error(ae.getMessage());
-						}
-					} else if (metricsEnabled && !config.dynamicConfiguration.dynamicMetricsConfig.enable.value ) {
-						disableMetrics();
-					}
-				}
-			}
-		}
-
 		// Reset connection error window for all nodes every connErrorWindow tend iterations.
 		if (maxErrorRate > 0 && tendCount % errorRateWindow == 0) {
 			for (Node node : nodes) {
@@ -665,8 +641,21 @@ public class Cluster implements Runnable, Closeable {
 			}
 		}
 
+		// Perform metrics snapshot.
 		if (metricsEnabled && (tendCount % metricsPolicy.interval) == 0) {
 			metricsListener.onSnapshot(this);
+		}
+
+		// Check configuration file for updates.
+		if (configInterval > 0 && tendCount % configInterval == 0) {
+			try {
+				loadConfiguration();
+			}
+			catch (Throwable t) {
+				if (Log.warnEnabled()) {
+					Log.warn("Dynamic configuration failed: " + Util.getErrorMessage(t));
+				}
+			}
 		}
 
 		processRecoverQueue();
@@ -1094,10 +1083,28 @@ public class Cluster implements Runnable, Closeable {
 		}
 	}
 
-	private void restartMetrics() {
-		disableMetrics();
-		enableMetrics(metricsPolicy);
-		metricsPolicy.setMetricsRestartRequired(false);
+	private void loadConfiguration() {
+		if (client.getConfigProvider().loadConfiguration()) {
+			config = client.getConfigProvider().fetchConfiguration();
+			client.mergeDefaultPoliciesWithConfig();
+			metricsPolicy = mergeMetricsPolicyWithConfig(metricsPolicy);
+
+			if (metricsEnabled && metricsPolicy.isMetricsRestartRequired()) {
+				disableMetrics();
+				enableMetrics(metricsPolicy);
+				metricsPolicy.setMetricsRestartRequired(false);
+				return;
+			}
+
+			if (config != null && config.dynamicConfiguration.dynamicMetricsConfig.enable != null) {
+				if (!metricsEnabled && config.dynamicConfiguration.dynamicMetricsConfig.enable.value) {
+					enableMetrics(metricsPolicy);
+				}
+				else if (metricsEnabled && !config.dynamicConfiguration.dynamicMetricsConfig.enable.value) {
+					disableMetrics();
+				}
+			}
+		}
 	}
 
 	private MetricsPolicy mergeMetricsPolicyWithConfig(MetricsPolicy mp) {
@@ -1109,6 +1116,7 @@ public class Cluster implements Runnable, Closeable {
 
 	public final void enableMetrics(MetricsPolicy policy) {
 		MetricsPolicy mergedMP = mergeMetricsPolicyWithConfig(policy);
+
 		if (config != null) {
 			if (config.dynamicConfiguration.dynamicMetricsConfig.enable != null) {
 				if (!config.dynamicConfiguration.dynamicMetricsConfig.enable.value) {
@@ -1118,19 +1126,16 @@ public class Cluster implements Runnable, Closeable {
 				}
 			}
 		}
-		mergedMP.interval = 3;
-		mergedMP.reportDir = "/tmp";
+
 		MetricsListener listener = mergedMP.listener;
+
 		if (listener == null) {
 			listener = new MetricsWriter(mergedMP.reportDir);
 		}
+
 		this.metricsListener = listener;
 		this.metricsPolicy = mergedMP;
 
-		finalizeMetricsEnablement();
-	}
-
-	private void finalizeMetricsEnablement() {
 		if (metricsEnabled) {
 			this.metricsListener.onDisable(this);
 		}
