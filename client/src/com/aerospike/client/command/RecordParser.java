@@ -141,7 +141,6 @@ public final class RecordParser {
 		if (receiveSize < Command.MSG_REMAINING_HEADER_SIZE) {
 			throw new AerospikeException.Parse("Invalid receive size: " + receiveSize);
 		}
-		bytesIn += receiveSize;
 
 		offset += 5;
 		resultCode = buffer[offset] & 0xFF;
