@@ -265,7 +265,7 @@ public class Info {
 	public static String request(Connection conn, String name)
 		throws AerospikeException {
 
-		Info info = new Info(null, conn, name);
+		Info info = new Info(conn, name);
 		return info.parseSingleResponse(name);
 	}
 
@@ -279,7 +279,7 @@ public class Info {
 	public static HashMap<String,String> request(Connection conn, String... names)
 		throws AerospikeException {
 
-		Info info = new Info(null, conn, names);
+		Info info = new Info(conn, names);
 		return info.parseMultiResponse();
 	}
 
