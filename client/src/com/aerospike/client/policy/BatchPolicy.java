@@ -20,48 +20,18 @@ import com.aerospike.client.configuration.ConfigurationProvider;
 import com.aerospike.client.configuration.serializers.Configuration;
 import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicBatchReadConfig;
 import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicBatchWriteConfig;
+
 /**
  * Batch parent policy.
  */
 public class BatchPolicy extends Policy {
 	/**
-	 * Maximum number of concurrent synchronous batch node request threads to server nodes.
-	 * Asynchronous batch requests ignore this field and always issue all node requests in parallel.
-	 * <p>
-	 * The batch is split into requests for each node according to the node assignment of each
-	 * batch key. The number of batch node requests is always less or equal to the cluster size.
-	 * <p>
-	 * If there are 16 batch node requests and maxConcurrentThreads is 8, then batch requests
-	 * will be made for 8 nodes in parallel threads. When a request completes, a new request will
-	 * be issued until all 16 requests are complete. If there are 4 batch node requests and
-	 * maxConcurrentThreads is 8, then only 4 batch requests will be made for 4 nodes in parallel
-	 * threads.
-	 * <p>
-	 * Values:
-	 * <ul>
-	 * <li>
-	 * 1 (default): Issue batch node requests sequentially. This mode has a performance advantage
-	 * for small batch sizes because requests can be issued in the main transaction thread without
-	 * using a thread pool. This mode is not optimal for batch requests spread out over many nodes
-	 * in a large cluster.
-	 * </li>
-	 * <li>
-	 * 0: Issue all batch node requests in parallel threads. This mode has a performance advantage
-	 * for large batch sizes because each node can process the request immediately. The downside is
-	 * extra threads will need to be created (or taken from a thread pool). In extreme cases, the
-	 * operating system's thread capacity could be exhausted.
-	 * </li>
-	 * <li>
-	 * > 0: Issue up to maxConcurrentThreads batch node requests in parallel threads. When a request
-	 * completes, a new request will be issued until all requests are complete. This mode prevents
-	 * too many parallel threads being created for large clusters. The downside is extra threads
-	 * will still need to be created (or taken from a thread pool). A typical value is the number
-	 * of cpu cores available on the client machine.
-	 * </li>
-	 * </ul>
-	 * <p>
-	 * Default: 1
+	 * This field is ignored and deprecated. Sync batch node commands are now always issued using
+	 * virtual threads in parallel. Async batch node commands always ignored this field. This field
+	 * only exists to maintain api compatibility when switching between aerospike-client-jdk21 and
+	 * aerospike-client-jdk8 packages.
 	 */
+	@Deprecated
 	public int maxConcurrentThreads = 1;
 
 	/**
@@ -102,9 +72,6 @@ public class BatchPolicy extends Policy {
 	 * If false, the server will stop the batch to its node on most key specific errors.
 	 * The exceptions are {@link com.aerospike.client.ResultCode#KEY_NOT_FOUND_ERROR} and
 	 * {@link com.aerospike.client.ResultCode#FILTERED_OUT} which never stop the batch.
-	 * The client will stop the entire batch on node specific errors for sync commands
-	 * that are run in sequence (maxConcurrentThreads == 1). The client will not stop
-	 * the entire batch for async commands or sync commands run in parallel.
 	 * <p>
 	 * Server versions &lt; 6.0 do not support this field and treat this value as false
 	 * for key specific errors.
@@ -141,19 +108,45 @@ public class BatchPolicy extends Policy {
 		}
 		DynamicBatchReadConfig dynBRC = config.dynamicConfiguration.dynamicBatchReadConfig;
 
-		if (dynBRC.readModeAP != null) this.readModeAP = dynBRC.readModeAP;
-		if (dynBRC.readModeSC != null) this.readModeSC = dynBRC.readModeSC;
-		if (dynBRC.connectTimeout != null) this.connectTimeout = dynBRC.connectTimeout.value;
-		if (dynBRC.replica != null) this.replica = dynBRC.replica;
-		if (dynBRC.sleepBetweenRetries != null) this.sleepBetweenRetries = dynBRC.sleepBetweenRetries.value;
-		if (dynBRC.socketTimeout != null) this.socketTimeout = dynBRC.socketTimeout.value;
-		if (dynBRC.timeoutDelay != null) this.timeoutDelay = dynBRC.timeoutDelay.value;
-		if (dynBRC.totalTimeout != null) this.totalTimeout = dynBRC.totalTimeout.value;
-		if (dynBRC.maxRetries != null) this.maxRetries = dynBRC.maxRetries.value;
-		if (dynBRC.maxConcurrentThreads != null) this.maxConcurrentThreads = dynBRC.maxConcurrentThreads.value;
-		if (dynBRC.allowInline != null) this.allowInline = dynBRC.allowInline.value;
-		if (dynBRC.allowInlineSSD != null) this.allowInlineSSD = dynBRC.allowInlineSSD.value;
-		if (dynBRC.respondAllKeys != null) this.respondAllKeys = dynBRC.respondAllKeys.value;
+		if (dynBRC.readModeAP != null) {
+			this.readModeAP = dynBRC.readModeAP;
+		}
+		if (dynBRC.readModeSC != null) {
+			this.readModeSC = dynBRC.readModeSC;
+		}
+		if (dynBRC.connectTimeout != null) {
+			this.connectTimeout = dynBRC.connectTimeout.value;
+		}
+		if (dynBRC.replica != null) {
+			this.replica = dynBRC.replica;
+		}
+		if (dynBRC.sleepBetweenRetries != null) {
+			this.sleepBetweenRetries = dynBRC.sleepBetweenRetries.value;
+		}
+		if (dynBRC.socketTimeout != null) {
+			this.socketTimeout = dynBRC.socketTimeout.value;
+		}
+		if (dynBRC.timeoutDelay != null) {
+			this.timeoutDelay = dynBRC.timeoutDelay.value;
+		}
+		if (dynBRC.totalTimeout != null) {
+			this.totalTimeout = dynBRC.totalTimeout.value;
+		}
+		if (dynBRC.maxRetries != null) {
+			this.maxRetries = dynBRC.maxRetries.value;
+		}
+		if (dynBRC.maxConcurrentThreads != null) {
+			this.maxConcurrentThreads = dynBRC.maxConcurrentThreads.value;
+		}
+		if (dynBRC.allowInline != null) {
+			this.allowInline = dynBRC.allowInline.value;
+		}
+		if (dynBRC.allowInlineSSD != null) {
+			this.allowInlineSSD = dynBRC.allowInlineSSD.value;
+		}
+		if (dynBRC.respondAllKeys != null) {
+			this.respondAllKeys = dynBRC.respondAllKeys.value;
+		}
 	}
 	/**
 	 * Copy batch policy from another batch policy.
@@ -224,17 +217,41 @@ public class BatchPolicy extends Policy {
 		}
 		DynamicBatchWriteConfig dynBWC = config.dynamicConfiguration.dynamicBatchWriteConfig;
 
-		if (dynBWC.connectTimeout != null) this.connectTimeout = dynBWC.connectTimeout.value;
-		if (dynBWC.failOnFilteredOut != null) this.failOnFilteredOut = dynBWC.failOnFilteredOut.value;
-		if (dynBWC.replica != null) this.replica = dynBWC.replica;
-		if (dynBWC.sendKey != null) this.sendKey = dynBWC.sendKey.value;
-		if (dynBWC.sleepBetweenRetries != null) this.sleepBetweenRetries = dynBWC.sleepBetweenRetries.value;
-		if (dynBWC.socketTimeout != null) this.socketTimeout = dynBWC.socketTimeout.value;
-		if (dynBWC.timeoutDelay != null) this.timeoutDelay = dynBWC.timeoutDelay.value;
-		if (dynBWC.totalTimeout != null) this.totalTimeout = dynBWC.totalTimeout.value;
-		if (dynBWC.maxRetries != null) this.maxRetries = dynBWC.maxRetries.value;
-		if (dynBWC.maxConcurrentThreads != null) this.maxConcurrentThreads = dynBWC.maxConcurrentThreads.value;
-		if (dynBWC.allowInlineSSD != null) this.allowInlineSSD = dynBWC.allowInlineSSD.value;
-		if (dynBWC.respondAllKeys != null) this.respondAllKeys = dynBWC.respondAllKeys.value;
+		if (dynBWC.connectTimeout != null) {
+			this.connectTimeout = dynBWC.connectTimeout.value;
+		}
+		if (dynBWC.failOnFilteredOut != null) {
+			this.failOnFilteredOut = dynBWC.failOnFilteredOut.value;
+		}
+		if (dynBWC.replica != null) {
+			this.replica = dynBWC.replica;
+		}
+		if (dynBWC.sendKey != null) {
+			this.sendKey = dynBWC.sendKey.value;
+		}
+		if (dynBWC.sleepBetweenRetries != null) {
+			this.sleepBetweenRetries = dynBWC.sleepBetweenRetries.value;
+		}
+		if (dynBWC.socketTimeout != null) {
+			this.socketTimeout = dynBWC.socketTimeout.value;
+		}
+		if (dynBWC.timeoutDelay != null) {
+			this.timeoutDelay = dynBWC.timeoutDelay.value;
+		}
+		if (dynBWC.totalTimeout != null) {
+			this.totalTimeout = dynBWC.totalTimeout.value;
+		}
+		if (dynBWC.maxRetries != null) {
+			this.maxRetries = dynBWC.maxRetries.value;
+		}
+		if (dynBWC.maxConcurrentThreads != null) {
+			this.maxConcurrentThreads = dynBWC.maxConcurrentThreads.value;
+		}
+		if (dynBWC.allowInlineSSD != null) {
+			this.allowInlineSSD = dynBWC.allowInlineSSD.value;
+		}
+		if (dynBWC.respondAllKeys != null) {
+			this.respondAllKeys = dynBWC.respondAllKeys.value;
+		}
 	}
 }

@@ -558,6 +558,15 @@ public final class Packer {
 		buffer[offset++] = (byte)val;
 	}
 
+	public void createBuffer() {
+		buffer = new byte[offset];
+		offset = 0;
+	}
+
+	public byte[] getBuffer() {
+		return buffer;
+	}
+
 	private void resize(int size) {
 		if (bufferList == null) {
 			bufferList = new ArrayList<BufferItem>();

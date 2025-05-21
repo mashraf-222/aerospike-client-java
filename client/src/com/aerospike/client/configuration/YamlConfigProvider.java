@@ -40,6 +40,7 @@ import com.aerospike.client.Log;
 
 public class YamlConfigProvider implements ConfigurationProvider {
     private static final String CONFIG_PATH_ENV = "AEROSPIKE_CLIENT_CONFIG_URL";
+    // System property CONFIG_PATH_SYS_PROP is only intended to be used for testing
     private static final String CONFIG_PATH_SYS_PROP = "AEROSPIKE_CLIENT_CONFIG_SYS_PROP";
     private static final String YAML_SERIALIZERS_PATH = "com.aerospike.client.configuration.serializers.";
     private static Path configurationPath;

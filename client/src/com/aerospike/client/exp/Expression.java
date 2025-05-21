@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 Aerospike, Inc.
+ * Copyright 2012-2024 Aerospike, Inc.
  *
  * Portions may be licensed to Aerospike, Inc. under one or more contributor
  * license agreements WHICH ARE COMPATIBLE WITH THE APACHE LICENSE, VERSION 2.0.
@@ -37,13 +37,9 @@ public final class Expression implements Serializable {
 	Expression(Exp exp) {
 		Packer packer = new Packer();
 		exp.pack(packer);
-		bytes = packer.toByteArray();
-		/*
-		for (int i = 0; i < bytes.length; i++) {
-			int b = bytes[i] & 0xff;
-			System.out.println("" + b);
-		}
-		*/
+		packer.createBuffer();
+		exp.pack(packer);
+		bytes = packer.getBuffer();
 	}
 
 	/**
@@ -100,10 +96,11 @@ public final class Expression implements Serializable {
 	 * Write expression in wire protocol.
 	 * For internal use only.
 	 */
-	public void write(Command cmd) {
+	public int write(Command cmd) {
 		cmd.writeExpHeader(bytes.length);
 		System.arraycopy(bytes, 0, cmd.dataBuffer, cmd.dataOffset, bytes.length);
 		cmd.dataOffset += bytes.length;
+		return bytes.length;
 	}
 
 	@Override

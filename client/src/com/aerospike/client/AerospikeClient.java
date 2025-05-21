@@ -152,6 +152,8 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	// Member variables.
 	//-------------------------------------------------------
 
+	private String version;
+
 	private ConfigurationProvider configProvider;
 
 	protected Cluster cluster;
@@ -339,6 +341,10 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 			policy = new ClientPolicy(policy, configProvider);
 		}
 		mergeDefaultPoliciesWithConfig();
+		version = this.getClass().getPackage().getImplementationVersion();
+		if (version == null) {
+			version = "development";
+		}
 		cluster = new Cluster(this, policy, hosts);
 	}
 
@@ -683,6 +689,13 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		return cluster;
 	}
 
+	/**
+	 * Return the client version
+	 */
+	public String getVersion() {
+		return version;
+	}
+
 	//-------------------------------------------------------
 	// Transaction
 	//-------------------------------------------------------
@@ -780,7 +793,7 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 			default:
 			case OPEN:
 			case VERIFIED:
-				return tr.abort(txnRollPolicyDefault);
+				return tr.abort(mergedTxnRollPolicyDefault);
 
 			case COMMITTED:
 				throw new AerospikeException(ResultCode.TXN_ALREADY_COMMITTED, "Transaction already committed");
@@ -5197,7 +5210,7 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		Info info;
 
 		try {
-			info = new Info(conn, command);
+			info = new Info(node, conn, command);
 			node.putConnection(conn);
 		}
 		catch (Throwable e) {

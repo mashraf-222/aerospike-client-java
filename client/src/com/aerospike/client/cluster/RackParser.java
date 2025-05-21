@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 Aerospike, Inc.
+ * Copyright 2012-2024 Aerospike, Inc.
  *
  * Portions may be licensed to Aerospike, Inc. under one or more contributor
  * license agreements WHICH ARE COMPATIBLE WITH THE APACHE LICENSE, VERSION 2.0.
@@ -32,9 +32,9 @@ public final class RackParser extends Info {
 	private final HashMap<String,Integer> racks;
 	private final int generation;
 
-	public RackParser(Connection conn) {
+	public RackParser(Node node, Connection conn) {
 		// Send format: rebalance-generation\nrack-ids\n
-		super(conn, RebalanceGeneration, RackIds);
+		super(node, conn, RebalanceGeneration, RackIds);
 
 		if (length == 0) {
 			throw new AerospikeException.Parse("rack-ids response is empty");
@@ -70,7 +70,7 @@ public final class RackParser extends Info {
 		while (offset < length) {
 			if (buffer[offset] == ':') {
 				// Parse namespace.
-				String namespace = Buffer.utf8ToString(buffer, begin, offset - begin, sb).trim();
+				String namespace = Buffer.utf8ToString(buffer, begin, offset - begin).trim();
 
 				if (namespace.length() <= 0 || namespace.length() >= 32) {
 					String response = getTruncatedResponse();

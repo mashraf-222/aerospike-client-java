@@ -107,8 +107,12 @@ public final class BatchUDFPolicy {
 		}
 		DynamicBatchUDFconfig dynUDF = config.dynamicConfiguration.dynamicBatchUDFconfig;
 
-		if (dynUDF.sendKey != null) this.sendKey = dynUDF.sendKey.value;
-		if (dynUDF.durableDelete != null) this.durableDelete = dynUDF.durableDelete.value;
+		if (dynUDF.sendKey != null) {
+			this.sendKey = dynUDF.sendKey.value;
+		}
+		if (dynUDF.durableDelete != null) {
+			this.durableDelete = dynUDF.durableDelete.value;
+		}
 	}
 
 	/**

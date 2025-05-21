@@ -294,17 +294,38 @@ public class Policy {
 		}
 		DynamicReadConfig dynRC = config.dynamicConfiguration.dynamicReadConfig;
 
-		if (dynRC.readModeAP != null) this.readModeAP = dynRC.readModeAP;
-		if (dynRC.readModeSC != null) this.readModeSC = dynRC.readModeSC;
-		if (dynRC.connectTimeout != null) this.connectTimeout = dynRC.connectTimeout.value;
-		if (dynRC.failOnFilteredOut != null) this.failOnFilteredOut = dynRC.failOnFilteredOut.value;
-		if (dynRC.replica != null) this.replica = dynRC.replica;
-		if (dynRC.sleepBetweenRetries != null) this.sleepBetweenRetries = dynRC.sleepBetweenRetries.value;
-		if (dynRC.socketTimeout != null) this.socketTimeout = dynRC.socketTimeout.value;
-		if (dynRC.timeoutDelay != null) this.timeoutDelay = dynRC.timeoutDelay.value;
-		if (dynRC.totalTimeout != null) this.totalTimeout = dynRC.totalTimeout.value;
-		if (dynRC.maxRetries != null) this.maxRetries = dynRC.maxRetries.value;
+		if (dynRC.readModeAP != null) {
+			this.readModeAP = dynRC.readModeAP;
+		}
+		if (dynRC.readModeSC != null) {
+			this.readModeSC = dynRC.readModeSC;
+		}
+		if (dynRC.connectTimeout != null) {
+			this.connectTimeout = dynRC.connectTimeout.value;
+		}
+		if (dynRC.failOnFilteredOut != null) {
+			this.failOnFilteredOut = dynRC.failOnFilteredOut.value;
+		}
+		if (dynRC.replica != null) {
+			this.replica = dynRC.replica;
+		}
+		if (dynRC.sleepBetweenRetries != null) {
+			this.sleepBetweenRetries = dynRC.sleepBetweenRetries.value;
+		}
+		if (dynRC.socketTimeout != null) {
+			this.socketTimeout = dynRC.socketTimeout.value;
+		}
+		if (dynRC.timeoutDelay != null) {
+			this.timeoutDelay = dynRC.timeoutDelay.value;
+		}
+		if (dynRC.totalTimeout != null) {
+			this.totalTimeout = dynRC.totalTimeout.value;
+		}
+		if (dynRC.maxRetries != null) {
+			this.maxRetries = dynRC.maxRetries.value;
+		}
 	}
+
 	/**
 	 * Default constructor.
 	 */

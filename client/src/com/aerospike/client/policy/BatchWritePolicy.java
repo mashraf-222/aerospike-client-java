@@ -138,8 +138,12 @@ public final class BatchWritePolicy {
 		}
 		DynamicBatchWriteConfig dynBWC = config.dynamicConfiguration.dynamicBatchWriteConfig;
 
-		if (dynBWC.sendKey != null) this.sendKey = dynBWC.sendKey.value;
-		if (dynBWC.durableDelete != null) this.durableDelete = dynBWC.durableDelete.value;
+		if (dynBWC.sendKey != null) {
+			this.sendKey = dynBWC.sendKey.value;
+		}
+		if (dynBWC.durableDelete != null) {
+			this.durableDelete = dynBWC.durableDelete.value;
+		}
 	}
 
 	/**

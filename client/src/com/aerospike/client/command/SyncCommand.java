@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 Aerospike, Inc.
+ * Copyright 2012-2025 Aerospike, Inc.
  *
  * Portions may be licensed to Aerospike, Inc. under one or more contributor
  * license agreements WHICH ARE COMPATIBLE WITH THE APACHE LICENSE, VERSION 2.0.
@@ -41,23 +41,26 @@ public abstract class SyncCommand extends Command {
 	int iteration = 1;
 	int commandSentCounter;
 	long deadline;
+	String namespace;
 
 	/**
 	 * Default constructor.
 	 */
-	public SyncCommand(Cluster cluster, Policy policy) {
+	public SyncCommand(Cluster cluster, Policy policy, String namespace) {
 		super(policy.socketTimeout, policy.totalTimeout, policy.maxRetries);
 		this.cluster = cluster;
 		this.policy = policy;
+		this.namespace = namespace;
 	}
 
 	/**
 	 * Scan/Query constructor.
 	 */
-	public SyncCommand(Cluster cluster, Policy policy, int socketTimeout, int totalTimeout) {
+	public SyncCommand(Cluster cluster, Policy policy, int socketTimeout, int totalTimeout, String namespace) {
 		super(socketTimeout, totalTimeout, 0);
 		this.cluster = cluster;
 		this.policy = policy;
+		this.namespace = namespace;
 	}
 
 	public void execute() {
@@ -72,7 +75,8 @@ public abstract class SyncCommand extends Command {
 		Node node;
 		AerospikeException exception = null;
 		long begin = 0;
-		LatencyType latencyType = cluster.metricsEnabled? getLatencyType() : LatencyType.NONE;
+		boolean metricsEnabled = cluster.metricsEnabled;
+		LatencyType latencyType = metricsEnabled? getLatencyType() : LatencyType.NONE;
 		boolean isClientTimeout;
 
 		// Execute command until successful, timed out or maximum iterations have been reached.
@@ -108,15 +112,19 @@ public abstract class SyncCommand extends Command {
 					conn.write(dataBuffer, dataOffset);
 					commandSentCounter++;
 
+					if (metricsEnabled) {
+						node.addBytesOut(namespace, dataOffset);
+					}
+
 					// Parse results.
-					parseResult(conn);
+					parseResult(node, conn);
 
 					// Put connection back in pool.
 					node.putConnection(conn);
 
 					if (latencyType != LatencyType.NONE) {
 						long elapsed = System.nanoTime() - begin;
-						node.addLatency(latencyType, elapsed);
+						node.addLatency(namespace, latencyType, elapsed);
 					}
 
 					// Command has completed successfully.  Exit method.
@@ -138,17 +146,23 @@ public abstract class SyncCommand extends Command {
 						exception = new AerospikeException.Timeout(policy, false);
 						isClientTimeout = false;
 						node.incrErrorRate();
-						node.addTimeout();
+						node.addTimeout(namespace);
 					}
 					else if (ae.getResultCode() == ResultCode.DEVICE_OVERLOAD) {
 						// Add to circuit breaker error count and retry.
 						exception = ae;
 						isClientTimeout = false;
 						node.incrErrorRate();
-						node.addError();
+						node.addError(namespace);
+					}
+					else if (ae.getResultCode() == ResultCode.KEY_BUSY) {
+						exception = ae;
+						isClientTimeout = false;
+						node.incrErrorRate();
+						node.addKeyBusy(namespace);
 					}
 					else {
-						node.addError();
+						node.addError(namespace);
 						prepareException(node, ae, subExceptions);
 						throw ae;
 					}
@@ -162,7 +176,7 @@ public abstract class SyncCommand extends Command {
 					}
 					exception = new AerospikeException.Timeout(policy, true);
 					isClientTimeout = true;
-					node.addTimeout();
+					node.addTimeout(namespace);
 				}
 				catch (SocketTimeoutException ste) {
 					// Full timeout has been reached.
@@ -170,7 +184,7 @@ public abstract class SyncCommand extends Command {
 					node.closeConnection(conn);
 					exception = new AerospikeException.Timeout(policy, true);
 					isClientTimeout = true;
-					node.addTimeout();
+					node.addTimeout(namespace);
 				}
 				catch (IOException ioe) {
 					// IO errors are considered temporary anomalies.  Retry.
@@ -178,14 +192,14 @@ public abstract class SyncCommand extends Command {
 					node.closeConnection(conn);
 					exception = new AerospikeException.Connection(ioe);
 					isClientTimeout = false;
-					node.addError();
+					node.addError(namespace);
 				}
 				catch (Throwable t) {
 					// All remaining exceptions are considered fatal.  Do not retry.
 					// Close socket to flush out possible garbage.  Do not put back in pool.
 					// Log.info("Throw Throwable: " + tranId + ',' + node + ',' + sequence + ',' + iteration);
 					node.closeConnection(conn);
-					node.addError();
+					node.addError(namespace);
 					AerospikeException ae = new AerospikeException(t);
 					prepareException(node, ae, subExceptions);
 					throw ae;
@@ -195,30 +209,30 @@ public abstract class SyncCommand extends Command {
 				// Connection already handled.
 				exception = new AerospikeException.Timeout(policy, true);
 				isClientTimeout = true;
-				node.addTimeout();
+				node.addTimeout(namespace);
 			}
 			catch (AerospikeException.Connection ce) {
 				// Socket connection error has occurred. Retry.
 				// Log.info("Connection error: " + tranId + ',' + node + ',' + sequence + ',' + iteration);
 				exception = ce;
 				isClientTimeout = false;
-				node.addError();
+				node.addError(namespace);
 			}
 			catch (AerospikeException.Backoff be) {
 				// Node is in backoff state. Retry, hopefully on another node.
 				// Log.info("Backoff error: " + tranId + ',' + node + ',' + sequence + ',' + iteration);
 				exception = be;
 				isClientTimeout = false;
-				node.addError();
+				node.addError(namespace);
 			}
 			catch (AerospikeException ae) {
 				// Log.info("Throw AerospikeException: " + tranId + ',' + node + ',' + sequence + ',' + iteration + ',' + ae.getResultCode());
-				node.addError();
+				node.addError(namespace);
 				prepareException(node, ae, subExceptions);
 				throw ae;
 			}
 			catch (Throwable t) {
-				node.addError();
+				node.addError(namespace);
 				AerospikeException ae = new AerospikeException(t);
 				prepareException(node, ae, subExceptions);
 				throw ae;
@@ -334,6 +348,6 @@ public abstract class SyncCommand extends Command {
 	protected abstract Node getNode();
 	protected abstract LatencyType getLatencyType();
 	protected abstract void writeBuffer();
-	protected abstract void parseResult(Connection conn) throws AerospikeException, IOException;
+	protected abstract void parseResult(Node node, Connection conn) throws AerospikeException, IOException;
 	protected abstract boolean prepareRetry(boolean timeout);
 }
