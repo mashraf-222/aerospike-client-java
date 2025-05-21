@@ -23,9 +23,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicClientConfig;
-import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicReadConfig;
-import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicWriteConfig;
 import org.yaml.snakeyaml.TypeDescription;
 
 import com.aerospike.client.configuration.serializers.DynamicConfiguration;

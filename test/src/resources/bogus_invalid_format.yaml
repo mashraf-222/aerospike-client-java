@@ -1,12 +1,8 @@
 # A bogus config YAML that is intended only for test purposes.  Not to be used outside of testing.
 
-metadata:
-  schema_version: 0.0.1
-  app_name= "example_app"
-  generation: 3
 static:
   client:
-    config_interval: 3
+    config_interval= 3
     max_connections_per_node: 10
     min_connections_per_node: 10
     async_max_connections_per_node: 50

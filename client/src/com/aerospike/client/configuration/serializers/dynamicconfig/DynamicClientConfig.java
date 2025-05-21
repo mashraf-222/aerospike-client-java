@@ -17,11 +17,11 @@
 
 package com.aerospike.client.configuration.serializers.dynamicconfig;
 
-import com.aerospike.client.Log;
+import java.util.List;
+
 import com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops.BooleanProperty;
 import com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops.IntProperty;
-
-import java.util.List;
+import com.aerospike.client.Log;
 
 public class DynamicClientConfig {
     public IntProperty timeout;
@@ -93,8 +93,7 @@ public class DynamicClientConfig {
             propsString.append(" use_service_alternative=").append(useServiceAlternative.value).append(", ");
         } catch (Exception e) {
             Log.error(e.toString());
-        } finally {
-            return propsString.append("}").toString();
         }
+        return propsString.append("}").toString();
     }
 }

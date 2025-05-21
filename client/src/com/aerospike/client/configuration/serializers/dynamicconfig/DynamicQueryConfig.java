@@ -17,10 +17,13 @@
 
 package com.aerospike.client.configuration.serializers.dynamicconfig;
 
-import com.aerospike.client.Log;
 import com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops.BooleanProperty;
 import com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops.IntProperty;
-import com.aerospike.client.policy.*;
+import com.aerospike.client.Log;
+import com.aerospike.client.policy.QueryDuration;
+import com.aerospike.client.policy.ReadModeAP;
+import com.aerospike.client.policy.ReadModeSC;
+import com.aerospike.client.policy.Replica;
 
 
 public class DynamicQueryConfig {
@@ -115,8 +118,7 @@ public class DynamicQueryConfig {
             propsString.append(" expected_duration=").append(expectedDuration).append(", ");
         } catch (Exception e) {
             Log.error(e.toString());
-        } finally {
-            return propsString.append("}").toString();
         }
+        return propsString.append("}").toString();
     }
 }

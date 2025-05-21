@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 Aerospike, Inc.
+ * Copyright 2012-2025 Aerospike, Inc.
  *
  * Portions may be licensed to Aerospike, Inc. under one or more contributor
  * license agreements WHICH ARE COMPATIBLE WITH THE APACHE LICENSE, VERSION 2.0.
@@ -75,8 +75,8 @@ public final class BatchDelete extends BatchRecord {
 		}
 		if (configProvider != null) {
 			Configuration config = configProvider.fetchConfiguration();
-			if (config != null && config.dynamicConfiguration.dynamicBatchUDFconfig.sendKey != null) {
-				sendkey = config.dynamicConfiguration.dynamicBatchUDFconfig.sendKey.value;
+			if (config != null && config.dynamicConfiguration.dynamicBatchDeleteConfig.sendKey != null) {
+				sendkey = config.dynamicConfiguration.dynamicBatchDeleteConfig.sendKey.value;
 			}
 		}
 		return !sendkey;

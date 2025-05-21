@@ -79,6 +79,11 @@ import com.aerospike.client.task.RegisterTask;
  */
 public interface IAerospikeClient extends Closeable {
 	/**
+	 * Return the client version
+	 */
+	public String getVersion();
+
+	/**
 	 * Returns the client's ConfigurationProvider, if any was added to the clientPolicy
 	 */
 	public ConfigurationProvider getConfigProvider();
