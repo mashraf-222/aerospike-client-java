@@ -17,9 +17,9 @@
 
 package com.aerospike.client.configuration.serializers.dynamicconfig;
 
-import com.aerospike.client.Log;
 import com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops.BooleanProperty;
 import com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops.IntProperty;
+import com.aerospike.client.Log;
 import com.aerospike.client.policy.Replica;
 
 
@@ -117,8 +117,7 @@ public class DynamicBatchWriteConfig {
             propsString.append(" respond_all_keys=").append(respondAllKeys.value).append(", ");
         } catch (Exception e) {
             Log.error(e.toString());
-        } finally {
-            return propsString.append("}").toString();
         }
+        return propsString.append("}").toString();
     }
 }

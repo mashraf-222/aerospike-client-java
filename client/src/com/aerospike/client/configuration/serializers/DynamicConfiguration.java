@@ -18,9 +18,6 @@
 package com.aerospike.client.configuration.serializers;
 
 import com.aerospike.client.configuration.serializers.dynamicconfig.*;
-import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicClientConfig;
-import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicReadConfig;
-import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicWriteConfig;
 
 public class DynamicConfiguration {
     public DynamicClientConfig dynamicClientConfig;

@@ -20,7 +20,6 @@ import com.aerospike.client.configuration.ConfigurationProvider;
 import com.aerospike.client.configuration.serializers.Configuration;
 import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicBatchDeleteConfig;
 import com.aerospike.client.exp.Expression;
-import com.aerospike.client.Log;
 
 /**
  * Policy attributes used in batch delete commands.
@@ -96,8 +95,12 @@ public final class BatchDeletePolicy {
 		}
 		DynamicBatchDeleteConfig dynBDC = config.dynamicConfiguration.dynamicBatchDeleteConfig;
 
-		if (dynBDC.sendKey != null) this.sendKey = dynBDC.sendKey.value;
-		if (dynBDC.durableDelete != null) this.durableDelete = dynBDC.durableDelete.value;
+		if (dynBDC.sendKey != null) {
+			this.sendKey = dynBDC.sendKey.value;
+		}
+		if (dynBDC.durableDelete != null) {
+			this.durableDelete = dynBDC.durableDelete.value;
+		}
 	}
 
 	/**

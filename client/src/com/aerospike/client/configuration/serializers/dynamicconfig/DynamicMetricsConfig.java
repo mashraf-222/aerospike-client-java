@@ -17,15 +17,19 @@
 
 package com.aerospike.client.configuration.serializers.dynamicconfig;
 
+import java.util.Map;
 
-import com.aerospike.client.Log;
 import com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops.BooleanProperty;
 import com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops.IntProperty;
+import com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops.StringProperty;
+import com.aerospike.client.Log;
 
 public class DynamicMetricsConfig {
     public BooleanProperty enable;
     public IntProperty latencyShift;
     public IntProperty latencyColumns;
+    public StringProperty app_id;
+    public Map<String, String> labels;
 
     public DynamicMetricsConfig() {}
 
@@ -35,11 +39,19 @@ public class DynamicMetricsConfig {
 
     public void setLatencyColumns(IntProperty latencyColumns) { this.latencyColumns = latencyColumns; }
 
+    public void setApp_id(StringProperty app_id) { this.app_id = app_id; }
+
+    public Map<String, String> getLabels() { return labels; }
+
+    public void setLabels(Map<String, String> labels) { this.labels = labels; }
+
     public BooleanProperty getEnable() { return enable; }
 
     public IntProperty getLatencyShift() { return latencyShift; }
 
     public IntProperty getLatencyColumns() { return latencyColumns; }
+
+    public StringProperty getApp_id() { return app_id; }
 
     @Override
     public String toString() {
@@ -48,10 +60,11 @@ public class DynamicMetricsConfig {
             propsString.append(" enable=").append(enable.value).append(", ");
             propsString.append(" latency_shift=").append(latencyShift.value).append(", ");
             propsString.append(" latency_columns=").append(latencyColumns.value).append(", ");
+            propsString.append(" app_id=").append(app_id.value).append(", ");
+            propsString.append(" labels=").append(getLabels().toString()).append(", ");
         } catch (Exception e) {
             Log.error(e.toString());
-        } finally {
-            return propsString.append("}").toString();
         }
+        return propsString.append("}").toString();
     }
 }

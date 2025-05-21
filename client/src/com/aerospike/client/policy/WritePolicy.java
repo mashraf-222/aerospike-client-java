@@ -16,12 +16,11 @@
  */
 package com.aerospike.client.policy;
 
+import java.util.Objects;
+
 import com.aerospike.client.configuration.ConfigurationProvider;
 import com.aerospike.client.configuration.serializers.Configuration;
 import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicWriteConfig;
-import com.aerospike.client.Log;
-
-import java.util.Objects;
 
 /**
  * Container object for policy attributes used in write operations.
@@ -144,16 +143,36 @@ public final class WritePolicy extends Policy {
 		}
 		DynamicWriteConfig dynWC = config.dynamicConfiguration.dynamicWriteConfig;
 
-		if (dynWC.connectTimeout != null) this.connectTimeout = dynWC.connectTimeout.value;
-		if (dynWC.failOnFilteredOut != null) this.failOnFilteredOut = dynWC.failOnFilteredOut.value;
-		if (dynWC.replica != null) this.replica = dynWC.replica;
-		if (dynWC.sendKey != null) this.sendKey = dynWC.sendKey.value;
-		if (dynWC.sleepBetweenRetries != null) this.sleepBetweenRetries = dynWC.sleepBetweenRetries.value;
-		if (dynWC.socketTimeout != null) this.socketTimeout = dynWC.socketTimeout.value;
-		if (dynWC.timeoutDelay != null) this.timeoutDelay = dynWC.timeoutDelay.value;
-		if (dynWC.totalTimeout != null) this.totalTimeout = dynWC.totalTimeout.value;
-		if (dynWC.maxRetries != null) this.maxRetries = dynWC.maxRetries.value;;
-		if (dynWC.durableDelete != null) this.durableDelete = dynWC.durableDelete.value;
+		if (dynWC.connectTimeout != null) {
+			this.connectTimeout = dynWC.connectTimeout.value;
+		}
+		if (dynWC.failOnFilteredOut != null) {
+			this.failOnFilteredOut = dynWC.failOnFilteredOut.value;
+		}
+		if (dynWC.replica != null) {
+			this.replica = dynWC.replica;
+		}
+		if (dynWC.sendKey != null) {
+			this.sendKey = dynWC.sendKey.value;
+		}
+		if (dynWC.sleepBetweenRetries != null) {
+			this.sleepBetweenRetries = dynWC.sleepBetweenRetries.value;
+		}
+		if (dynWC.socketTimeout != null) {
+			this.socketTimeout = dynWC.socketTimeout.value;
+		}
+		if (dynWC.timeoutDelay != null) {
+			this.timeoutDelay = dynWC.timeoutDelay.value;
+		}
+		if (dynWC.totalTimeout != null) {
+			this.totalTimeout = dynWC.totalTimeout.value;
+		}
+		if (dynWC.maxRetries != null) {
+			this.maxRetries = dynWC.maxRetries.value;
+		}
+		if (dynWC.durableDelete != null) {
+			this.durableDelete = dynWC.durableDelete.value;
+		}
 	}
 
 	/**

@@ -20,7 +20,6 @@ import com.aerospike.client.configuration.ConfigurationProvider;
 import com.aerospike.client.configuration.serializers.Configuration;
 import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicBatchUDFconfig;
 import com.aerospike.client.exp.Expression;
-import com.aerospike.client.Log;
 
 /**
  * Policy attributes used in batch UDF execute commands.
@@ -108,8 +107,12 @@ public final class BatchUDFPolicy {
 		}
 		DynamicBatchUDFconfig dynUDF = config.dynamicConfiguration.dynamicBatchUDFconfig;
 
-		if (dynUDF.sendKey != null) this.sendKey = dynUDF.sendKey.value;
-		if (dynUDF.durableDelete != null) this.durableDelete = dynUDF.durableDelete.value;
+		if (dynUDF.sendKey != null) {
+			this.sendKey = dynUDF.sendKey.value;
+		}
+		if (dynUDF.durableDelete != null) {
+			this.durableDelete = dynUDF.durableDelete.value;
+		}
 	}
 
 	/**

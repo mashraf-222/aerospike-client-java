@@ -61,8 +61,7 @@ public class StaticClientConfig {
             propsString.append(" async_min_connections_per_node=").append(asyncMinConnectionsPerNode.value).append(", ");
         } catch (Exception e) {
             Log.error(e.toString());
-        } finally {
-            return propsString.append("}").toString();
         }
+        return propsString.append("}").toString();
     }
 }
