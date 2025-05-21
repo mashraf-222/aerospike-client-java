@@ -144,6 +144,7 @@ public final class MetricsPolicy {
 		this.latencyShift = other.latencyShift;
 		this.appId = other.appId;
 		this.labels = other.labels;
+		this.metricsRestartRequired = other.metricsRestartRequired;
 	}
 
 	/**

@@ -1090,7 +1090,7 @@ public class Cluster implements Runnable, Closeable {
 			metricsPolicy = mergeMetricsPolicyWithConfig(metricsPolicy);
 
 			if (metricsEnabled && metricsPolicy.isMetricsRestartRequired()) {
-				disableMetrics();
+				disableMetricsInternal();
 				enableMetrics(metricsPolicy);
 				metricsPolicy.setMetricsRestartRequired(false);
 				return;
@@ -1101,7 +1101,7 @@ public class Cluster implements Runnable, Closeable {
 					enableMetrics(metricsPolicy);
 				}
 				else if (metricsEnabled && !config.dynamicConfiguration.dynamicMetricsConfig.enable.value) {
-					disableMetrics();
+					disableMetricsInternal();
 				}
 			}
 		}
@@ -1159,9 +1159,13 @@ public class Cluster implements Runnable, Closeable {
 					return;
 				}
 			}
-			metricsEnabled = false;
-			metricsListener.onDisable(this);
+			disableMetricsInternal();
 		}
+	}
+
+	private void disableMetricsInternal() {
+		metricsEnabled = false;
+		metricsListener.onDisable(this);
 	}
 
 	public EventLoop[] getEventLoopArray() {
@@ -1526,7 +1530,7 @@ public class Cluster implements Runnable, Closeable {
 		tendThread.interrupt();
 
 		try {
-			disableMetrics();
+			disableMetricsInternal();
 		}
 		catch (Throwable e) {
 			Log.warn("DisableMetrics failed: " + Util.getErrorMessage(e));
