@@ -16,14 +16,12 @@
  */
 package com.aerospike.client.metrics;
 
-
 /**
  * Optional extended node metrics. Used when extended metrics is enabled
  * (See {@link com.aerospike.client.AerospikeClient#enableMetrics(MetricsPolicy)}).
  */
 public final class NodeMetrics {
 	private final Histograms histograms;
-	public final Counter keyBusyCounter;
 	public final Counter bytesInCounter;
 	public final Counter bytesOutCounter;
 
@@ -31,13 +29,9 @@ public final class NodeMetrics {
 	 * Initialize extended node metrics.
 	 */
 	public NodeMetrics(MetricsPolicy policy) {
-		int latencyColumns = policy.latencyColumns;
-		int latencyShift = policy.latencyShift;
-		this.keyBusyCounter = new Counter();
 		this.bytesInCounter = new Counter();
 		this.bytesOutCounter = new Counter();
-
-		histograms = new Histograms(latencyColumns, latencyShift);
+		histograms = new Histograms(policy.latencyColumns, policy.latencyShift);
 	}
 
 	/**
