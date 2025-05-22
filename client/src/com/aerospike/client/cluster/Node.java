@@ -678,7 +678,7 @@ public class Node implements Closeable {
 				new Connection(address, timeout, this, pool);
 
 			long elapsed = System.nanoTime() - begin;
-			metrics.addLatency(null, LatencyType.CONN, TimeUnit.NANOSECONDS.toMillis(elapsed));
+			metrics.addLatency(null, LatencyType.CONN, elapsed);
 		}
 		else {
 			conn = (cluster.tlsPolicy != null && !cluster.tlsPolicy.forLoginOnly) ?
