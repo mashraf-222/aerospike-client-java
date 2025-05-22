@@ -96,11 +96,10 @@ public final class Expression implements Serializable {
 	 * Write expression in wire protocol.
 	 * For internal use only.
 	 */
-	public int write(Command cmd) {
+	public void write(Command cmd) {
 		cmd.writeExpHeader(bytes.length);
 		System.arraycopy(bytes, 0, cmd.dataBuffer, cmd.dataOffset, bytes.length);
 		cmd.dataOffset += bytes.length;
-		return bytes.length;
 	}
 
 	@Override
@@ -113,12 +112,15 @@ public final class Expression implements Serializable {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (obj == null)
+		}
+		if (obj == null) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if (getClass() != obj.getClass()) {
 			return false;
+		}
 		Expression other = (Expression) obj;
 		return Arrays.equals(bytes, other.bytes);
 	}
