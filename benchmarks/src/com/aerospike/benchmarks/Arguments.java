@@ -31,13 +31,14 @@ public class Arguments {
 	public String setName;
 	public Workload workload;
 	public DBObjectSpec[] objectSpec;
+	public String binNameBase;
 	public Policy readPolicy;
 	public WritePolicy writePolicy;
 	public WritePolicy updatePolicy;
 	public WritePolicy replacePolicy;
 	public BatchPolicy batchPolicy;
 	public int batchSize;
-	public int nBins;
+	public int aerospikeBins;
 	public int readPct;
 	public int readMultiBinPct;
 	public int writeMultiBinPct;
@@ -67,12 +68,12 @@ public class Arguments {
 			return (multiBin)? fixedBins : fixedBin;
 		}
 
-		int binCount = (multiBin)? nBins : 1;
+		int binCount = (multiBin)? aerospikeBins : 1;
 		Bin[] bins = new Bin[binCount];
 		int specLength = objectSpec.length;
 
 		for (int i = 0; i < binCount; i++) {
-			String name = Integer.toString(i);
+			String name = binNameBase + "_" + (i + 1);
 			// Use passed in value for 0th bin. Random for others.
 			Value value = genValue(random, objectSpec[i % specLength],
 							i == 0 ? keySeed : -1);
