@@ -60,12 +60,12 @@ public class ConnectionOptions {
                 + "\tThe tlsname is only used when connecting with a secure TLS enabled server.\n"
                 + "\tIf the port is not specified, the default port is used.\n"
                 + "\tIPv6 addresses must be enclosed in square brackets.\n"
-                + "Default: localhost\n"
+                + "Default: localhost:3000\n"
                 + "Examples:\n"
                 + "\thost1\n"
                 + "\thost1:3000,host2:3000\n"
                 + "\t192.168.1.10:cert1:3000,[2001::1111]:cert2:3000\n")
-    private String hosts = "localhost";
+    private String hosts = "localhost:3000";
 
     /**
      * Set the default port number for connecting to Aerospike server.
