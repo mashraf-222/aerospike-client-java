@@ -53,7 +53,7 @@ import java.util.concurrent.Executors;
 @Command(
     name = Constants.ASBENCH_COMMAND,
     mixinStandardHelpOptions = false,
-    version = Constants.ASBENCH_COMMAND + " 0.1.0",
+    versionProvider = Main.VersionProvider.class,
     description = "%n" + Constants.USAGE_MESSAGE + "%n",
     descriptionHeading = "%nDescription:%n",
     footerHeading = "%n %n",
@@ -144,12 +144,12 @@ public class AerospikeBenchmark implements Callable<Integer>, Log.Callback {
         if (benchmarkOptions == null) {
             benchmarkOptions = new BenchmarkOptions();
         }
-        setup(connectionOptions, workloadOptions, benchmarkOptions);
+        initialize(connectionOptions, workloadOptions, benchmarkOptions);
         runBenchmarks();
         return 0;
     }
 
-    public void setup(ConnectionOptions connOpts, WorkloadOptions workloadOpts, BenchmarkOptions benchmarkOpts) throws Exception {
+    public void initialize(ConnectionOptions connOpts, WorkloadOptions workloadOpts, BenchmarkOptions benchmarkOpts) throws Exception {
         boolean hasTxns = false;
 
         if (benchmarkOpts.isAsync()) {

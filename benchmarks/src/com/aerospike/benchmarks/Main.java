@@ -16,6 +16,9 @@
  */
 package com.aerospike.benchmarks;
 
+import java.io.InputStream;
+import java.util.Properties;
+
 import picocli.CommandLine;
 import picocli.CommandLine.Help.Ansi.Style;
 import picocli.CommandLine.Help.ColorScheme;
@@ -68,5 +71,24 @@ public class Main {
             .errors(Style.fg_red, Style.bold)
             .stackTraces(Style.italic)
             .build();
+    }
+
+	/**
+	 * Provides the version of the application.
+	 * 
+	 * <p>The version is read from the project.properties file.
+	 * If the file is not found, the version is "developer-build".
+	 * 
+	 * @return The version of the application
+	 * @throws Exception If the version is not found
+	 */
+	public static class VersionProvider implements CommandLine.IVersionProvider {
+		public String[] getVersion() throws Exception {
+			Properties props = new Properties();
+			try (InputStream in = Main.class.getClassLoader().getResourceAsStream("project.properties")) {
+				props.load(in);
+			}
+			return new String[] { props.getProperty("version", "developer-build") };
+		}
     }
 }
