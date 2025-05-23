@@ -47,6 +47,7 @@ import com.aerospike.client.async.NettyTlsContext;
 import com.aerospike.client.async.NioEventLoops;
 import com.aerospike.client.cluster.Node.AsyncPool;
 import com.aerospike.client.command.Buffer;
+import com.aerospike.client.configuration.serializers.Configuration;
 import com.aerospike.client.listener.ClusterStatsListener;
 import com.aerospike.client.metrics.MetricsListener;
 import com.aerospike.client.metrics.MetricsPolicy;
@@ -61,6 +62,9 @@ import com.aerospike.client.util.Util;
 public class Cluster implements Runnable, Closeable {
 	// Client back pointer.
 	public final AerospikeClient client;
+
+	// Config created from a ConfigProvider, if available
+	private Configuration config;
 
 	// Expected cluster name.
 	protected final String clusterName;
@@ -130,10 +134,10 @@ public class Cluster implements Runnable, Closeable {
 	private final long maxSocketIdleNanosTrim;
 
 	// Minimum sync connections per node.
-	protected final int minConnsPerNode;
+	protected int minConnsPerNode;
 
 	// Maximum sync connections per node.
-	protected final int maxConnsPerNode;
+	protected int maxConnsPerNode;
 
 	// Minimum async connections per node.
 	protected final int asyncMinConnsPerNode;
@@ -170,6 +174,9 @@ public class Cluster implements Runnable, Closeable {
 
 	// Cluster tend counter
 	private int tendCount;
+
+	// YAML config file monitor frequency - expressed as a multiple of the tendInterval
+	public int configInterval;
 
 	// Has cluster instance been closed.
 	private AtomicBoolean closed;
@@ -208,6 +215,15 @@ public class Cluster implements Runnable, Closeable {
 		this.validateClusterName = policy.validateClusterName;
 		this.tlsPolicy = policy.tlsPolicy;
 		this.authMode = policy.authMode;
+
+		if (client.getConfigProvider() != null) {
+			config = client.getConfigProvider().fetchConfiguration();
+			if (config != null) {
+				this.configInterval = config.staticConfiguration.staticClientConfig.configInterval.value;
+			}
+		} else {
+			this.configInterval = -1;
+		}
 
 		// Default TLS names when TLS enabled.
 		if (tlsPolicy != null) {
@@ -436,6 +452,11 @@ public class Cluster implements Runnable, Closeable {
 			addSeeds(seedsToAdd.toArray(new Host[seedsToAdd.size()]));
 		}
 
+		if (config != null && config.dynamicConfiguration.dynamicMetricsConfig.enable != null &&
+				config.dynamicConfiguration.dynamicMetricsConfig.enable.value) {
+			enableMetrics(metricsPolicy);
+		}
+
 		// Run cluster tend thread.
 		tendValid = true;
 		tendThread = new Thread(this);
@@ -620,8 +641,21 @@ public class Cluster implements Runnable, Closeable {
 			}
 		}
 
+		// Perform metrics snapshot.
 		if (metricsEnabled && (tendCount % metricsPolicy.interval) == 0) {
 			metricsListener.onSnapshot(this);
+		}
+
+		// Check configuration file for updates.
+		if (configInterval > 0 && tendCount % configInterval == 0) {
+			try {
+				loadConfiguration();
+			}
+			catch (Throwable t) {
+				if (Log.warnEnabled()) {
+					Log.warn("Dynamic configuration failed: " + Util.getErrorMessage(t));
+				}
+			}
 		}
 
 		processRecoverQueue();
@@ -1049,35 +1083,89 @@ public class Cluster implements Runnable, Closeable {
 		}
 	}
 
+	private void loadConfiguration() {
+		if (client.getConfigProvider().loadConfiguration()) {
+			config = client.getConfigProvider().fetchConfiguration();
+			client.mergeDefaultPoliciesWithConfig();
+			metricsPolicy = mergeMetricsPolicyWithConfig(metricsPolicy);
+
+			if (metricsEnabled && metricsPolicy.isMetricsRestartRequired()) {
+				disableMetricsInternal();
+				enableMetrics(metricsPolicy);
+				metricsPolicy.setMetricsRestartRequired(false);
+				return;
+			}
+
+			if (config != null && config.dynamicConfiguration.dynamicMetricsConfig.enable != null) {
+				if (!metricsEnabled && config.dynamicConfiguration.dynamicMetricsConfig.enable.value) {
+					enableMetrics(metricsPolicy);
+				}
+				else if (metricsEnabled && !config.dynamicConfiguration.dynamicMetricsConfig.enable.value) {
+					disableMetricsInternal();
+				}
+			}
+		}
+	}
+
+	private MetricsPolicy mergeMetricsPolicyWithConfig(MetricsPolicy mp) {
+		if (mp == null) {
+			mp = new MetricsPolicy();
+		}
+        return new MetricsPolicy(mp, config);
+	}
+
 	public final void enableMetrics(MetricsPolicy policy) {
+		MetricsPolicy mergedMP = mergeMetricsPolicyWithConfig(policy);
+
+		if (config != null) {
+			if (config.dynamicConfiguration.dynamicMetricsConfig.enable != null) {
+				if (!config.dynamicConfiguration.dynamicMetricsConfig.enable.value) {
+					Log.warn("When a config exists, metrics can not be enabled via enableMetrics unless they" +
+							" are enabled in the config provider.");
+					return;
+				}
+			}
+		}
+
+		MetricsListener listener = mergedMP.listener;
+
+		if (listener == null) {
+			listener = new MetricsWriter(mergedMP.reportDir);
+		}
+
+		this.metricsListener = listener;
+		this.metricsPolicy = mergedMP;
+
 		if (metricsEnabled) {
 			this.metricsListener.onDisable(this);
 		}
 
-		MetricsListener listener = policy.listener;
-
-		if (listener == null) {
-			listener = new MetricsWriter(policy.reportDir);
-		}
-
-		this.metricsListener = listener;
-		this.metricsPolicy = policy;
-
 		Node[] nodeArray = nodes;
 
 		for (Node node : nodeArray) {
-			node.enableMetrics(policy);
+			node.enableMetrics(this.metricsPolicy);
 		}
 
-		listener.onEnable(this, policy);
+		this.metricsListener.onEnable(this, this.metricsPolicy);
 		metricsEnabled = true;
 	}
 
 	public final void disableMetrics() {
 		if (metricsEnabled) {
-			metricsEnabled = false;
-			metricsListener.onDisable(this);
+			if (config != null) {
+				if (config.dynamicConfiguration.dynamicMetricsConfig.enable != null &&
+						config.dynamicConfiguration.dynamicMetricsConfig.enable.value ) {
+					Log.warn("Metrics can not be disabled via disableMetrics() when they are enabled via config.");
+					return;
+				}
+			}
+			disableMetricsInternal();
 		}
+	}
+
+	private void disableMetricsInternal() {
+		metricsEnabled = false;
+		metricsListener.onDisable(this);
 	}
 
 	public EventLoop[] getEventLoopArray() {
@@ -1424,6 +1512,13 @@ public class Cluster implements Runnable, Closeable {
 		return invalidNodeCount;
 	}
 
+	/**
+	 * Return the current Metrics Policy
+	 */
+	public MetricsPolicy getMetricsPolicy() {
+		return metricsPolicy;
+	}
+
 	public void close() {
 		if (! closed.compareAndSet(false, true)) {
 			// close() has already been called.
@@ -1435,7 +1530,7 @@ public class Cluster implements Runnable, Closeable {
 		tendThread.interrupt();
 
 		try {
-			disableMetrics();
+			disableMetricsInternal();
 		}
 		catch (Throwable e) {
 			Log.warn("DisableMetrics failed: " + Util.getErrorMessage(e));

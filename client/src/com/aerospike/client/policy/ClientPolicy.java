@@ -22,11 +22,20 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
 import com.aerospike.client.async.EventLoops;
+import com.aerospike.client.configuration.ConfigurationProvider;
+import com.aerospike.client.configuration.serializers.Configuration;
+import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicClientConfig;
+import com.aerospike.client.configuration.serializers.staticconfig.StaticClientConfig;
 
 /**
  * Container object for client policy Command.
  */
 public class ClientPolicy {
+	/**
+	 * Configuration provider that will override user-provided and/or merged policy settings
+	 */
+	public ConfigurationProvider configProvider;
+
 	/**
 	 * Optional event loops to use in asynchronous commands.
 	 * <p>
@@ -398,6 +407,63 @@ public class ClientPolicy {
 	 * Default: null
 	 */
 	public List<Integer> rackIds;
+
+	/**
+	 * Copy client policy from another client policy AND override certain policy attributes if they exist in the
+	 * configProvider.
+	 */
+	public ClientPolicy(ClientPolicy other, ConfigurationProvider configProvider) {
+		this(other);
+		Configuration config = configProvider.fetchConfiguration();
+		if (config == null) {
+			return;
+		}
+		StaticClientConfig staCC = config.staticConfiguration.staticClientConfig;
+		if (staCC.maxConnectionsPerNode != null) {
+			this.maxConnsPerNode = staCC.maxConnectionsPerNode.value;
+		}
+		if (staCC.minConnectionsPerNode != null) {
+			this.minConnsPerNode = staCC.minConnectionsPerNode.value;
+		}
+		if (staCC.asyncMaxConnectionsPerNode != null) {
+			this.asyncMaxConnsPerNode = staCC.asyncMaxConnectionsPerNode.value;
+		}
+		if (staCC.asyncMinConnectionsPerNode != null) {
+			this.asyncMinConnsPerNode = staCC.asyncMinConnectionsPerNode.value;
+		}
+
+		DynamicClientConfig dynCC = config.dynamicConfiguration.dynamicClientConfig;
+		if (dynCC.timeout != null) {
+			this.timeout = dynCC.timeout.value;
+		}
+		if (dynCC.errorRateWindow != null) {
+			this.errorRateWindow = dynCC.errorRateWindow.value;
+		}
+		if (dynCC.maxErrorRate != null) {
+			this.maxErrorRate = dynCC.maxErrorRate.value;
+		}
+		if (dynCC.failIfNotConnected != null) {
+			this.failIfNotConnected = dynCC.failIfNotConnected.value;
+		}
+		if (dynCC.loginTimeout != null) {
+			this.loginTimeout = dynCC.loginTimeout.value;
+		}
+		if (dynCC.maxSocketIdle != null) {
+			this.maxSocketIdle = dynCC.maxSocketIdle.value;
+		}
+		if (dynCC.rackAware != null) {
+			this.rackAware = dynCC.rackAware.value;
+		}
+		if (dynCC.timeout != null) {
+			this.rackIds = dynCC.rackIds;
+		}
+		if (dynCC.tendInterval != null) {
+			this.tendInterval = dynCC.tendInterval.value;
+		}
+		if (dynCC.useServiceAlternative != null) {
+			this.useServicesAlternate = dynCC.useServiceAlternative.value;
+		}
+	}
 
 	/**
 	 * Copy client policy from another client policy.
