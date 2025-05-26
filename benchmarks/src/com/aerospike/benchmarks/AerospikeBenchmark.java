@@ -303,7 +303,7 @@ public class AerospikeBenchmark implements Callable<Integer>, Log.Callback {
         }
 
         args.binNameBase = workloadOpts.getBinNameBase();
-        args.aerospikeBins = workloadOpts.getBins();
+        args.nBins = workloadOpts.getBins();
 
         if (workloadOpts.getObjectSpec() != null) {
             String[] objectsArr = workloadOpts.getObjectSpec().split(",");
@@ -733,7 +733,7 @@ public class AerospikeBenchmark implements Callable<Integer>, Log.Callback {
                 + ", transactions: "
                 + args.transactionLimit
                 + ", bins: "
-                + args.aerospikeBins
+                + args.nBins
                 + ", random values: "
                 + (args.fixedBins == null)
                 + ", throughput: "

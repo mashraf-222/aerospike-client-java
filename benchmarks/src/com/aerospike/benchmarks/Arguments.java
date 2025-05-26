@@ -38,7 +38,7 @@ public class Arguments {
 	public WritePolicy replacePolicy;
 	public BatchPolicy batchPolicy;
 	public int batchSize;
-	public int aerospikeBins;
+	public int nBins;
 	public int readPct;
 	public int readMultiBinPct;
 	public int writeMultiBinPct;
@@ -68,7 +68,7 @@ public class Arguments {
 			return (multiBin)? fixedBins : fixedBin;
 		}
 
-		int binCount = (multiBin)? aerospikeBins : 1;
+		int binCount = (multiBin)? nBins : 1;
 		Bin[] bins = new Bin[binCount];
 		int specLength = objectSpec.length;
 
