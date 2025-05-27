@@ -14,7 +14,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package com.aerospike.benchmarks;
 
 import picocli.CommandLine.Option;
@@ -29,23 +28,23 @@ import picocli.CommandLine.Option;
  * functionality to users.
  */
 public class HelpOptions {
-    @Option(
-        names = {"-u", "--usage"},
-        usageHelp = true,
-        description = "prints usage options")
-    private boolean usageHelpRequested;
+	@Option(
+		names = {"-u", "--usage"},
+		usageHelp = true,
+		description = "prints usage options")
+	private boolean usageHelpRequested;
 
-    @Option(
-        names = {"-V", "--version"},
-        versionHelp = true,
-        description = "Show version info")
-    private boolean versionRequested;
+	@Option(
+		names = {"-V", "--version"},
+		versionHelp = true,
+		description = "Show version info")
+	private boolean versionRequested;
 
-    public boolean isUsageHelpRequested() {
-        return usageHelpRequested;
-    }
+	public boolean isUsageHelpRequested() {
+		return usageHelpRequested;
+	}
 
-    public boolean isVersionRequested() {
-        return versionRequested;
-    }
+	public boolean isVersionRequested() {
+		return versionRequested;
+	}
 }
