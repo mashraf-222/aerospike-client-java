@@ -1,7 +1,7 @@
 package com.aerospike.benchmarks;
 
 public class Constants {
-    public static final String ASBENCH_COMMAND = "asbench";
+    public static final String ASBENCH_COMMAND = "run_benchmarks";
     public static final String CONNECTION_OPTIONS_HEADING = "Connection Options:";
     public static final String WORKLOAD_OPTIONS_HEADING = "Workload Options:";
     public static final String BENCHMARK_OPTIONS_HEADING = "Benchmark Options:";
