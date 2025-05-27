@@ -75,33 +75,6 @@ import java.util.concurrent.Executors;
 	footerHeading = "%n %n",
 	footer = "For more information, visit https://www.aerospike.com. Copyright (c) 2025",
 	subcommands = {GenerateCompletion.class},
-	header = {
-		"@|green                                                                                                        |@",
-		"@|green                                                                                                        |@",
-		"@|green ###################################################################################################### |@",
-		"@|green #   █████████                                                  ███  █████                            # |@",
-		"@|green #  ███░░░░░███                                                ░░░  ░░███                             # |@",
-		"@|green # ░███    ░███   ██████  ████████   ██████   █████  ████████  ████  ░███ █████  ██████               # |@",
-		"@|green # ░███████████  ███░░███░░███░░███ ███░░███ ███░░  ░░███░░███░░███  ░███░░███  ███░░███              # |@",
-		"@|green # ░███░░░░░███ ░███████  ░███ ░░░ ░███ ░███░░█████  ░███ ░███ ░███  ░██████░  ░███████               # |@",
-		"@|green # ░███    ░███ ░███░░░   ░███     ░███ ░███ ░░░░███ ░███ ░███ ░███  ░███░░███ ░███░░░                # |@",
-		"@|green # █████   █████░░██████  █████    ░░██████  ██████  ░███████  █████ ████ █████░░██████               # |@",
-		"@|green #░░░░░   ░░░░░  ░░░░░░  ░░░░░      ░░░░░░  ░░░░░░   ░███░░░  ░░░░░ ░░░░ ░░░░░  ░░░░░░                # |@",
-		"@|green #                                                   ░███                                             # |@",
-		"@|green #                                                   █████                                            # |@",
-		"@|green #                                                  ░░░░░                                             # |@",
-		"@|green # ███████████                               █████                                          █████     # |@",
-		"@|green #░░███░░░░░███                             ░░███                                          ░░███      # |@",
-		"@|green # ░███    ░███  ██████  ████████    ██████  ░███████   █████████████    ██████   ████████  ░███ █████# |@",
-		"@|green # ░██████████  ███░░███░░███░░███  ███░░███ ░███░░███ ░░███░░███░░███  ░░░░░███ ░░███░░███ ░███░░███ # |@",
-		"@|green # ░███░░░░░███░███████  ░███ ░███ ░███ ░░░  ░███ ░███  ░███ ░███ ░███   ███████  ░███ ░░░  ░██████░  # |@",
-		"@|green # ░███    ░███░███░░░   ░███ ░███ ░███  ███ ░███ ░███  ░███ ░███ ░███  ███░░███  ░███      ░███░░███ # |@",
-		"@|green # ███████████ ░░██████  ████ █████░░██████  ████ █████ █████░███ █████░░████████ █████     ████ █████# |@",
-		"@|green #░░░░░░░░░░░   ░░░░░░  ░░░░ ░░░░░  ░░░░░░  ░░░░ ░░░░░ ░░░░░ ░░░ ░░░░░  ░░░░░░░░ ░░░░░     ░░░░ ░░░░░ # |@",
-		"@|green ###################################################################################################### |@",
-		"@|green                                                                                                        |@",
-		"@|green                                                                                                        |@",
-		"@|green                                                                                                        |@"},
 	usageHelpAutoWidth = true
 )
 public class AerospikeBenchmark implements Callable<Integer>, Log.Callback {
@@ -145,11 +118,6 @@ public class AerospikeBenchmark implements Callable<Integer>, Log.Callback {
 
 	@Override
 	public Integer call() throws Exception {
-		// Print the header ;)
-		String[] header = spec.usageMessage().header();
-		for (String line : header) {
-			System.out.println(CommandLine.Help.Ansi.AUTO.string(line));
-		}
 		// arg groups can be null, if user doesn't pass any arguments
 		if (connectionOptions == null) {
 			connectionOptions = new ConnectionOptions();
