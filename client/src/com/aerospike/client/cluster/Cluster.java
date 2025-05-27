@@ -1164,8 +1164,8 @@ public class Cluster implements Runnable, Closeable {
 	}
 
 	private void disableMetricsInternal() {
-		metricsEnabled = false;
 		metricsListener.onDisable(this);
+		metricsEnabled = false;
 	}
 
 	public EventLoop[] getEventLoopArray() {
@@ -1529,11 +1529,13 @@ public class Cluster implements Runnable, Closeable {
 		tendValid = false;
 		tendThread.interrupt();
 
-		try {
-			disableMetricsInternal();
-		}
-		catch (Throwable e) {
-			Log.warn("DisableMetrics failed: " + Util.getErrorMessage(e));
+		if (metricsEnabled) {
+			try {
+				disableMetricsInternal();
+			}
+			catch (Throwable e) {
+				Log.warn("DisableMetrics failed: " + Util.getErrorMessage(e));
+			}
 		}
 
 		if (eventLoops == null) {
