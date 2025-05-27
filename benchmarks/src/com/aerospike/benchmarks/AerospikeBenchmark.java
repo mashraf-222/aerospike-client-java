@@ -17,7 +17,6 @@
 package com.aerospike.benchmarks;
 
 import picocli.AutoComplete.GenerateCompletion;
-import picocli.CommandLine;
 import picocli.CommandLine.ArgGroup;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
