@@ -1178,9 +1178,7 @@ public class AerospikeBenchmark implements Callable<Integer>, Log.Callback {
 	}
 
 	private ExecutorService getExecutorService() {
-		return useVirtualThreads
-			? Executors.newVirtualThreadPerTaskExecutor()
-			: Executors.newFixedThreadPool(this.numberOfThreads);
+		return Executors.newFixedThreadPool(this.numberOfThreads);
 	}
 
 	private void showBatchNodes(IAerospikeClient client) {
