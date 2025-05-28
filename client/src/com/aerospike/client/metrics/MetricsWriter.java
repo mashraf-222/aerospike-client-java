@@ -79,14 +79,34 @@ public final class MetricsWriter implements MetricsListener {
 		this.latencyShift = policy.latencyShift;
 
 		try {
-			Files.createDirectories(Paths.get(dir));
-			open();
+			initMetricsFile();
 		}
-		catch (IOException ioe) {
+		catch (AerospikeException ioe) {
 			throw new AerospikeException(ioe);
 		}
 
 		enabled = true;
+	}
+
+	/**
+	 * Initialize the metrics output file.
+	 */
+	private void initMetricsFile() {
+		synchronized(this) {
+			size = 0;
+			LocalDateTime now = LocalDateTime.now();
+			try {
+				Files.createDirectories(Paths.get(dir));
+				String path = dir + File.separator + "metrics-" + now.format(FilenameFormat) + ".log";
+				File dirFile = new File(path);
+				writer = new FileWriter(path, true);
+				if ( dirFile.length() == 0 ) {
+					writeHeader();
+				}
+			} catch (IOException ioe) {
+				throw new AerospikeException(ioe);
+			}
+		}
 	}
 
 	/**
@@ -136,12 +156,8 @@ public final class MetricsWriter implements MetricsListener {
 		}
 	}
 
-	private void open() throws IOException {
+	private void writeHeader() throws IOException {
 		LocalDateTime now = LocalDateTime.now();
-		String path = dir + File.separator + "metrics-" + now.format(FilenameFormat) + ".log";
-		writer = new FileWriter(path, true);
-		size = 0;
-
 		// Must use separate StringBuilder instance to avoid conflicting with metrics detail write.
 		sb.setLength(0);
 		sb.append(now.format(TimestampFormat));
@@ -333,7 +349,7 @@ public final class MetricsWriter implements MetricsListener {
 				writer.close();
 
 				// This call is recursive since open() calls writeLine() to write the header.
-				open();
+				writeHeader();
 			}
 		}
 		catch (IOException ioe) {
