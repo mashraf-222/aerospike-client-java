@@ -343,8 +343,8 @@ public final class MetricsWriter implements MetricsListener {
 			if (maxSize > 0 && size >= maxSize) {
 				writer.close();
 
-				// This call is recursive since writeHeader() calls writeLine() to write the header.
-				writeHeader();
+				// This call can be recursive since initMetricsFile() calls writeHeader() which calls writeLine()
+				initMetricsFile();
 			}
 		}
 		catch (IOException ioe) {
