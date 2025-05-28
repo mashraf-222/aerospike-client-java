@@ -1164,10 +1164,8 @@ public class Cluster implements Runnable, Closeable {
 	}
 
 	private void disableMetricsInternal() {
-		if (metricsEnabled) {
-			metricsListener.onDisable(this);
-			metricsEnabled = false;
-		}
+		metricsListener.onDisable(this);
+		metricsEnabled = false;
 	}
 
 	public EventLoop[] getEventLoopArray() {
