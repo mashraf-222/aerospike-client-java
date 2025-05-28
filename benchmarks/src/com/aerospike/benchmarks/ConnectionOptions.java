@@ -53,7 +53,7 @@ public class ConnectionOptions {
 	CommandSpec spec;
 
 	@Option(
-		names = {"-h", "--hosts"},
+		names = {"-h", "-hosts", "--hosts"},
 		description =
 			"List of seed hosts in format: hostname1[:tlsname][:port1],...\n"
 				+ "\tThe tlsname is only used when connecting with a secure TLS enabled server.\n"
@@ -73,7 +73,7 @@ public class ConnectionOptions {
 	 * @throws ParameterException If the port number is out of valid range (1-65535).
 	 */
 	@Option(
-		names = {"-p", "--port"},
+		names = {"-p", "-port", "--port"},
 		description = "Set the default port on which to connect to Aerospike. Default: 3000\n",
 		defaultValue = "3000")
 	public void setPort(int value) throws ParameterException {
@@ -87,26 +87,26 @@ public class ConnectionOptions {
 	private Integer port = 3000;
 
 	@Option(
-		names = {"-U", "--user"},
+		names = {"-U", "-user", "--user"},
 		description = "User name used for authentication.")
 	private String user;
 
 	@Option(
-		names = {"-P", "--password"},
+		names = {"-P", "-password", "--password"},
 		description = "Password used for authentication.",
 		interactive = true,
 		arity = "0..1")
 	private char[] password;
 
 	@Option(
-		names = {"-sa", "-servicesAlternate"},
+		names = {"-sa", "-servicesAlternate", "--servicesAlternate"},
 		description =
 			"Set to enable use of services-alternate instead of services in info request during"
 				+ " cluster tending. Default: false")
 	private boolean servicesAlternate;
 
 	@Option(
-		names = {"-tls", "--tlsEnable"},
+		names = {"-tls", "-tlsEnable", "--tlsEnable"},
 		description = "Use TLS/SSL sockets. Default: false")
 	private boolean tlsEnable;
 
@@ -117,7 +117,7 @@ public class ConnectionOptions {
 	 *              TLSv1.1, TLSv1.2. If null or empty, defaults to "TLSv1.2".
 	 */
 	@Option(
-		names = {"-tp", "--tlsProtocols"},
+		names = {"-tp", "-tlsProtocols", "--tlsProtocols"},
 		description =
 			"Allow TLS protocols\n"
 				+ "Values:  TLSv1,TLSv1.1,TLSv1.2 separated by comma\n"
@@ -133,7 +133,7 @@ public class ConnectionOptions {
 	private String tlsProtocols;
 
 	@Option(
-		names = {"-tlsCiphers", "--tlsCipherSuite"},
+		names = {"-tlsCiphers", "-tlsCipherSuite", "--tlsCipherSuite"},
 		description =
 			"Allow TLS cipher suites\n"
 				+ "Values:  cipher names defined by JVM separated by comma\n"
@@ -141,7 +141,7 @@ public class ConnectionOptions {
 	private String tlsCipherSuite;
 
 	@Option(
-		names = {"-tr", "--tlsRevoke"},
+		names = {"-tr", "-tlsRevoke", "--tlsRevoke"},
 		description =
 			"Revoke certificates identified by their serial number\n"
 				+ "Values:  serial numbers separated by comma\n"
@@ -149,7 +149,7 @@ public class ConnectionOptions {
 	private String tlsRevoke;
 
 	@Option(
-		names = {"-tlsLoginOnly", "--tlsLoginOnly"},
+		names = {"-tlsLoginOnly", "-tlsLoginOnly", "--tlsLoginOnly"},
 		description = "Use TLS/SSL sockets on node login only. Default: false")
 	private boolean tlsLoginOnly;
 
@@ -164,7 +164,7 @@ public class ConnectionOptions {
 	 * @throws ParameterException If the provided authentication mode is not a valid AuthMode value.
 	 */
 	@Option(
-		names = {"-auth", "--authMode"},
+		names = {"-auth", "-authMode", "--authMode"},
 		description =
 			"Authentication mode.\n"
 				+ "Values:  INTERNAL, EXTERNAL, EXTERNAL_INSECURE, PKI, PKI_INSECURE")
@@ -185,24 +185,24 @@ public class ConnectionOptions {
 	private String authMode;
 
 	@Option(
-		names = {"-c", "--clusterName"},
+		names = {"-c", "-clusterName", "--clusterName"},
 		description = "Set expected cluster name.")
 	private String clusterName;
 
 	@Option(
-		names = {"-lt", "--loginTimeout"},
+		names = {"-lt", "-loginTimeout", "--loginTimeout"},
 		description =
 			"Set expected loginTimeout in milliseconds. The timeout is used when user "
 				+ "authentication is enabled and a node login is being performed. Default: 5000")
 	private Integer loginTimeout;
 
 	@Option(
-		names = {"-tt", "--tendTimeout"},
+		names = {"-tt", "-tendTimeout", "--tendTimeout"},
 		description = "Set cluster tend info call timeout in milliseconds. Default: 1000")
 	private Integer tendTimeout;
 
 	@Option(
-		names = {"-ti", "--tendInterval"},
+		names = {"-ti", "-tendInterval", "--tendInterval"},
 		description = "Interval between cluster tends in milliseconds. Default: 1000")
 	private Integer tendInterval;
 
@@ -225,7 +225,7 @@ public class ConnectionOptions {
 	private Integer errorRateWindow;
 
 	@Option(
-		names = {"Y", "--connPoolsPerNode"},
+		names = {"Y", "-connPoolsPerNode", "--connPoolsPerNode"},
 		description = "Number of synchronous connection pools per node.  Default 1.")
 	private Integer connPoolsPerNode;
 
@@ -250,12 +250,12 @@ public class ConnectionOptions {
 	private Integer asyncMaxConnsPerNode = 100;
 
 	@Option(
-		names = {"-ct", "--connectTimeout"},
+		names = {"-ct", "-connectTimeout", "--connectTimeout"},
 		description = "Set socket connection timeout in milliseconds. Default: 0")
 	private Integer connectTimeout;
 
 	@Option(
-		names = {"-T", "--timeout"},
+		names = {"-T", "-timeout", "--timeout"},
 		description =
 			"Set read and write socketTimeout and totalTimeout to the same timeout in milliseconds."
 				+ " Default: 0")

@@ -29,13 +29,13 @@ import picocli.CommandLine.Option;
  */
 public class HelpOptions {
 	@Option(
-		names = {"-u", "--usage"},
+		names = {"-u", "-usage", "--usage"},
 		usageHelp = true,
 		description = "prints usage options")
 	private boolean usageHelpRequested;
 
 	@Option(
-		names = {"-V", "--version"},
+		names = {"-V", "-version", "--version"},
 		versionHelp = true,
 		description = "Show version info")
 	private boolean versionRequested;

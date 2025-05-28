@@ -48,7 +48,7 @@ public class BenchmarkOptions {
 	 * @throws ParameterException If the provided thread count is less than 1
 	 */
 	@Option(
-		names = {"-z", "--threads"},
+		names = {"-z", "-threads", "--threads"},
 		description = "Set the number of OS threads the client will use to generate load.")
 	public void setThreads(int value) throws ParameterException {
 		if (value < 1) {
@@ -67,7 +67,7 @@ public class BenchmarkOptions {
 	 * @throws ParameterException If the value is less than 1
 	 */
 	@Option(
-		names = {"-vt", "--virtualThreads"},
+		names = {"-vt", "-virtualThreads", "--virtualThreads"},
 		description =
 			"Set the number of virtual threads the client will use to generate load.\n"
 				+ "This option will override the OS threads setting (-z).")
@@ -82,7 +82,7 @@ public class BenchmarkOptions {
 	private Integer virtualThreads;
 
 	@Option(
-		names = {"-l", "-latency"},
+		names = {"-l", "-latency", "--latency"},
 		description =
 			"ycsb[,<warmup count>] | [alt,]<columns>,<range shift increment>[,us|ms] \n"
 				+ "ycsb: Show the timings in ycsb format. \n"
@@ -103,58 +103,58 @@ public class BenchmarkOptions {
 	private String latency;
 
 	@Option(
-		names = {"-N", "--reportNotFound"},
+		names = {"-N", "-reportNotFound", "--reportNotFound"},
 		description =
 			"Report not found errors. Data should be fully initialized before using this option."
 				+ " Default: false")
 	private boolean reportNotFound;
 
 	@Option(
-		names = {"-D", "--debug"},
+		names = {"-D", "-debug", "--debug"},
 		description = "Run benchmarks in debug mode. Default: false")
 	private boolean debug;
 
 	@Option(
-		names = {"-B", "--batchSize"},
+		names = {"-B", "-batchSize", "--batchSize"},
 		description =
 			"Enable batch mode with number of records to process in each batch get call. Batch mode"
 				+ " is valid only for RU (read update) workloads. Batch mode is disabled by default.")
 	private Integer batchSize;
 
 	@Option(
-		names = {"-BSN", "--batchShowNodes"},
+		names = {"-BSN", "-batchShowNodes", "--batchShowNodes"},
 		description =
 			"Print target nodes and count of keys directed at each node once on start of benchmarks."
 				+ " Default: false")
 	private boolean batchShowNodes;
 
 	@Option(
-		names = {"-prole", "--proleDistribution"},
+		names = {"-prole", "-proleDistribution", "--proleDistribution"},
 		description = "Distribute reads across proles in round-robin fashion. Default: false")
 	private boolean proleDistribution;
 
 	@Option(
-		names = {"-a", "--async"},
+		names = {"-a", "-async", "--async"},
 		description = "Benchmark asynchronous methods instead of synchronous methods. Default: false")
 	private boolean async;
 
 	@Option(
-		names = {"-C", "--asyncMaxCommands"},
+		names = {"-C", "-asyncMaxCommands", "--asyncMaxCommands"},
 		description = "Maximum number of concurrent asynchronous database commands. Default: 100")
 	private Integer asyncMaxCommands;
 
 	@Option(
-		names = {"-W", "--eventLoops"},
+		names = {"-W", "-eventLoops", "--eventLoops"},
 		description = "Number of event loop threads when running in asynchronous mode. Default: 1")
 	private Integer eventLoops;
 
 	@Option(
-		names = {"-netty"},
+		names = {"-netty", "--netty"},
 		description = "Use Netty NIO event loops for async benchmarks. Default: false")
 	private boolean netty;
 
 	@Option(
-		names = {"-nettyEpoll"},
+		names = {"-nettyEpoll", "--nettyEpoll"},
 		description = "Use Netty epoll event loops for async benchmarks (Linux only). Default: false")
 	private boolean nettyEpoll;
 
@@ -172,7 +172,7 @@ public class BenchmarkOptions {
 	 * @throws ParameterException If the provided event loop type is invalid
 	 */
 	@Option(
-		names = {"-elt", "--eventLoopType"},
+		names = {"-elt", "-eventLoopType", "--eventLoopType"},
 		description =
 			"Use specified event loop type for async examples\n"
 				+ "Value: DIRECT_NIO | NETTY_NIO | NETTY_EPOLL | NETTY_KQUEUE | NETTY_IOURING")

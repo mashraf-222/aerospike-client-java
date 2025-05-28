@@ -48,31 +48,31 @@ public class WorkloadOptions {
 	CommandSpec spec;
 
 	@Option(
-		names = {"-n", "--namespace"},
+		names = {"-n", "-namespace", "--namespace"},
 		description = "Set the Aerospike namespace for the benchmark.",
 		defaultValue = "test")
 	private String namespace = "test";
 
 	@Option(
-		names = {"-s", "--set"},
+		names = {"-s", "-set", "--set"},
 		description = "Set the Aerospike set name.",
 		defaultValue = "testset")
 	private String set = "testset";
 
 	@Option(
-		names = {"-bns", "--batchNamespaces"},
+		names = {"-bns", "-batchNamespaces", "--batchNamespaces"},
 		description = "Comma separated values for batch namespaces. Default is regular namespace.")
 	private String batchNamespaces;
 
 	@Option(
-		names = {"-b", "--bins"},
+		names = {"-b", "-bins", "--bins"},
 		description =
 			"Set the number of Aerospike bins. Each bin will contain an object defined with -o. The"
 				+ " default is single bin (-b 1).")
 	private Integer bins = 1;
 
 	@Option(
-		names = { "-bn", "--binNameBase" },
+		names = { "-bn", "-binNameBase", "--binNameBase" },
 		description = 
 			"Set the base name for Aerospike bins (default: 'testbin').\n"
 			+ "The first bin will be <binNameBase>_1, the second will be\n"
@@ -80,7 +80,7 @@ public class WorkloadOptions {
 	private String binNameBase = "testbin";
 
 	@Option(
-		names = {"-o", "--objectSpec"},
+		names = {"-o", "-objectSpec", "--objectSpec"},
 		description =
 			"I | S:<size> | B:<size> | R:<size>:<rand_pct>\n"
 				+ "Set the type of object(s) to use in Aerospike transactions. Type can be 'I' "
@@ -89,14 +89,14 @@ public class WorkloadOptions {
 	private String objectSpec;
 
 	@Option(
-		names = {"-R", "--random"},
+		names = {"-R", "-random", "--random"},
 		description =
 			"Use dynamically generated random bin values instead of default static fixed bin values."
 				+ " Default: false")
 	private boolean random;
 
 	@Option(
-		names = {"-k", "--keys"},
+		names = {"-k", "-keys", "--keys"},
 		description =
 			"Set the number of keys the client is dealing with. If using an 'insert' workload"
 				+ " (detailed below), the client will write this number of keys, starting from value"
@@ -106,7 +106,7 @@ public class WorkloadOptions {
 	private Long keys = 100000L;
 
 	@Option(
-		names = {"-S", "--startkey"},
+		names = {"-S", "-startkey", "--startkey"},
 		description =
 			"Set the starting value of the working set of keys. If using an 'insert' workload, the"
 				+ " start_value indicates the first value to write. Otherwise, the start_value"
@@ -114,17 +114,17 @@ public class WorkloadOptions {
 	private Long startkey;
 
 	@Option(
-		names = {"-F", "--keyFile"},
+		names = {"-F", "-keyFile", "--keyFile"},
 		description = "File path to read the keys for read operation.")
 	private String keyFile;
 
 	@Option(
-		names = {"-KT", "--keyType"},
+		names = {"-KT", "-keyType", "--keyType"},
 		description = "Type of the key(String/Integer) in the file, default is String")
 	private String keyType = "String";
 
 	@Option(
-		names = {"-w", "--workload"},
+		names = {"-w", "-workload", "--workload"},
 		description =
 			"I | RU,<percent>[,<percent2>][,<percent3>] | RR,<percent>[,<percent2>][,<percent3>], RMU"
 				+ " | RMI | RMD%nSet the desired workload.%n%n   -w I sets a linear 'insert'"
@@ -156,7 +156,7 @@ public class WorkloadOptions {
 	 * @throws ParameterException if the provided value is less than -1
 	 */
 	@Option(
-		names = {"-e", "--expirationTime"},
+		names = {"-e", "-expirationTime", "--expirationTime"},
 		description =
 			"Set expiration time of each record in seconds.\n"
 				+ " -1: Never expire\n"
@@ -182,7 +182,7 @@ public class WorkloadOptions {
 	 * @throws ParameterException If the provided value is outside the valid range (0-100)
 	 */
 	@Option(
-		names = {"-rt", "--readTouchTtlPercent"},
+		names = {"-rt", "-readTouchTtlPercent", "--readTouchTtlPercent"},
 		description =
 			"Read touch TTL percent is expressed as a percentage of the TTL (or expiration) sent on"
 				+ " the most\n"
@@ -201,14 +201,14 @@ public class WorkloadOptions {
 	private Integer readTouchTtlPercent;
 
 	@Option(
-		names = {"-g", "--throughput"},
+		names = {"-g", "-throughput", "--throughput"},
 		description =
 			"Set a target transactions per second for the client. The client should not exceed this "
 				+ "average throughput.")
 	private Integer throughput;
 
 	@Option(
-		names = {"-t", "--transactions"},
+		names = {"-t", "-transactions", "--transactions"},
 		description =
 			"Number of transactions to perform in read/write mode before shutting down. "
 				+ "The default is to run indefinitely.")
@@ -236,7 +236,7 @@ public class WorkloadOptions {
 	private Integer sleepBetweenRetries;
 
 	@Option(
-		names = {"-r", "-replica"},
+		names = {"-r", "-replica", "--replica"},
 		description =
 			"Which replica to use for reads.\n\n"
 				+ "Values:  master | any | sequence | preferRack.  Default: sequence\n"
@@ -338,17 +338,17 @@ public class WorkloadOptions {
 	private String partitionIds;
 
 	@Option(
-		names = {"-upn", "--udfPackageName"},
+		names = {"-upn", "-udfPackageName", "--udfPackageName"},
 		description = "Specify the package name where the udf function is located")
 	private String udfPackageName;
 
 	@Option(
-		names = {"-ufn", "--udfFunctionName"},
+		names = {"-ufn", "-udfFunctionName", "--udfFunctionName"},
 		description = "Specify the udf function name that must be used in the udf benchmarks")
 	private String udfFunctionName;
 
 	@Option(
-		names = {"-ufv", "--udfFunctionValues"},
+		names = {"-ufv", "-udfFunctionValues", "--udfFunctionValues"},
 		description = "The udf argument values comma separated")
 	private String udfFunctionValues;
 
