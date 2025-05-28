@@ -82,7 +82,7 @@ public class BenchmarkOptions {
 	private Integer virtualThreads;
 
 	@Option(
-		names = {"-l", "--latency"},
+		names = {"-l", "-latency"},
 		description =
 			"ycsb[,<warmup count>] | [alt,]<columns>,<range shift increment>[,us|ms] \n"
 				+ "ycsb: Show the timings in ycsb format. \n"
@@ -149,12 +149,12 @@ public class BenchmarkOptions {
 	private Integer eventLoops;
 
 	@Option(
-		names = {"--netty"},
+		names = {"-netty"},
 		description = "Use Netty NIO event loops for async benchmarks. Default: false")
 	private boolean netty;
 
 	@Option(
-		names = {"--nettyEpoll"},
+		names = {"-nettyEpoll"},
 		description = "Use Netty epoll event loops for async benchmarks (Linux only). Default: false")
 	private boolean nettyEpoll;
 

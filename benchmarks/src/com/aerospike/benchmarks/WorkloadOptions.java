@@ -65,7 +65,7 @@ public class WorkloadOptions {
 	private String batchNamespaces;
 
 	@Option(
-		names = {"-b", "--binCount"},
+		names = {"-b", "--bins"},
 		description =
 			"Set the number of Aerospike bins. Each bin will contain an object defined with -o. The"
 				+ " default is single bin (-b 1).")
@@ -215,12 +215,12 @@ public class WorkloadOptions {
 	private Long transactions;
 
 	@Option(
-		names = {"--rackId"},
+		names = {"-rackId"},
 		description = "Set Rack where this benchmark instance resides.  Default: 0")
 	private Integer rackId = 0;
 
 	@Option(
-		names = {"--maxRetries"},
+		names = {"-maxRetries"},
 		description =
 			"Maximum number of retries before aborting the current transaction. \n"
 				+ "Default for write: 0 (no retries) \n"
@@ -229,14 +229,14 @@ public class WorkloadOptions {
 	private Integer maxRetries;
 
 	@Option(
-		names = {"--sleepBetweenRetries"},
+		names = {"-sleepBetweenRetries"},
 		description =
 			"Milliseconds to sleep between retries if a transaction fails and the timeout was not"
 				+ " exceeded. Default: 0 (no sleep)")
 	private Integer sleepBetweenRetries;
 
 	@Option(
-		names = {"-r", "--replica"},
+		names = {"-r", "-replica"},
 		description =
 			"Which replica to use for reads.\n\n"
 				+ "Values:  master | any | sequence | preferRack.  Default: sequence\n"
@@ -257,7 +257,7 @@ public class WorkloadOptions {
 	 * @throws ParameterException If the value is not "one" or "all" (case-insensitive)
 	 */
 	@Option(
-		names = {"--readModeAP"},
+		names = {"-readModeAP"},
 		description =
 			"Read consistency level when in AP mode.\n" + "Values:  one | all.  Default: one")
 	public void setReadModeAp(String value) throws ParameterException {
@@ -285,7 +285,7 @@ public class WorkloadOptions {
 	 *                            levels
 	 */
 	@Option(
-		names = {"--readModeSC"},
+		names = {"-readModeSC"},
 		description =
 			"Read consistency level when in SC (strong consistency) mode.\n"
 				+ "Values:  session | linearize | allow_replica | allow_unavailable.  Default:"
@@ -311,7 +311,7 @@ public class WorkloadOptions {
 	 * @throws ParameterException if an invalid commit level is provided
 	 */
 	@Option(
-		names = {"--commitLevel"},
+		names = {"-commitLevel"},
 		description =
 			"Desired replica consistency guarantee when committing a transaction on the server.\n"
 				+ "Values:  all | master.  Default: all")
@@ -327,7 +327,7 @@ public class WorkloadOptions {
 	private String commitLevel;
 
 	@Option(
-		names = {"-sk", "--sendKey"},
+		names = {"-sendKey"},
 		description = "Send key to server for every operation. Default: false")
 	private boolean sendKey;
 

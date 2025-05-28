@@ -99,7 +99,7 @@ public class ConnectionOptions {
 	private char[] password;
 
 	@Option(
-		names = {"-sa", "--servicesAlternate"},
+		names = {"-sa", "-servicesAlternate"},
 		description =
 			"Set to enable use of services-alternate instead of services in info request during"
 				+ " cluster tending. Default: false")
@@ -207,45 +207,45 @@ public class ConnectionOptions {
 	private Integer tendInterval;
 
 	@Option(
-		names = {"--maxSocketIdle"},
+		names = {"-maxSocketIdle"},
 		description =
 			"Maximum socket idle in seconds. Socket connection pools will discard sockets that have"
 				+ " been idle longer than the maximum. Default: 0")
 	private Integer maxSocketIdle;
 
 	@Option(
-		names = {"--maxErrorRate"},
+		names = {"-maxErrorRate"},
 		description = "Maximum number of errors allowed per node per tend iteration. Default: 100")
 	private Integer maxErrorRate;
 
 	@Option(
-		names = {"--errorRateWindow"},
+		names = {"-errorRateWindow"},
 		description =
 			"Number of cluster tend iterations that defines the window for maxErrorRate. Default: 1")
 	private Integer errorRateWindow;
 
 	@Option(
-		names = {"--connPoolsPerNode"},
+		names = {"Y", "--connPoolsPerNode"},
 		description = "Number of synchronous connection pools per node.  Default 1.")
 	private Integer connPoolsPerNode;
 
 	@Option(
-		names = {"--minConnsPerNode"},
+		names = {"-minConnsPerNode"},
 		description = "Minimum number of sync connections pre-allocated per server node. Default: 0")
 	private Integer minConnsPerNode;
 
 	@Option(
-		names = {"--maxConnsPerNode"},
+		names = {"-maxConnsPerNode"},
 		description = "Maximum number of sync connections allowed per server node. Default: 100")
 	private Integer maxConnsPerNode;
 
 	@Option(
-		names = {"--asyncMinConnsPerNode"},
+		names = {"-asyncMinConnsPerNode"},
 		description = "Minimum number of async connections pre-allocated per server node. Default: 0")
 	private Integer asyncMinConnsPerNode = 0;
 
 	@Option(
-		names = {"--asyncMaxConnsPerNode"},
+		names = {"-asyncMaxConnsPerNode"},
 		description = "Maximum number of async connections allowed per server node. Default: 100")
 	private Integer asyncMaxConnsPerNode = 100;
 
@@ -262,22 +262,22 @@ public class ConnectionOptions {
 	private Integer timeout;
 
 	@Option(
-		names = {"--socketTimeout"},
+		names = {"-socketTimeout"},
 		description = "Set read and write socketTimeout in milliseconds. Default: 30000")
 	private Integer socketTimeout;
 
 	@Option(
-		names = {"--readSocketTimeout"},
+		names = {"-readSocketTimeout"},
 		description = "Set read socketTimeout in milliseconds. Default: 30000")
 	private Integer readSocketTimeout;
 
 	@Option(
-		names = {"--writeSocketTimeout"},
+		names = {"-writeSocketTimeout"},
 		description = "Set write socketTimeout in milliseconds. Default: 30000")
 	private Integer writeSocketTimeout;
 
 	@Option(
-		names = {"--totalTimeout"},
+		names = {"-totalTimeout"},
 		description =
 			"Set read and write totalTimeout in milliseconds. \n"
 				+ "Default for scan/query: 0\n"
@@ -285,7 +285,7 @@ public class ConnectionOptions {
 	private Integer totalTimeout = 0;
 
 	@Option(
-		names = {"--readTotalTimeout"},
+		names = {"-readTotalTimeout"},
 		description =
 			"Set read totalTimeout in milliseconds. \n"
 				+ "Default for scan/query: 0\n"
@@ -293,7 +293,7 @@ public class ConnectionOptions {
 	private Integer readTotalTimeout;
 
 	@Option(
-		names = {"--writeTotalTimeout"},
+		names = {"-writeTotalTimeout"},
 		description =
 			"Set write totalTimeout in milliseconds. \n"
 				+ "Default for scan/query: 0\n"
@@ -301,7 +301,7 @@ public class ConnectionOptions {
 	private Integer writeTotalTimeout;
 
 	@Option(
-		names = {"--timeoutDelay"},
+		names = {"-timeoutDelay"},
 		description = "Set read and write timeoutDelay in milliseconds.")
 	private Integer timeoutDelay;
 
