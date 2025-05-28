@@ -78,12 +78,7 @@ public final class MetricsWriter implements MetricsListener {
 		this.latencyColumns = policy.latencyColumns;
 		this.latencyShift = policy.latencyShift;
 
-		try {
-			initMetricsFile();
-		}
-		catch (AerospikeException ioe) {
-			throw new AerospikeException(ioe);
-		}
+		initMetricsFile();
 
 		enabled = true;
 	}
