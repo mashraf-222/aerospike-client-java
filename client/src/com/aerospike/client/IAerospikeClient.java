@@ -28,6 +28,7 @@ import com.aerospike.client.cdt.CTX;
 import com.aerospike.client.cluster.Cluster;
 import com.aerospike.client.cluster.ClusterStats;
 import com.aerospike.client.cluster.Node;
+import com.aerospike.client.configuration.*;
 import com.aerospike.client.exp.Expression;
 import com.aerospike.client.listener.BatchListListener;
 import com.aerospike.client.listener.BatchOperateListListener;
@@ -77,6 +78,16 @@ import com.aerospike.client.task.RegisterTask;
  * AerospikeClient without being constrained by final methods.
  */
 public interface IAerospikeClient extends Closeable {
+	/**
+	 * Return the client version
+	 */
+	public String getVersion();
+
+	/**
+	 * Returns the client's ConfigurationProvider, if any was added to the clientPolicy
+	 */
+	public ConfigurationProvider getConfigProvider();
+
 	//-------------------------------------------------------
 	// Default Policies
 	//-------------------------------------------------------

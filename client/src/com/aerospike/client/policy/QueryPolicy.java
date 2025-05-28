@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 Aerospike, Inc.
+ * Copyright 2012-2025 Aerospike, Inc.
  *
  * Portions may be licensed to Aerospike, Inc. under one or more contributor
  * license agreements WHICH ARE COMPATIBLE WITH THE APACHE LICENSE, VERSION 2.0.
@@ -15,6 +15,10 @@
  * the License.
  */
 package com.aerospike.client.policy;
+
+import com.aerospike.client.configuration.ConfigurationProvider;
+import com.aerospike.client.configuration.serializers.Configuration;
+import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicQueryConfig;
 
 /**
  * Container object for policy attributes used in query operations.
@@ -39,10 +43,6 @@ public class QueryPolicy extends Policy {
 	 * number of nodes involved in the query.  The actual number of records returned
 	 * may be less than maxRecords if node record counts are small and unbalanced across
 	 * nodes.
-	 * <p>
-	 * maxRecords is only supported when query filter is null.  maxRecords
-	 * exists here because query methods will convert into a scan when the query
-	 * filter is null.  maxRecords is ignored when the query contains a filter.
 	 * <p>
 	 * Default: 0 (do not limit record count)
 	 */
@@ -86,8 +86,8 @@ public class QueryPolicy extends Policy {
 	public boolean includeBinData = true;
 
 	/**
-	 * Terminate query if cluster is in migration state. If the server supports partition
-	 * queries or the query filter is null (scan), this field is ignored.
+	 * Terminate query if cluster is in migration state. This field is ignored in server
+	 * versions 6.0+.
 	 * <p>
 	 * Default: false
 	 */
@@ -109,6 +109,59 @@ public class QueryPolicy extends Policy {
 	 */
 	@Deprecated
 	public boolean shortQuery;
+
+	/**
+	 * Copy query policy from another query policy AND override certain policy attributes if they exist in the
+	 * configProvider.
+	 */
+	public QueryPolicy(QueryPolicy other, ConfigurationProvider configProvider) {
+		this(other);
+		if (configProvider == null) {
+			return;
+		}
+		Configuration config = configProvider.fetchConfiguration();
+		if (config == null) {
+			return;
+		}
+		DynamicQueryConfig dynQC = config.dynamicConfiguration.dynamicQueryConfig;
+
+		if (dynQC.readModeAP != null) {
+			this.readModeSC = dynQC.readModeSC;
+		}
+		if (dynQC.connectTimeout != null) {
+			this.connectTimeout = dynQC.connectTimeout.value;
+		}
+		if (dynQC.replica != null) {
+			this.replica = dynQC.replica;
+		}
+		if (dynQC.sleepBetweenRetries != null) {
+			this.sleepBetweenRetries = dynQC.sleepBetweenRetries.value;
+		}
+		if (dynQC.socketTimeout != null) {
+			this.socketTimeout = dynQC.socketTimeout.value;
+		}
+		if (dynQC.timeoutDelay != null) {
+			this.timeoutDelay = dynQC.timeoutDelay.value;
+		}
+		if (dynQC.totalTimeout != null) {
+			this.totalTimeout = dynQC.totalTimeout.value;
+		}
+		if (dynQC.maxRetries != null) {
+			this.maxRetries = dynQC.maxRetries.value;
+		}
+		if (dynQC.includeBinData != null) {
+			this.includeBinData = dynQC.includeBinData.value;
+		}
+		if (dynQC.infoTimeout != null) {
+			this.infoTimeout = dynQC.infoTimeout.value;
+		}
+		if (dynQC.recordQueueSize != null) {
+			this.recordQueueSize = dynQC.recordQueueSize.value;
+		}
+		if (dynQC.expectedDuration != null) {
+			this.expectedDuration = dynQC.expectedDuration;
+		}
+	}
 
 	/**
 	 * Copy query policy from another query policy.

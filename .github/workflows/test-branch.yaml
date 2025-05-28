@@ -1,0 +1,58 @@
+permissions:
+  # This is required for requesting the OIDC token
+  id-token: write
+
+on:
+  workflow_call:
+    inputs:
+      source-branch:
+        type: string
+        required: true
+        description: Branch to run test against
+      crypto-type:
+        type: string
+        required: true
+      use-server-rc:
+        type: boolean
+        required: true
+      server-tag:
+        type: string
+        required: true
+    secrets:
+      JFROG_OIDC_PROVIDER:
+        required: true
+      JFROG_OIDC_AUDIENCE:
+        required: true
+
+jobs:
+  build:
+    runs-on: ${{ vars.BUILD_CONTAINER_DISTRO_VERSION }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.source-branch }}
+
+      - name: Get java version
+        id: get-java-version
+        run: |
+          echo java-version="$(grep '<java.version>' pom.xml | sed -e 's/<[^>]*>//g' | awk '{$1=$1};1' | sed 's/^1\.8$/8/')"  >> $GITHUB_OUTPUT
+
+      # Java plugin will setup gpg but we are not using maven to deploy do JFrog.
+      # - jf mvn clean install on publish does not publish POM we would like to publish
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "semeru"
+          java-version: ${{ steps.get-java-version.outputs.java-version }}
+
+      # Running build followed by tests
+      - name: Build and test
+        uses: ./.github/actions/build-and-test
+        with:
+          crypto-type: ${{ inputs.crypto-type }}
+          server-tag: ${{ inputs.server-tag }}
+          use-server-rc: ${{ inputs.use-server-rc }}
+          oidc-provider: ${{ secrets.JFROG_OIDC_PROVIDER }}
+          oidc-audience: ${{ secrets.JFROG_OIDC_AUDIENCE }}

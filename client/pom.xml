@@ -6,9 +6,9 @@
   <parent>
     <groupId>com.aerospike</groupId>
     <artifactId>aerospike-parent</artifactId>
-    <version>9.0.3</version>
+    <version>${revision}</version>
   </parent>
-  <artifactId>aerospike-client${crypto.type}-jdk21</artifactId>
+  <artifactId>aerospike-client-jdk21</artifactId>
   <packaging>jar</packaging>
 
   <name>aerospike-client-jdk21</name>
@@ -61,6 +61,12 @@
       <groupId>org.mindrot</groupId>
       <artifactId>jbcrypt</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>org.yaml</groupId>
+      <artifactId>snakeyaml</artifactId>
+    </dependency>
+
   </dependencies>
 
   <profiles>
@@ -79,12 +85,35 @@
       <dependencies>
         <dependency>
           <groupId>org.bouncycastle</groupId>
-          <artifactId>bcprov-jdk15on</artifactId>
-          <version>1.69</version>
+          <artifactId>bcprov-jdk18on</artifactId>
+          <version>1.80</version>
         </dependency>
       </dependencies>
       <build>
         <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <version>3.2.0</version> <!-- or newer -->
+            <executions>
+              <execution>
+                <id>attach-custom-pom</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>attach-artifact</goal>
+                </goals>
+                <configuration>
+                  <artifacts>
+                    <artifact>
+                      <file>${project.basedir}/deploy-resources/bouncycastle_pom.xml</file>
+                      <type>pom</type>
+                    </artifact>
+                  </artifacts>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
           <plugin>
             <artifactId>maven-antrun-plugin</artifactId>
             <version>3.1.0</version>
@@ -103,27 +132,6 @@
               </execution>
             </executions>
           </plugin>
-
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-install-plugin</artifactId>
-            <version>3.1.3</version>
-            <executions>
-              <execution>
-                <id>install-custom-pom</id>
-                <phase>install</phase>
-                <goals>
-                  <goal>install-file</goal>
-                  </goals>
-                <configuration>
-                  <pomFile>${project.basedir}/src/resources/bouncy_pom.xml</pomFile>
-                  <file>target/${project.build.finalName}.jar</file>
-                  <groupId>com.aerospike</groupId>
-                  <artifactId>aerospike-client${crypto.type}-jdk21</artifactId>
-                  </configuration>
-                </execution>
-              </executions>
-            </plugin>
         </plugins>
       </build>
     </profile>
@@ -149,6 +157,29 @@
       <build>
         <plugins>
           <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <version>3.2.0</version> <!-- or newer -->
+            <executions>
+              <execution>
+                <id>attach-custom-pom</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>attach-artifact</goal>
+                </goals>
+                <configuration>
+                  <artifacts>
+                    <artifact>
+                      <file>${project.basedir}/deploy-resources/gnu_pom.xml</file>
+                      <type>pom</type>
+                    </artifact>
+                  </artifacts>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
+          <plugin>
             <artifactId>maven-antrun-plugin</artifactId>
             <version>3.1.0</version>
             <executions>
@@ -166,33 +197,33 @@
               </execution>
             </executions>
           </plugin>
-
-          <!--
-          We are using precanned pom file for installs and deployments because 
-          1. We would like to omit some of the metadata that would added if we did not.
-          2. To make sure not to brak users transient dependencies since we are 
-             injecting dependencies based on profiles.
-          -->
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>gpg</id>
+      <build>
+        <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-install-plugin</artifactId>
-            <version>3.1.3</version>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>3.1.0</version>
             <executions>
               <execution>
-                <id>install-custom-pom</id>
-                <phase>install</phase>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
                 <goals>
-                  <goal>install-file</goal>
-                  </goals>
-                <configuration>
-                  <pomFile>${project.basedir}/src/resources/gnu_pom.xml</pomFile>
-                  <file>target/${project.build.finalName}.jar</file>
-                  <groupId>com.aerospike</groupId>
-                  <artifactId>aerospike-client${crypto.type}-jdk21</artifactId>
-                  </configuration>
-                </execution>
-              </executions>
-            </plugin>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <gpgArguments>
+                <arg>--pinentry-mode</arg>
+                <arg>loopback</arg>
+              </gpgArguments>
+            </configuration>
+          </plugin>
         </plugins>
       </build>
     </profile>
@@ -200,7 +231,7 @@
 
   <build>
     <!-- This just makes sure that the final jar that is  built has expected format. The pom will/can look differently -->
-    <finalName>aerospike-client${crypto.type}-jdk21-${version}</finalName>
+    <finalName>aerospike-client${crypto.type}-jdk21-${project.version}</finalName>
     <sourceDirectory>${project.basedir}/src</sourceDirectory>
     <resources>
       <resource>
@@ -235,11 +266,22 @@
           </execution>
         </executions>
       </plugin>
-
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.4.2</version>
+        <configuration>
+          <archive>
+            <manifest>
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
-        <version>2.2.1</version>
+        <version>3.3.1</version>
       </plugin>
 
       <plugin>
@@ -301,7 +343,6 @@
           </sourceFileIncludes>
           </configuration>
         </plugin>
-
     </plugins>
 
   </build>

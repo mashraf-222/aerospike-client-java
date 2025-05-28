@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 Aerospike, Inc.
+ * Copyright 2012-2025 Aerospike, Inc.
  *
  * Portions may be licensed to Aerospike, Inc. under one or more contributor
  * license agreements WHICH ARE COMPATIBLE WITH THE APACHE LICENSE, VERSION 2.0.
@@ -20,6 +20,7 @@ import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -46,6 +47,7 @@ import com.aerospike.client.async.NettyTlsContext;
 import com.aerospike.client.async.NioEventLoops;
 import com.aerospike.client.cluster.Node.AsyncPool;
 import com.aerospike.client.command.Buffer;
+import com.aerospike.client.configuration.serializers.Configuration;
 import com.aerospike.client.listener.ClusterStatsListener;
 import com.aerospike.client.metrics.MetricsListener;
 import com.aerospike.client.metrics.MetricsPolicy;
@@ -61,15 +63,14 @@ public class Cluster implements Runnable, Closeable {
 	// Client back pointer.
 	public final AerospikeClient client;
 
+	// Config created from a ConfigProvider, if available
+	private Configuration config;
+
 	// Expected cluster name.
 	protected final String clusterName;
 
 	// Initial host nodes specified by user.
 	private volatile Host[] seeds;
-
-	// All host aliases for all nodes in cluster.
-	// Only accessed within cluster tend thread.
-	protected final HashMap<Host,Node> aliases;
 
 	// Map of active nodes in cluster.
 	// Only accessed within cluster tend thread.
@@ -133,10 +134,10 @@ public class Cluster implements Runnable, Closeable {
 	private final long maxSocketIdleNanosTrim;
 
 	// Minimum sync connections per node.
-	protected final int minConnsPerNode;
+	protected int minConnsPerNode;
 
 	// Maximum sync connections per node.
-	protected final int maxConnsPerNode;
+	protected int maxConnsPerNode;
 
 	// Minimum async connections per node.
 	protected final int asyncMinConnsPerNode;
@@ -173,6 +174,9 @@ public class Cluster implements Runnable, Closeable {
 
 	// Cluster tend counter
 	private int tendCount;
+
+	// YAML config file monitor frequency - expressed as a multiple of the tendInterval
+	public int configInterval;
 
 	// Has cluster instance been closed.
 	private AtomicBoolean closed;
@@ -211,6 +215,15 @@ public class Cluster implements Runnable, Closeable {
 		this.validateClusterName = policy.validateClusterName;
 		this.tlsPolicy = policy.tlsPolicy;
 		this.authMode = policy.authMode;
+
+		if (client.getConfigProvider() != null) {
+			config = client.getConfigProvider().fetchConfiguration();
+			if (config != null) {
+				this.configInterval = config.staticConfiguration.staticClientConfig.configInterval.value;
+			}
+		} else {
+			this.configInterval = -1;
+		}
 
 		// Default TLS names when TLS enabled.
 		if (tlsPolicy != null) {
@@ -314,7 +327,6 @@ public class Cluster implements Runnable, Closeable {
 			rackIds = new int[] {policy.rackId};
 		}
 
-		aliases = new HashMap<Host,Node>();
 		nodesMap = new HashMap<String,Node>();
 		nodes = new Node[0];
 		partitionMap = new HashMap<String,Partitions>();
@@ -440,6 +452,11 @@ public class Cluster implements Runnable, Closeable {
 			addSeeds(seedsToAdd.toArray(new Host[seedsToAdd.size()]));
 		}
 
+		if (config != null && config.dynamicConfiguration.dynamicMetricsConfig.enable != null &&
+				config.dynamicConfiguration.dynamicMetricsConfig.enable.value) {
+			enableMetrics(metricsPolicy);
+		}
+
 		// Run cluster tend thread.
 		tendValid = true;
 		tendThread = new Thread(this);
@@ -560,8 +577,8 @@ public class Cluster implements Runnable, Closeable {
 				findNodesToRemove(peers);
 
 				// Remove nodes in a batch.
-				if (peers.removeList.size() > 0) {
-					removeNodes(peers.removeList);
+				if (peers.removeNodes.size() > 0) {
+					removeNodes(peers.removeNodes);
 				}
 			}
 
@@ -624,8 +641,21 @@ public class Cluster implements Runnable, Closeable {
 			}
 		}
 
+		// Perform metrics snapshot.
 		if (metricsEnabled && (tendCount % metricsPolicy.interval) == 0) {
 			metricsListener.onSnapshot(this);
+		}
+
+		// Check configuration file for updates.
+		if (configInterval > 0 && tendCount % configInterval == 0) {
+			try {
+				loadConfiguration();
+			}
+			catch (Throwable t) {
+				if (Log.warnEnabled()) {
+					Log.warn("Dynamic configuration failed: " + Util.getErrorMessage(t));
+				}
+			}
 		}
 
 		processRecoverQueue();
@@ -751,13 +781,13 @@ public class Cluster implements Runnable, Closeable {
 	}
 
 	private final void findNodesToRemove(Peers peers) {
-		int refreshCount = peers.refreshCount;	
-		ArrayList<Node> removeList = peers.removeList;
+		int refreshCount = peers.refreshCount;
+		HashSet<Node> removeNodes = peers.removeNodes;
 
 		for (Node node : nodes) {
 			if (! node.isActive()) {
 				// Inactive nodes must be removed.
-				removeList.add(node);
+				removeNodes.add(node);
 				continue;
 			}
 
@@ -765,7 +795,7 @@ public class Cluster implements Runnable, Closeable {
 				// All node info requests failed and this node had 5 consecutive failures.
 				// Remove node.  If no nodes are left, seeds will be tried in next cluster
 				// tend iteration.
-				removeList.add(node);
+				removeNodes.add(node);
 				continue;
 			}
 
@@ -777,12 +807,12 @@ public class Cluster implements Runnable, Closeable {
 					if (! findNodeInPartitionMap(node)) {
 						// Node doesn't have any partitions mapped to it.
 						// There is no point in keeping it in the cluster.
-						removeList.add(node);
+						removeNodes.add(node);
 					}
 				}
 				else {
 					// Node not responding. Remove it.
-					removeList.add(node);
+					removeNodes.add(node);
 				}
 			}
 		}
@@ -857,15 +887,9 @@ public class Cluster implements Runnable, Closeable {
 		}
 
 		nodesMap.put(node.getName(), node);
-
-		// Add node's aliases to global alias set.
-		// Aliases are only used in tend thread, so synchronization is not necessary.
-		for (Host alias : node.aliases) {
-			aliases.put(alias, node);
-		}
 	}
 
-	private final void removeNodes(List<Node> nodesToRemove) {
+	private final void removeNodes(HashSet<Node> nodesToRemove) {
 		// There is no need to delete nodes from partitionWriteMap because the nodes
 		// have already been set to inactive. Further connection requests will result
 		// in an exception and a different node will be tried.
@@ -874,13 +898,6 @@ public class Cluster implements Runnable, Closeable {
 		for (Node node : nodesToRemove) {
 			// Remove node from map.
 			nodesMap.remove(node.getName());
-
-			// Remove node's aliases from cluster alias set.
-			// Aliases are only used in tend thread, so synchronization is not necessary.
-			for (Host alias : node.aliases) {
-				// Log.debug("Remove alias " + alias);
-				aliases.remove(alias);
-			}
 
 			if (metricsEnabled) {
 				// Flush node metrics before removal.
@@ -901,7 +918,7 @@ public class Cluster implements Runnable, Closeable {
 	/**
 	 * Remove nodes using copy on write semantics.
 	 */
-	private final void removeNodesCopy(List<Node> nodesToRemove) {
+	private final void removeNodesCopy(HashSet<Node> nodesToRemove) {
 		// Create temporary nodes array.
 		// Since nodes are only marked for deletion using node references in the nodes array,
 		// and the tend thread is the only thread modifying nodes, we are guaranteed that nodes
@@ -911,7 +928,7 @@ public class Cluster implements Runnable, Closeable {
 
 		// Add nodes that are not in remove list.
 		for (Node node : nodes) {
-			if (findNode(node, nodesToRemove)) {
+			if (nodesToRemove.contains(node)) {
 				if (Log.infoEnabled()) {
 					Log.info("Remove node " + node);
 				}
@@ -935,15 +952,6 @@ public class Cluster implements Runnable, Closeable {
 
 		// Replace nodes with copy.
 		nodes = nodeArray;
-	}
-
-	private final static boolean findNode(Node search, List<Node> nodeList) {
-		for (Node node : nodeList) {
-			if (node.equals(search)) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 	public final boolean isConnected() {
@@ -1075,35 +1083,89 @@ public class Cluster implements Runnable, Closeable {
 		}
 	}
 
+	private void loadConfiguration() {
+		if (client.getConfigProvider().loadConfiguration()) {
+			config = client.getConfigProvider().fetchConfiguration();
+			client.mergeDefaultPoliciesWithConfig();
+			metricsPolicy = mergeMetricsPolicyWithConfig(metricsPolicy);
+
+			if (metricsEnabled && metricsPolicy.isMetricsRestartRequired()) {
+				disableMetricsInternal();
+				enableMetrics(metricsPolicy);
+				metricsPolicy.setMetricsRestartRequired(false);
+				return;
+			}
+
+			if (config != null && config.dynamicConfiguration.dynamicMetricsConfig.enable != null) {
+				if (!metricsEnabled && config.dynamicConfiguration.dynamicMetricsConfig.enable.value) {
+					enableMetrics(metricsPolicy);
+				}
+				else if (metricsEnabled && !config.dynamicConfiguration.dynamicMetricsConfig.enable.value) {
+					disableMetricsInternal();
+				}
+			}
+		}
+	}
+
+	private MetricsPolicy mergeMetricsPolicyWithConfig(MetricsPolicy mp) {
+		if (mp == null) {
+			mp = new MetricsPolicy();
+		}
+        return new MetricsPolicy(mp, config);
+	}
+
 	public final void enableMetrics(MetricsPolicy policy) {
+		MetricsPolicy mergedMP = mergeMetricsPolicyWithConfig(policy);
+
+		if (config != null) {
+			if (config.dynamicConfiguration.dynamicMetricsConfig.enable != null) {
+				if (!config.dynamicConfiguration.dynamicMetricsConfig.enable.value) {
+					Log.warn("When a config exists, metrics can not be enabled via enableMetrics unless they" +
+							" are enabled in the config provider.");
+					return;
+				}
+			}
+		}
+
+		MetricsListener listener = mergedMP.listener;
+
+		if (listener == null) {
+			listener = new MetricsWriter(mergedMP.reportDir);
+		}
+
+		this.metricsListener = listener;
+		this.metricsPolicy = mergedMP;
+
 		if (metricsEnabled) {
 			this.metricsListener.onDisable(this);
 		}
 
-		MetricsListener listener = policy.listener;
-
-		if (listener == null) {
-			listener = new MetricsWriter(policy.reportDir);
-		}
-
-		this.metricsListener = listener;
-		this.metricsPolicy = policy;
-
 		Node[] nodeArray = nodes;
 
 		for (Node node : nodeArray) {
-			node.enableMetrics(policy);
+			node.enableMetrics(this.metricsPolicy);
 		}
 
-		listener.onEnable(this, policy);
+		this.metricsListener.onEnable(this, this.metricsPolicy);
 		metricsEnabled = true;
 	}
 
 	public final void disableMetrics() {
 		if (metricsEnabled) {
-			metricsEnabled = false;
-			metricsListener.onDisable(this);
+			if (config != null) {
+				if (config.dynamicConfiguration.dynamicMetricsConfig.enable != null &&
+						config.dynamicConfiguration.dynamicMetricsConfig.enable.value ) {
+					Log.warn("Metrics can not be disabled via disableMetrics() when they are enabled via config.");
+					return;
+				}
+			}
+			disableMetricsInternal();
 		}
+	}
+
+	private void disableMetricsInternal() {
+		metricsListener.onDisable(this);
+		metricsEnabled = false;
 	}
 
 	public EventLoop[] getEventLoopArray() {
@@ -1450,6 +1512,13 @@ public class Cluster implements Runnable, Closeable {
 		return invalidNodeCount;
 	}
 
+	/**
+	 * Return the current Metrics Policy
+	 */
+	public MetricsPolicy getMetricsPolicy() {
+		return metricsPolicy;
+	}
+
 	public void close() {
 		if (! closed.compareAndSet(false, true)) {
 			// close() has already been called.
@@ -1460,11 +1529,13 @@ public class Cluster implements Runnable, Closeable {
 		tendValid = false;
 		tendThread.interrupt();
 
-		try {
-			disableMetrics();
-		}
-		catch (Throwable e) {
-			Log.warn("DisableMetrics failed: " + Util.getErrorMessage(e));
+		if (metricsEnabled) {
+			try {
+				disableMetricsInternal();
+			}
+			catch (Throwable e) {
+				Log.warn("DisableMetrics failed: " + Util.getErrorMessage(e));
+			}
 		}
 
 		if (eventLoops == null) {

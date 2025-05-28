@@ -6,7 +6,7 @@
   <parent>
     <groupId>com.aerospike</groupId>
     <artifactId>aerospike-parent</artifactId>
-    <version>9.0.3</version>
+    <version>${revision}</version>
   </parent>
   <artifactId>aerospike-benchmarks</artifactId>
   <packaging>jar</packaging>
@@ -15,7 +15,7 @@
   <dependencies>
     <dependency>
       <groupId>com.aerospike</groupId>
-      <artifactId>aerospike-client${crypto.type}-jdk21</artifactId>
+      <artifactId>aerospike-client-jdk21</artifactId>
     </dependency>
 
     <dependency>
@@ -44,6 +44,13 @@
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-handler</artifactId>
+    </dependency>
+
+
+    <dependency>
+      <groupId>org.yaml</groupId>
+      <artifactId>snakeyaml</artifactId>
+      <version>2.4</version>
     </dependency>
 
     <!-- Apache command line parser. -->
