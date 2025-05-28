@@ -25,7 +25,6 @@ import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.aerospike.client.AerospikeException;
