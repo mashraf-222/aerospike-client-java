@@ -374,6 +374,10 @@ public class WorkloadOptions {
 		return set;
 	}
 
+	public Long getMrtSize() {
+		return mrtSize;
+	}
+
 	public Long getKeys() {
 		return keys;
 	}
@@ -392,10 +396,6 @@ public class WorkloadOptions {
 
 	public boolean isRandom() {
 		return random;
-	}
-
-	public Long getMrtSize() {
-		return mrtSize;
 	}
 
 	public String getKeyFile() {

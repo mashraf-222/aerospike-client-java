@@ -67,7 +67,7 @@ public abstract class MRTRWTask {
 			case READ_MODIFY_DECREMENT:
 			case READ_FROM_FILE:
 			case TRANSACTION:
-				throw new Exception("MRT does not support for workload "+args.workload);
+				throw new Exception("MRT does not support the workload: " + args.workload);
 
 			default:
 				break;

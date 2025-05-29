@@ -551,7 +551,7 @@ public class AerospikeBenchmark implements Callable<Integer>, Log.Callback {
 			args.batchSize = benchmarkOpts.getBatchSize();
 
 			if(mrtEnabled) {
-				throw new Exception("MRT not supporting for batch size.");
+				throw new Exception("MRT does not support the batch size.");
 			}
 		}
 
@@ -559,7 +559,7 @@ public class AerospikeBenchmark implements Callable<Integer>, Log.Callback {
 			this.batchShowNodes = true;
 
 			if(mrtEnabled) {
-				throw new Exception("MRT not supporting for batch show nodes.");
+				throw new Exception("MRT does not support the batch show nodes operation.");
 			}
 		}
 
