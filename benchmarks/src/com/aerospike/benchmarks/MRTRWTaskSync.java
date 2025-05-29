@@ -80,13 +80,15 @@ public class MRTRWTaskSync extends MRTRWTask implements Runnable {
 							}
 						}
 					}
-
-					if (valid) {
-						client.commit(txn);
-					} else {
-						client.abort(txn);
-					}
 				} catch (AerospikeException e) {
+					client.abort(txn);
+					System.err.println("Transaction failed for MRT iteration: " + (i + 1) + " - " + e.getMessage());
+					continue;
+				}
+
+				if (valid) {
+					client.commit(txn);
+				} else {
 					client.abort(txn);
 				}
 			}

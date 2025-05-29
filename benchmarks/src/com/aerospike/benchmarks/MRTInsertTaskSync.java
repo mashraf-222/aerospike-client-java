@@ -77,11 +77,12 @@ public final class MRTInsertTaskSync extends MRTInsertTask implements Runnable {
 						}
 					}
 				}
-				client.commit(txn);
 			} catch (Exception e) {
 				System.err.println("Transaction failed for MRT iteration: " + (i + 1) + " - " + e.getMessage());
 				client.abort(txn);
+				continue;
 			}
+			client.commit(txn);
 		}
 	}
 
