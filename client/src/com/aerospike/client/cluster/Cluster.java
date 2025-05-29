@@ -205,6 +205,7 @@ public class Cluster implements Runnable, Closeable {
 	public boolean metricsEnabled;
 	MetricsPolicy metricsPolicy;
 	private volatile MetricsListener metricsListener;
+	private final Object metricsLock = new Object();
 	private final AtomicLong retryCount = new AtomicLong();
 	private final AtomicLong commandCount = new AtomicLong();
 	private final AtomicLong delayQueueTimeoutCount = new AtomicLong();
@@ -453,8 +454,10 @@ public class Cluster implements Runnable, Closeable {
 		}
 
 		if (config != null && config.dynamicConfiguration.dynamicMetricsConfig.enable != null &&
-				config.dynamicConfiguration.dynamicMetricsConfig.enable.value) {
-			enableMetrics(metricsPolicy);
+			config.dynamicConfiguration.dynamicMetricsConfig.enable.value) {
+			synchronized(metricsLock) {
+				enableMetricsInternal(metricsPolicy);
+			}
 		}
 
 		// Run cluster tend thread.
@@ -642,8 +645,10 @@ public class Cluster implements Runnable, Closeable {
 		}
 
 		// Perform metrics snapshot.
-		if (metricsEnabled && (tendCount % metricsPolicy.interval) == 0) {
-			metricsListener.onSnapshot(this);
+		synchronized(metricsLock) {
+			if (metricsEnabled && (tendCount % metricsPolicy.interval) == 0) {
+				metricsListener.onSnapshot(this);
+			}
 		}
 
 		// Check configuration file for updates.
@@ -899,13 +904,15 @@ public class Cluster implements Runnable, Closeable {
 			// Remove node from map.
 			nodesMap.remove(node.getName());
 
-			if (metricsEnabled) {
-				// Flush node metrics before removal.
-				try {
-					metricsListener.onNodeClose(node);
-				}
-				catch (Throwable e) {
-					Log.warn("Write metrics failed on " + node + ": " + Util.getErrorMessage(e));
+			synchronized(metricsLock) {
+				if (metricsEnabled) {
+					// Flush node metrics before removal.
+					try {
+						metricsListener.onNodeClose(node);
+					}
+					catch (Throwable e) {
+						Log.warn("Write metrics failed on " + node + ": " + Util.getErrorMessage(e));
+					}
 				}
 			}
 			node.close();
@@ -1087,21 +1094,24 @@ public class Cluster implements Runnable, Closeable {
 		if (client.getConfigProvider().loadConfiguration()) {
 			config = client.getConfigProvider().fetchConfiguration();
 			client.mergeDefaultPoliciesWithConfig();
-			metricsPolicy = mergeMetricsPolicyWithConfig(metricsPolicy);
 
-			if (metricsEnabled && metricsPolicy.isMetricsRestartRequired()) {
-				disableMetricsInternal();
-				enableMetrics(metricsPolicy);
-				metricsPolicy.setMetricsRestartRequired(false);
-				return;
-			}
+			synchronized(metricsLock) {
+				metricsPolicy = mergeMetricsPolicyWithConfig(metricsPolicy);
 
-			if (config != null && config.dynamicConfiguration.dynamicMetricsConfig.enable != null) {
-				if (!metricsEnabled && config.dynamicConfiguration.dynamicMetricsConfig.enable.value) {
-					enableMetrics(metricsPolicy);
-				}
-				else if (metricsEnabled && !config.dynamicConfiguration.dynamicMetricsConfig.enable.value) {
+				if (metricsEnabled && metricsPolicy.isMetricsRestartRequired()) {
 					disableMetricsInternal();
+					enableMetricsInternal(metricsPolicy);
+					metricsPolicy.setMetricsRestartRequired(false);
+					return;
+				}
+
+				if (config != null && config.dynamicConfiguration.dynamicMetricsConfig.enable != null) {
+					if (!metricsEnabled && config.dynamicConfiguration.dynamicMetricsConfig.enable.value) {
+						enableMetricsInternal(metricsPolicy);
+					}
+					else if (metricsEnabled && !config.dynamicConfiguration.dynamicMetricsConfig.enable.value) {
+						disableMetricsInternal();
+					}
 				}
 			}
 		}
@@ -1115,8 +1125,6 @@ public class Cluster implements Runnable, Closeable {
 	}
 
 	public final void enableMetrics(MetricsPolicy policy) {
-		MetricsPolicy mergedMP = mergeMetricsPolicyWithConfig(policy);
-
 		if (config != null) {
 			if (config.dynamicConfiguration.dynamicMetricsConfig.enable != null) {
 				if (!config.dynamicConfiguration.dynamicMetricsConfig.enable.value) {
@@ -1127,6 +1135,13 @@ public class Cluster implements Runnable, Closeable {
 			}
 		}
 
+		synchronized(metricsLock) {
+			enableMetricsInternal(policy);
+		}
+	}
+
+	private void enableMetricsInternal(MetricsPolicy policy) {
+		MetricsPolicy mergedMP = mergeMetricsPolicyWithConfig(policy);
 		MetricsListener listener = mergedMP.listener;
 
 		if (listener == null) {
@@ -1151,21 +1166,24 @@ public class Cluster implements Runnable, Closeable {
 	}
 
 	public final void disableMetrics() {
-		if (metricsEnabled) {
-			if (config != null) {
-				if (config.dynamicConfiguration.dynamicMetricsConfig.enable != null &&
-						config.dynamicConfiguration.dynamicMetricsConfig.enable.value ) {
-					Log.warn("Metrics can not be disabled via disableMetrics() when they are enabled via config.");
-					return;
-				}
+		if (config != null) {
+			if (config.dynamicConfiguration.dynamicMetricsConfig.enable != null &&
+				config.dynamicConfiguration.dynamicMetricsConfig.enable.value) {
+				Log.warn("Metrics can not be disabled via disableMetrics() when they are enabled via config.");
+				return;
 			}
+		}
+
+		synchronized(metricsLock) {
 			disableMetricsInternal();
 		}
 	}
 
 	private void disableMetricsInternal() {
-		metricsListener.onDisable(this);
-		metricsEnabled = false;
+		if (metricsEnabled) {
+			metricsEnabled = false;
+			metricsListener.onDisable(this);
+		}
 	}
 
 	public EventLoop[] getEventLoopArray() {
@@ -1529,7 +1547,7 @@ public class Cluster implements Runnable, Closeable {
 		tendValid = false;
 		tendThread.interrupt();
 
-		if (metricsEnabled) {
+		synchronized(metricsLock) {
 			try {
 				disableMetricsInternal();
 			}

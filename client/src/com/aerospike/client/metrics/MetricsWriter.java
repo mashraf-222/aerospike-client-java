@@ -94,10 +94,8 @@ public final class MetricsWriter implements MetricsListener {
 	 */
 	@Override
 	public void onSnapshot(Cluster cluster) {
-		synchronized(this) {
-			if (enabled) {
-				writeCluster(cluster);
-			}
+		if (enabled) {
+			writeCluster(cluster);
 		}
 	}
 
@@ -106,14 +104,12 @@ public final class MetricsWriter implements MetricsListener {
 	 */
 	@Override
 	public void onNodeClose(Node node) {
-		synchronized(this) {
-			if (enabled) {
-				sb.setLength(0);
-				sb.append(LocalDateTime.now().format(TimestampFormat));
-				sb.append(" node");
-				writeNode(node);
-				writeLine();
-			}
+		if (enabled) {
+			sb.setLength(0);
+			sb.append(LocalDateTime.now().format(TimestampFormat));
+			sb.append(" node");
+			writeNode(node);
+			writeLine();
 		}
 	}
 
@@ -122,16 +118,14 @@ public final class MetricsWriter implements MetricsListener {
 	 */
 	@Override
 	public void onDisable(Cluster cluster) {
-		synchronized(this) {
-			if (enabled) {
-				try {
-					enabled = false;
-					writeCluster(cluster);
-					writer.close();
-				}
-				catch (Throwable e) {
-					Log.error("Failed to close metrics writer: " + Util.getErrorMessage(e));
-				}
+		if (enabled) {
+			try {
+				enabled = false;
+				writeCluster(cluster);
+				writer.close();
+			}
+			catch (Throwable e) {
+				Log.error("Failed to close metrics writer: " + Util.getErrorMessage(e));
 			}
 		}
 	}
