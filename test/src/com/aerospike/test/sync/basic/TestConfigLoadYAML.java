@@ -34,7 +34,7 @@ public class TestConfigLoadYAML extends TestSync {
     public void loadGoodYAML() {
         String yamlURL = YAML_URL_BASE + GOOD_YAML_CONF_RELATIVE_PATH;
         System.setProperty("AEROSPIKE_CLIENT_CONFIG_SYS_PROP", yamlURL);
-        YamlConfigProvider yamlLoader = new YamlConfigProvider();
+        YamlConfigProvider yamlLoader = new YamlConfigProvider(yamlURL);
         Configuration yamlConf = yamlLoader.fetchConfiguration();
         assertNotNull(yamlConf);
         // System.out.println(yamlConf);
@@ -46,7 +46,7 @@ public class TestConfigLoadYAML extends TestSync {
     public void loadBogusIPYAML() {
         String yamlURL = YAML_URL_BASE + BOGUS_YAML_IP_CONF_RELATIVE_PATH;
         System.setProperty("AEROSPIKE_CLIENT_CONFIG_SYS_PROP", yamlURL);
-        YamlConfigProvider yamlLoader = new YamlConfigProvider();
+        YamlConfigProvider yamlLoader = new YamlConfigProvider(yamlURL);
         Configuration yamlConf = yamlLoader.fetchConfiguration();
         assertNull(yamlConf);
     }
@@ -55,26 +55,17 @@ public class TestConfigLoadYAML extends TestSync {
     public void loadBogusMVYAML() {
         String yamlURL = YAML_URL_BASE + BOGUS_YAML_IF_CONF_RELATIVE_PATH;
         System.setProperty("AEROSPIKE_CLIENT_CONFIG_SYS_PROP", yamlURL);
-        YamlConfigProvider yamlLoader = new YamlConfigProvider();
+        YamlConfigProvider yamlLoader = new YamlConfigProvider(yamlURL);
         Configuration yamlConf = yamlLoader.fetchConfiguration();
         assertNull(yamlConf);
     }
 
-    @Test
-    public void testPolicyConfig() {
-        String yamlURL = YAML_URL_BASE + GOOD_YAML_CONF_RELATIVE_PATH;
-        System.setProperty("AEROSPIKE_CLIENT_CONFIG_SYS_PROP", yamlURL);
-        var clientPolicy = new ClientPolicy();
-        clientPolicy.configProvider = new YamlConfigProvider();
-        assertNotNull(clientPolicy.configProvider.fetchConfiguration());
-
-    }
 
     @Test
     public void getStaticYAMLConfig() {
         String yamlURL = YAML_URL_BASE + GOOD_YAML_CONF_RELATIVE_PATH;
         System.setProperty("AEROSPIKE_CLIENT_CONFIG_SYS_PROP", yamlURL);
-        YamlConfigProvider yamlLoader = new YamlConfigProvider();
+        YamlConfigProvider yamlLoader = new YamlConfigProvider(yamlURL);
         Configuration yamlConf = yamlLoader.fetchConfiguration();
         assertNotNull(yamlConf);
         assertNotNull(yamlConf.staticConfiguration);
@@ -86,7 +77,7 @@ public class TestConfigLoadYAML extends TestSync {
     public void getDynamicYAMLConfig() {
         String yamlURL = YAML_URL_BASE + GOOD_YAML_CONF_RELATIVE_PATH;
         System.setProperty("AEROSPIKE_CLIENT_CONFIG_SYS_PROP", yamlURL);
-        YamlConfigProvider yamlLoader = new YamlConfigProvider();
+        YamlConfigProvider yamlLoader = new YamlConfigProvider(yamlURL);
         Configuration yamlConf = yamlLoader.fetchDynamicConfiguration();
         assertNotNull(yamlConf);
         assertNull(yamlConf.staticConfiguration);

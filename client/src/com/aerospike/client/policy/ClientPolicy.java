@@ -32,11 +32,6 @@ import com.aerospike.client.configuration.serializers.staticconfig.StaticClientC
  */
 public class ClientPolicy {
 	/**
-	 * Configuration provider that will override user-provided and/or merged policy settings
-	 */
-	public ConfigurationProvider configProvider;
-
-	/**
 	 * Optional event loops to use in asynchronous commands.
 	 * <p>
 	 * Default: null (async methods are disabled)
