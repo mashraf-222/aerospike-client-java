@@ -39,31 +39,27 @@ import com.aerospike.client.Log;
 
 
 public class YamlConfigProvider implements ConfigurationProvider {
-    private static final String CONFIG_PATH_ENV = "AEROSPIKE_CLIENT_CONFIG_URL";
-    // System property CONFIG_PATH_SYS_PROP is only intended to be used for testing
-    private static final String CONFIG_PATH_SYS_PROP = "AEROSPIKE_CLIENT_CONFIG_SYS_PROP";
     private static final String YAML_SERIALIZERS_PATH = "com.aerospike.client.configuration.serializers.";
+    private static final String DEFAULT_CONFIG_URL_PREFIX = "file://";
     private static Path configurationPath;
     private Configuration configuration;
     public long lastModified;
 
-    public YamlConfigProvider() {
-        setConfigPath();
+    public YamlConfigProvider(String configEnvValue) {
+        setConfigPath(configEnvValue);
         loadConfiguration();
     }
 
-    public String getConfigPathEnv() {
-        return System.getenv(CONFIG_PATH_ENV) != null ? System.getenv(CONFIG_PATH_ENV) :
-                System.getProperty(CONFIG_PATH_SYS_PROP, "");
-    }
-
-    public void setConfigPath() {
+    public void setConfigPath(String configEnvValue) {
         try {
-            URI envURI = new URI(getConfigPathEnv());
+            if (!configEnvValue.startsWith(DEFAULT_CONFIG_URL_PREFIX)) {
+                configEnvValue = DEFAULT_CONFIG_URL_PREFIX + configEnvValue;
+            }
+            URI envURI = new URI(configEnvValue);
             URL envURL = envURI.toURL();
             configurationPath = convertURLToPath(envURL);
         } catch (Exception e) {
-            Log.error("Could not parse the " + CONFIG_PATH_ENV + " env var");
+            Log.error("Could not parse the config env var");
         }
     }
 
@@ -85,7 +81,7 @@ public class YamlConfigProvider implements ConfigurationProvider {
 
     public boolean loadConfiguration() {
         if (configurationPath == null) {
-            Log.error("The YAML config file path has not been set. Check the " + CONFIG_PATH_ENV + " env variable");
+            Log.error("The YAML config file path has not been set. Check the config env variable");
             return false;
         }
         ConfigurationTypeDescription configurationTypeDescription = new ConfigurationTypeDescription();

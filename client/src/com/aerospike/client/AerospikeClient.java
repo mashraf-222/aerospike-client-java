@@ -80,6 +80,7 @@ import com.aerospike.client.command.TxnMonitor;
 import com.aerospike.client.command.TxnRoll;
 import com.aerospike.client.command.WriteCommand;
 import com.aerospike.client.configuration.ConfigurationProvider;
+import com.aerospike.client.configuration.YamlConfigProvider;
 import com.aerospike.client.exp.Expression;
 import com.aerospike.client.listener.BatchListListener;
 import com.aerospike.client.listener.BatchOperateListListener;
@@ -148,6 +149,15 @@ import com.aerospike.client.util.Util;
  * addition.
  */
 public class AerospikeClient implements IAerospikeClient, Closeable {
+	//-------------------------------------------------------
+	// Constants
+	//-------------------------------------------------------
+
+	private static final String CONFIG_PATH_ENV = "AEROSPIKE_CLIENT_CONFIG_URL";
+
+	// System property CONFIG_PATH_SYS_PROP is only intended to be used for testing
+	private static final String CONFIG_PATH_SYS_PROP = "AEROSPIKE_CLIENT_CONFIG_SYS_PROP";
+
 	//-------------------------------------------------------
 	// Member variables.
 	//-------------------------------------------------------
@@ -336,10 +346,12 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		this.txnRollPolicyDefault = policy.txnRollPolicyDefault;
 		this.operatePolicyReadDefault = new WritePolicy(this.readPolicyDefault);
 
-		if (policy.configProvider != null) {
-			this.configProvider = policy.configProvider;
-			policy = new ClientPolicy(policy, configProvider);
+		String configEnvValue = getConfigPathEnv();
+		if (configEnvValue != null ) {
+			this.configProvider = new YamlConfigProvider(configEnvValue);
+			policy = new ClientPolicy(policy, this.configProvider);
 		}
+
 		mergeDefaultPoliciesWithConfig();
 		version = this.getClass().getPackage().getImplementationVersion();
 		if (version == null) {
@@ -386,6 +398,12 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 			this.txnRollPolicyDefault = new TxnRollPolicy();
 			this.operatePolicyReadDefault = new WritePolicy(this.readPolicyDefault);
 		}
+	}
+
+
+	private String getConfigPathEnv() {
+		return System.getenv(CONFIG_PATH_ENV) != null ? System.getenv(CONFIG_PATH_ENV) :
+				System.getProperty(CONFIG_PATH_SYS_PROP, "");
 	}
 
 	/**

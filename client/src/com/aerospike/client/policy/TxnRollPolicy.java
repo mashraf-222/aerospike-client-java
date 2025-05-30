@@ -46,6 +46,9 @@ public class TxnRollPolicy extends BatchPolicy {
 			return;
 		}
 		DynamicTxnRollConfig dynTRC = config.dynamicConfiguration.dynamicTxnRollConfig;
+		if (dynTRC == null) {
+			return;
+		}
 
 		if (dynTRC.readModeAP != null) {
 			this.readModeAP = dynTRC.readModeAP;
