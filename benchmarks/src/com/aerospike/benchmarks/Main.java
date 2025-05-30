@@ -177,6 +177,12 @@ public class Main implements Log.Callback {
 			"will read and update randomly across the values between startkey and " +
 			"startkey + num_keys.  startkey can be set using '-S' or '-startkey'."
 			);
+		options.addOption("keyType", true,
+			"Type of the key: S (String) or I (Integer). Default: I"
+			);
+		options.addOption("keyLength", true,
+			"Length of string keys when keyType is S. Default: 10"
+			);
 		options.addOption("b", "bins", true,
 			"Set the number of Aerospike bins. " +
 			"Each bin will contain an object defined with -o. The default is single bin (-b 1)."
@@ -222,7 +228,7 @@ public class Main implements Log.Callback {
 			);
 		options.addOption("rt", "readTouchTtlPercent", true,
 			"Read touch TTL percent is expressed as a percentage of the TTL (or expiration) sent on the most\n" +
-			"recent write such that a read within this interval of the record’s end of life will generate a touch.\n" +
+			"recent write such that a read within this interval of the record's end of life will generate a touch.\n" +
 			"Range: 0 - 100"
 		);
 		options.addOption("g", "throughput", true,
@@ -555,21 +561,17 @@ public class Main implements Log.Callback {
 
 				if (keyType.equals("S")) {
 					args.keyType = KeyType.STRING;
+					args.keyLength = line.hasOption("keyLength") ? Integer.parseInt(line.getOptionValue("keyLength")) : 10;
 				}
 				else if (keyType.equals("I")) {
-					if (Utils.isNumeric(keyList.get(0))) {
-						args.keyType = KeyType.INTEGER;
-					}
-					else {
-						throw new Exception("Invalid keyType '" + keyType + "' Key type doesn't match with file content type.");
-					}
+					args.keyType = KeyType.INTEGER;
 				}
 				else {
 					throw new Exception("Invalid keyType: " + keyType);
 				}
 			}
 			else {
-				args.keyType = KeyType.STRING;
+				args.keyType = KeyType.INTEGER;
 			}
 
 		}

@@ -75,10 +75,32 @@ public final class InsertTaskSync extends InsertTask implements Runnable {
 	}
 
 	private void runCommand(long keyCurrent, RandomShift random) {
-		Key key = new Key(args.namespace, args.setName, keyCurrent);
+		Key key;
+		if (args.keyType == KeyType.STRING) {
+			// Generate fixed length string key
+			String strKey = generateFixedLengthKey(keyCurrent, args.keyLength);
+			key = new Key(args.namespace, args.setName, strKey);
+		} else {
+			key = new Key(args.namespace, args.setName, keyCurrent);
+		}
 		// Use predictable value for 0th bin same as key value
 		Bin[] bins = args.getBins(random, true, keyCurrent);
 		put(key, bins);
+	}
+
+	private String generateFixedLengthKey(long keyValue, int length) {
+		// Convert number to string and pad with zeros
+		String baseStr = String.format("K%d", keyValue);
+		if (baseStr.length() >= length) {
+			return baseStr.substring(0, length);
+		}
+		// Pad with zeros if needed
+		StringBuilder sb = new StringBuilder();
+		sb.append(baseStr);
+		while (sb.length() < length) {
+			sb.append('0');
+		}
+		return sb.toString();
 	}
 
 	private void put(Key key, Bin[] bins) {

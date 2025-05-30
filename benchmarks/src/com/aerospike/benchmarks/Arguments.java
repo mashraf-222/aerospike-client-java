@@ -48,6 +48,7 @@ public class Arguments {
 	public boolean debug;
 	public TransactionalWorkload transactionalWorkload;
 	public KeyType keyType;
+	public int keyLength;  // Length for string keys
 	public Bin[] fixedBins;
 	public Bin[] fixedBin;
 	public String udfPackageName;

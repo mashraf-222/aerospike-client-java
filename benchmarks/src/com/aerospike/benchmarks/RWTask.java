@@ -226,7 +226,13 @@ public abstract class RWTask {
 	 * Write the key at the given index
 	 */
 	protected void doWrite(RandomShift random, long keyIdx, boolean multiBin, WritePolicy writePolicy) {
-		Key key = new Key(args.namespace, args.setName, keyStart + keyIdx);
+		Key key;
+		if (args.keyType == KeyType.STRING) {
+			String strKey = generateFixedLengthKey(keyStart + keyIdx, args.keyLength);
+			key = new Key(args.namespace, args.setName, strKey);
+		} else {
+			key = new Key(args.namespace, args.setName, keyStart + keyIdx);
+		}
 		// Use predictable value for 0th bin same as key value
 		Bin[] bins = args.getBins(random, multiBin, keyStart + keyIdx);
 
@@ -268,7 +274,13 @@ public abstract class RWTask {
 	 */
 	protected void doRead(long keyIdx, boolean multiBin) {
 		try {
-			Key key = new Key(args.namespace, args.setName, keyStart + keyIdx);
+			Key key;
+			if (args.keyType == KeyType.STRING) {
+				String strKey = generateFixedLengthKey(keyStart + keyIdx, args.keyLength);
+				key = new Key(args.namespace, args.setName, strKey);
+			} else {
+				key = new Key(args.namespace, args.setName, keyStart + keyIdx);
+			}
 
 			// if udf has been chosen call udf
 			if (args.udfValues != null) {
@@ -300,7 +312,12 @@ public abstract class RWTask {
 		try {
 			Key[] keys = new Key[keyIdxs.length];
 			for (int i = 0; i < keyIdxs.length; i++) {
-				keys[i] = new Key(args.namespace, args.setName, keyStart + keyIdxs[i]);
+				if (args.keyType == KeyType.STRING) {
+					String strKey = generateFixedLengthKey(keyStart + keyIdxs[i], args.keyLength);
+					keys[i] = new Key(args.namespace, args.setName, strKey);
+				} else {
+					keys[i] = new Key(args.namespace, args.setName, keyStart + keyIdxs[i]);
+				}
 			}
 
 			if (multiBin) {
@@ -496,4 +513,19 @@ public abstract class RWTask {
 	protected abstract void get(Key key, String udfPackageName, String udfFunctionName, Value[] udfValues);
 	protected abstract void get(Key[] keys);
 	protected abstract void get(Key[] keys, String binName);
+
+	private String generateFixedLengthKey(long keyValue, int length) {
+		// Convert number to string and pad with zeros
+		String baseStr = String.format("K%d", keyValue);
+		if (baseStr.length() >= length) {
+			return baseStr.substring(0, length);
+		}
+		// Pad with zeros if needed
+		StringBuilder sb = new StringBuilder();
+		sb.append(baseStr);
+		while (sb.length() < length) {
+			sb.append('0');
+		}
+		return sb.toString();
+	}
 }
