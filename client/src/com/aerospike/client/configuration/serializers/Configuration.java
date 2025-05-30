@@ -39,6 +39,23 @@ public class Configuration {
         this.dynamicConfiguration = dynamicConfiguration;
     }
 
+    public boolean hasDBWCsendKey() {
+		return dynamicConfiguration != null &&
+				dynamicConfiguration.dynamicBatchWriteConfig != null &&
+				dynamicConfiguration.dynamicBatchWriteConfig.sendKey != null;
+	}
+
+    public boolean hasDBUDFCsendKey() {
+        return dynamicConfiguration != null &&
+                dynamicConfiguration.dynamicBatchUDFconfig != null &&
+                dynamicConfiguration.dynamicBatchUDFconfig.sendKey != null;
+    }
+
+    public boolean hasDBDCsendKey() {
+        return dynamicConfiguration != null &&
+                dynamicConfiguration.dynamicBatchDeleteConfig != null &&
+                dynamicConfiguration.dynamicBatchDeleteConfig.sendKey != null;
+    }
 
     @Override
     public String toString() {

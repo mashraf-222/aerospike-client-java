@@ -94,10 +94,8 @@ public final class MetricsWriter implements MetricsListener {
 	 */
 	@Override
 	public void onSnapshot(Cluster cluster) {
-		synchronized(this) {
-			if (enabled) {
-				writeCluster(cluster);
-			}
+		if (enabled) {
+			writeCluster(cluster);
 		}
 	}
 
@@ -106,14 +104,12 @@ public final class MetricsWriter implements MetricsListener {
 	 */
 	@Override
 	public void onNodeClose(Node node) {
-		synchronized(this) {
-			if (enabled) {
-				sb.setLength(0);
-				sb.append(LocalDateTime.now().format(TimestampFormat));
-				sb.append(" node");
-				writeNode(node);
-				writeLine();
-			}
+		if (enabled) {
+			sb.setLength(0);
+			sb.append(LocalDateTime.now().format(TimestampFormat));
+			sb.append(" node");
+			writeNode(node);
+			writeLine();
 		}
 	}
 
@@ -122,16 +118,14 @@ public final class MetricsWriter implements MetricsListener {
 	 */
 	@Override
 	public void onDisable(Cluster cluster) {
-		synchronized(this) {
-			if (enabled) {
-				try {
-					enabled = false;
-					writeCluster(cluster);
-					writer.close();
-				}
-				catch (Throwable e) {
-					Log.error("Failed to close metrics writer: " + Util.getErrorMessage(e));
-				}
+		if (enabled) {
+			try {
+				enabled = false;
+				writeCluster(cluster);
+				writer.close();
+			}
+			catch (Throwable e) {
+				Log.error("Failed to close metrics writer: " + Util.getErrorMessage(e));
 			}
 		}
 	}
@@ -139,7 +133,7 @@ public final class MetricsWriter implements MetricsListener {
 	private void open() throws IOException {
 		LocalDateTime now = LocalDateTime.now();
 		String path = dir + File.separator + "metrics-" + now.format(FilenameFormat) + ".log";
-		writer = new FileWriter(path, true);
+		writer = new FileWriter(path, false);
 		size = 0;
 
 		// Must use separate StringBuilder instance to avoid conflicting with metrics detail write.

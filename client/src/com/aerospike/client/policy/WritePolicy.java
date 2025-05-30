@@ -142,6 +142,9 @@ public final class WritePolicy extends Policy {
 			return;
 		}
 		DynamicWriteConfig dynWC = config.dynamicConfiguration.dynamicWriteConfig;
+		if (dynWC == null) {
+			return;
+		}
 
 		if (dynWC.connectTimeout != null) {
 			this.connectTimeout = dynWC.connectTimeout.value;

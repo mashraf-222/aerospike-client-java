@@ -85,6 +85,9 @@ public final class ScanPolicy extends Policy {
 			return;
 		}
 		DynamicScanConfig dynSC = config.dynamicConfiguration.dynamicScanConfig;
+		if (dynSC == null) {
+			return;
+		}
 
 		if (dynSC.readModeAP != null) {
 			this.readModeAP = dynSC.readModeAP;

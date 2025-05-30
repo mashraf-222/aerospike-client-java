@@ -83,7 +83,7 @@ public class DynamicClientConfig {
         try {
             propsString.append(" timeout=").append(timeout.value).append(", ");
             propsString.append(" error_rate_window=").append(errorRateWindow.value).append(", ");
-            propsString.append(" error_rate_window=").append(maxErrorRate.value).append(", ");
+            propsString.append(" maxErrorRate=").append(maxErrorRate.value).append(", ");
             propsString.append(" fail_if_not_connected=").append(failIfNotConnected.value).append(", ");
             propsString.append(" login_timeout=").append(loginTimeout.value).append(", ");
             propsString.append(" max_socket_idle=").append(maxSocketIdle.value).append(", ");

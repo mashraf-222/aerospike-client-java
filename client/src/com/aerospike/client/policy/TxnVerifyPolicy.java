@@ -45,6 +45,9 @@ public class TxnVerifyPolicy extends BatchPolicy {
 			return;
 		}
 		DynamicTxnVerifyConfig dynTVC = config.dynamicConfiguration.dynamicTxnVerifyConfig;
+		if (dynTVC == null) {
+			return;
+		}
 
 		if (dynTVC.readModeAP != null) {
 			this.readModeAP = dynTVC.readModeAP;

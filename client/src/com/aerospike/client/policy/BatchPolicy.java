@@ -141,6 +141,9 @@ public class BatchPolicy extends Policy {
 			return;
 		}
 		DynamicBatchReadConfig dynBRC = config.dynamicConfiguration.dynamicBatchReadConfig;
+		if (dynBRC == null) {
+			return;
+		}
 
 		if (dynBRC.readModeAP != null) {
 			this.readModeAP = dynBRC.readModeAP;
@@ -250,6 +253,9 @@ public class BatchPolicy extends Policy {
 			return;
 		}
 		DynamicBatchWriteConfig dynBWC = config.dynamicConfiguration.dynamicBatchWriteConfig;
+		if (dynBWC == null) {
+			return;
+		}
 
 		if (dynBWC.connectTimeout != null) {
 			this.connectTimeout = dynBWC.connectTimeout.value;
