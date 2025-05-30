@@ -24,6 +24,7 @@ import java.util.concurrent.ExecutorService;
 import com.aerospike.client.async.EventLoops;
 import com.aerospike.client.configuration.ConfigurationProvider;
 import com.aerospike.client.configuration.serializers.Configuration;
+import com.aerospike.client.configuration.serializers.StaticConfiguration;
 import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicClientConfig;
 import com.aerospike.client.configuration.serializers.staticconfig.StaticClientConfig;
 
@@ -31,11 +32,6 @@ import com.aerospike.client.configuration.serializers.staticconfig.StaticClientC
  * Container object for client policy Command.
  */
 public class ClientPolicy {
-	/**
-	 * Configuration provider that will override user-provided and/or merged policy settings
-	 */
-	public ConfigurationProvider configProvider;
-
 	/**
 	 * Optional event loops to use in asynchronous commands.
 	 * <p>
@@ -418,7 +414,14 @@ public class ClientPolicy {
 		if (config == null) {
 			return;
 		}
-		StaticClientConfig staCC = config.staticConfiguration.staticClientConfig;
+		StaticConfiguration sConfig = config.getStaticConfiguration();
+		if (sConfig == null) {
+			return;
+		}
+		StaticClientConfig staCC = sConfig.getStaticClientConfig();
+		if (staCC == null) {
+			return;
+		}
 		if (staCC.maxConnectionsPerNode != null) {
 			this.maxConnsPerNode = staCC.maxConnectionsPerNode.value;
 		}
@@ -433,6 +436,9 @@ public class ClientPolicy {
 		}
 
 		DynamicClientConfig dynCC = config.dynamicConfiguration.dynamicClientConfig;
+		if (dynCC == null) {
+			return;
+		}
 		if (dynCC.timeout != null) {
 			this.timeout = dynCC.timeout.value;
 		}

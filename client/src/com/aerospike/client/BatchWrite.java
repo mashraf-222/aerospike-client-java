@@ -91,7 +91,7 @@ public final class BatchWrite extends BatchRecord {
 		}
 		if (configProvider != null) {
 			Configuration config = configProvider.fetchConfiguration();
-			if (config != null && config.dynamicConfiguration.dynamicBatchWriteConfig.sendKey != null) {
+			if (config != null && config.hasDBWCsendKey()) {
 				sendkey = config.dynamicConfiguration.dynamicBatchWriteConfig.sendKey.value;
 			}
 		}
@@ -116,7 +116,7 @@ public final class BatchWrite extends BatchRecord {
 			sendkey = policy.sendKey;
 			if (configProvider != null) {
 				Configuration config = configProvider.fetchConfiguration();
-				if (config != null && config.dynamicConfiguration.dynamicBatchWriteConfig.sendKey != null) {
+				if (config != null && config.hasDBWCsendKey()) {
 					sendkey = config.dynamicConfiguration.dynamicBatchWriteConfig.sendKey.value;
 				}
 			}

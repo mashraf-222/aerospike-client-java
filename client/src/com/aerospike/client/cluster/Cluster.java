@@ -48,6 +48,8 @@ import com.aerospike.client.async.NioEventLoops;
 import com.aerospike.client.cluster.Node.AsyncPool;
 import com.aerospike.client.command.Buffer;
 import com.aerospike.client.configuration.serializers.Configuration;
+import com.aerospike.client.configuration.serializers.StaticConfiguration;
+import com.aerospike.client.configuration.serializers.staticconfig.StaticClientConfig;
 import com.aerospike.client.listener.ClusterStatsListener;
 import com.aerospike.client.metrics.MetricsListener;
 import com.aerospike.client.metrics.MetricsPolicy;
@@ -217,13 +219,18 @@ public class Cluster implements Runnable, Closeable {
 		this.tlsPolicy = policy.tlsPolicy;
 		this.authMode = policy.authMode;
 
+		this.configInterval = -1;
 		if (client.getConfigProvider() != null) {
 			config = client.getConfigProvider().fetchConfiguration();
 			if (config != null) {
-				this.configInterval = config.staticConfiguration.staticClientConfig.configInterval.value;
+				StaticConfiguration sConfig = config.getStaticConfiguration();
+				if (sConfig != null) {
+					StaticClientConfig staCC = sConfig.getStaticClientConfig();
+					if (staCC != null && staCC.configInterval != null) {
+						this.configInterval = staCC.configInterval.value;
+					}
+				}
 			}
-		} else {
-			this.configInterval = -1;
 		}
 
 		// Default TLS names when TLS enabled.

@@ -99,7 +99,7 @@ public final class MetricsPolicy {
 	private boolean metricsRestartRequired = false;
 
 	/**
-	 * Copy batch policy from another batch policy AND override certain policy attributes if they exist in the
+	 * Copy metrics policy from another metrics policy AND override certain policy attributes if they exist in the
 	 * configProvider.
 	 */
 	public MetricsPolicy(MetricsPolicy other, Configuration config) {
@@ -108,6 +108,9 @@ public final class MetricsPolicy {
 			return;
 		}
 		DynamicMetricsConfig dynMC = config.dynamicConfiguration.dynamicMetricsConfig;
+		if (dynMC == null) {
+			return;
+		}
 		if (dynMC.app_id != null) {
 			this.appId = dynMC.app_id.value;
 		}

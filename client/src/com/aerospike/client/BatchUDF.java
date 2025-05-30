@@ -106,7 +106,7 @@ public final class BatchUDF extends BatchRecord {
 		}
 		if (configProvider != null) {
 			Configuration config = configProvider.fetchConfiguration();
-			if (config != null && config.dynamicConfiguration.dynamicBatchUDFconfig.sendKey != null) {
+			if (config != null && config.hasDBUDFCsendKey()) {
 				sendkey = config.dynamicConfiguration.dynamicBatchUDFconfig.sendKey.value;
 			}
 		}
@@ -130,7 +130,7 @@ public final class BatchUDF extends BatchRecord {
 			sendkey = policy.sendKey;
 			if (configProvider != null) {
 				Configuration config = configProvider.fetchConfiguration();
-				if (config != null && config.dynamicConfiguration.dynamicBatchUDFconfig.sendKey != null) {
+				if (config != null && config.hasDBUDFCsendKey()) {
 					sendkey = config.dynamicConfiguration.dynamicBatchUDFconfig.sendKey.value;
 				}
 			}

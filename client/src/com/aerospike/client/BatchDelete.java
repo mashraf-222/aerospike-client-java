@@ -75,7 +75,7 @@ public final class BatchDelete extends BatchRecord {
 		}
 		if (configProvider != null) {
 			Configuration config = configProvider.fetchConfiguration();
-			if (config != null && config.dynamicConfiguration.dynamicBatchDeleteConfig.sendKey != null) {
+			if (config != null && config.hasDBDCsendKey()) {
 				sendkey = config.dynamicConfiguration.dynamicBatchDeleteConfig.sendKey.value;
 			}
 		}
@@ -98,7 +98,7 @@ public final class BatchDelete extends BatchRecord {
 			sendkey = policy.sendKey;
 			if (configProvider != null) {
 				Configuration config = configProvider.fetchConfiguration();
-				if (config != null && config.dynamicConfiguration.dynamicBatchDeleteConfig.sendKey != null) {
+				if (config != null && config.hasDBDCsendKey()) {
 					sendkey = config.dynamicConfiguration.dynamicBatchDeleteConfig.sendKey.value;
 				}
 			}

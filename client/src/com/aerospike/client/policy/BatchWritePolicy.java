@@ -137,6 +137,9 @@ public final class BatchWritePolicy {
 			return;
 		}
 		DynamicBatchWriteConfig dynBWC = config.dynamicConfiguration.dynamicBatchWriteConfig;
+		if (dynBWC == null) {
+			return;
+		}
 
 		if (dynBWC.sendKey != null) {
 			this.sendKey = dynBWC.sendKey.value;
