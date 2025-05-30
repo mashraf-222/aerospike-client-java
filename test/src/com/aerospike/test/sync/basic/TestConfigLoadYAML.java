@@ -21,7 +21,6 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 import com.aerospike.client.configuration.serializers.Configuration;
 import com.aerospike.client.configuration.YamlConfigProvider;
-import com.aerospike.client.policy.ClientPolicy;
 import com.aerospike.test.sync.TestSync;
 
 public class TestConfigLoadYAML extends TestSync {
