@@ -133,7 +133,7 @@ public final class MetricsWriter implements MetricsListener {
 	private void open() throws IOException {
 		LocalDateTime now = LocalDateTime.now();
 		String path = dir + File.separator + "metrics-" + now.format(FilenameFormat) + ".log";
-		writer = new FileWriter(path, true);
+		writer = new FileWriter(path, false);
 		size = 0;
 
 		// Must use separate StringBuilder instance to avoid conflicting with metrics detail write.
