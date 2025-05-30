@@ -150,6 +150,15 @@ import com.aerospike.client.util.Util;
  */
 public class AerospikeClient implements IAerospikeClient, Closeable {
 	//-------------------------------------------------------
+	// Constants
+	//-------------------------------------------------------
+
+	private static final String CONFIG_PATH_ENV = "AEROSPIKE_CLIENT_CONFIG_URL";
+
+	// System property CONFIG_PATH_SYS_PROP is only intended to be used for testing
+	private static final String CONFIG_PATH_SYS_PROP = "AEROSPIKE_CLIENT_CONFIG_SYS_PROP";
+
+	//-------------------------------------------------------
 	// Member variables.
 	//-------------------------------------------------------
 
@@ -236,10 +245,6 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 
 	private final WritePolicy operatePolicyReadDefault;
 	private WritePolicy mergedOperatePolicyReadDefault;
-
-	private static final String CONFIG_PATH_ENV = "AEROSPIKE_CLIENT_CONFIG_URL";
-	// System property CONFIG_PATH_SYS_PROP is only intended to be used for testing
-	private static final String CONFIG_PATH_SYS_PROP = "AEROSPIKE_CLIENT_CONFIG_SYS_PROP";
 
 	//-------------------------------------------------------
 	// Constructors

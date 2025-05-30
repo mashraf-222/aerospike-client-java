@@ -40,7 +40,7 @@ import com.aerospike.client.Log;
 
 public class YamlConfigProvider implements ConfigurationProvider {
     private static final String YAML_SERIALIZERS_PATH = "com.aerospike.client.configuration.serializers.";
-    private static final String DEFAULT_CONFIG_URL_PREFIX = "file:///";
+    private static final String DEFAULT_CONFIG_URL_PREFIX = "file://";
     private static Path configurationPath;
     private Configuration configuration;
     public long lastModified;
