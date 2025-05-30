@@ -28,7 +28,7 @@ public class TestConfigLoadYAML extends TestSync {
     public static final String GOOD_YAML_CONF_RELATIVE_PATH = "/src/resources/aerospikeconfig.yaml";
     public static final String BOGUS_YAML_IP_CONF_RELATIVE_PATH = "/src/resources/bogus_invalid_property.yaml";
     public static final String BOGUS_YAML_IF_CONF_RELATIVE_PATH = "/src/resources/bogus_invalid_format.yaml";
-    public static final String YAML_URL_BASE = "file:///" + System.getProperty("user.dir");
+    public static final String YAML_URL_BASE = "file://" + System.getProperty("user.dir");
 
     @Test
     public void loadGoodYAML() {
