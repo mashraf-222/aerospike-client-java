@@ -94,6 +94,9 @@ public final class BatchDeletePolicy {
 			return;
 		}
 		DynamicBatchDeleteConfig dynBDC = config.dynamicConfiguration.dynamicBatchDeleteConfig;
+		if (dynBDC == null) {
+			return;
+		}
 
 		if (dynBDC.sendKey != null) {
 			this.sendKey = dynBDC.sendKey.value;

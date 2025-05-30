@@ -293,6 +293,9 @@ public class Policy {
 			return;
 		}
 		DynamicReadConfig dynRC = config.dynamicConfiguration.dynamicReadConfig;
+		if (dynRC == null) {
+			return;
+		}
 
 		if (dynRC.readModeAP != null) {
 			this.readModeAP = dynRC.readModeAP;
