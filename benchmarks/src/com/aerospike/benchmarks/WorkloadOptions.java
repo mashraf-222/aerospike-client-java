@@ -96,6 +96,12 @@ public class WorkloadOptions {
 	private boolean random;
 
 	@Option(
+		names = {"-mrtSize", "--mrtSize"},
+		description =
+			"Number of records per multi record transaction.")
+	private Long mrtSize;
+
+	@Option(
 		names = {"-k", "-keys", "--keys"},
 		description =
 			"Set the number of keys the client is dealing with. If using an 'insert' workload"
@@ -366,6 +372,10 @@ public class WorkloadOptions {
 
 	public String getSet() {
 		return set;
+	}
+
+	public Long getMrtSize() {
+		return mrtSize;
 	}
 
 	public Long getKeys() {

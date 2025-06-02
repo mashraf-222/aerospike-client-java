@@ -111,6 +111,10 @@ public class AerospikeBenchmark implements Callable<Integer>, Log.Callback {
 	private boolean batchShowNodes;
 	private String filepath;
 
+	private boolean mrtEnabled;
+	private long nMRTs;
+	private long keysPerMRT;
+
 	private EventLoops eventLoops;
 	private final ClientPolicy clientPolicy = new ClientPolicy();
 	private final CounterStore counters = new CounterStore();
@@ -239,6 +243,19 @@ public class AerospikeBenchmark implements Callable<Integer>, Log.Callback {
 		clientPolicy.asyncMaxConnsPerNode = connOpts.getAsyncMaxConnsPerNode();
 
 		this.numberOfKeys = workloadOpts.getKeys();
+
+		if (workloadOpts.getMrtSize() != null) {
+			this.mrtEnabled = true;
+			this.keysPerMRT = workloadOpts.getMrtSize();
+			if (this.keysPerMRT < 1 || this.keysPerMRT > this.numberOfKeys) {
+				throw new Exception("Invalid mrtSize value");
+			}
+			long rem = this.numberOfKeys % this.keysPerMRT;
+			if (rem != 0) {
+				throw new Exception("Invalid key distribution per MRT");
+			}
+			this.nMRTs = this.numberOfKeys / this.keysPerMRT;
+		}
 
 		if (workloadOpts.getStartKey() != null) {
 			this.startKey = workloadOpts.getStartKey();
@@ -532,10 +549,18 @@ public class AerospikeBenchmark implements Callable<Integer>, Log.Callback {
 
 		if (benchmarkOpts.getBatchSize() != null) {
 			args.batchSize = benchmarkOpts.getBatchSize();
+
+			if(mrtEnabled) {
+				throw new Exception("MRT does not support the batch size.");
+			}
 		}
 
 		if (benchmarkOpts.isBatchShowNodes()) {
 			this.batchShowNodes = true;
+
+			if(mrtEnabled) {
+				throw new Exception("MRT does not support the batch show nodes operation.");
+			}
 		}
 
 		if (benchmarkOpts.getAsyncMaxCommands() != null) {
@@ -918,11 +943,20 @@ public class AerospikeBenchmark implements Callable<Integer>, Log.Callback {
 				IAerospikeClient client = new AerospikeClient(clientPolicy, hosts);
 
 				try {
-					if (initialize) {
-						doAsyncInserts(client);
+					if (mrtEnabled) {
+						if (initialize) {
+							throw new Exception("MRT does not support asynchronous insertion during initialization.");
+						}
+						else {
+							throw new Exception("MRT does not support asynchronous batch and RU workload.");
+						}
 					} else {
-						showBatchNodes(client);
-						doAsyncRwTest(client);
+						if (initialize) {
+							doAsyncInserts(client);
+						} else {
+							showBatchNodes(client);
+							doAsyncRwTest(client);
+						}
 					}
 				} finally {
 					client.close();
@@ -934,11 +968,20 @@ public class AerospikeBenchmark implements Callable<Integer>, Log.Callback {
 			IAerospikeClient client = new AerospikeClient(clientPolicy, hosts);
 
 			try {
-				if (initialize) {
-					doInserts(client);
+				if (mrtEnabled) {
+					if (initialize) {
+						doMRTInserts(client);
+					}
+					else {
+						doMRTRWTest(client);
+					}
 				} else {
-					showBatchNodes(client);
-					doRwTest(client);
+					if (initialize) {
+						doInserts(client);
+					} else {
+						showBatchNodes(client);
+						doRwTest(client);
+					}
 				}
 			} finally {
 				client.close();
@@ -1157,6 +1200,159 @@ public class AerospikeBenchmark implements Callable<Integer>, Log.Callback {
 				if (transactionTotal >= args.transactionLimit) {
 					for (RWTask task : tasks) {
 						task.stop();
+					}
+
+					if (this.counters.write.latency != null) {
+						this.counters.write.latency.printSummaryHeader(System.out);
+						this.counters.write.latency.printSummary(System.out, "write");
+						this.counters.read.latency.printSummary(System.out, "read");
+						if (this.counters.transaction != null && this.counters.transaction.latency != null) {
+							this.counters.transaction.latency.printSummary(System.out, "txn");
+						}
+					}
+
+					System.out.println("Transaction limit reached: " + args.transactionLimit + ". Exiting.");
+					break;
+				}
+			}
+
+			Thread.sleep(1000);
+		}
+	}
+
+	private void doMRTInserts(IAerospikeClient client) throws Exception {
+		ExecutorService es = getExecutorService();
+
+		// Create N insert tasks
+		long ntasks = this.numberOfThreads < this.nMRTs ? this.numberOfThreads : this.nMRTs;
+		long mrtsPerTask = this.nMRTs / ntasks;
+		long rem = this.nMRTs - (mrtsPerTask * ntasks);
+		long start = this.startKey;
+		long keysPerMRT = this.keysPerMRT;
+
+		for (long i = 0; i < ntasks; i++) {
+			long nMrtsPerThread = (i < rem) ? mrtsPerTask + 1 : mrtsPerTask;
+			MRTInsertTaskSync it = new MRTInsertTaskSync(client, args, counters, start, keysPerMRT, nMrtsPerThread);
+			es.execute(it);
+			start += keysPerMRT * nMrtsPerThread;
+		}
+		Thread.sleep(900);
+		collectMRTStats();
+		es.shutdownNow();
+	}
+
+	private void collectMRTStats() throws Exception {
+		long total = 0;
+
+		while (total < this.numberOfKeys) {
+			long time = System.currentTimeMillis();
+
+			int numWrites = this.counters.write.count.getAndSet(0);
+			int timeoutWrites = this.counters.write.timeouts.getAndSet(0);
+			int errorWrites = this.counters.write.errors.getAndSet(0);
+			total += numWrites;
+
+			this.counters.periodBegin.set(time);
+
+			LocalDateTime dt = Instant.ofEpochMilli(time).atZone(ZoneId.systemDefault()).toLocalDateTime();
+			System.out.println(dt.format(TimeFormatter) + " write(count=" + total + " tps=" + numWrites + " timeouts="
+					+ timeoutWrites + " errors=" + errorWrites + ")");
+
+			if (this.counters.write.latency != null) {
+				this.counters.write.latency.printHeader(System.out);
+				this.counters.write.latency.printResults(System.out, "write");
+			}
+
+			Thread.sleep(1000);
+		}
+
+		if (this.counters.write.latency != null) {
+			this.counters.write.latency.printSummaryHeader(System.out);
+			this.counters.write.latency.printSummary(System.out, "write");
+		}
+	}
+
+	private void doMRTRWTest(IAerospikeClient client) throws Exception {
+		ExecutorService es = getExecutorService();
+		long ntasks = this.numberOfThreads < this.nMRTs ? this.numberOfThreads : this.nMRTs;
+		long mrtsPerTask = this.nMRTs / ntasks;
+		long rem = this.nMRTs - (mrtsPerTask * ntasks);
+		MRTRWTask[] tasks = new MRTRWTask[this.numberOfThreads];
+
+		for (int i = 0; i < ntasks; i++) {
+			long nMrtsPerThread = (i < rem) ? mrtsPerTask + 1 : mrtsPerTask;
+			MRTRWTaskSync rt = new MRTRWTaskSync(client, args, counters, nMrtsPerThread, this.startKey,
+					this.numberOfKeys, this.keysPerMRT);
+			tasks[i] = rt;
+			es.execute(rt);
+		}
+		Thread.sleep(1000);
+		collectMRTRWStats(tasks);
+		es.shutdownNow();
+	}
+
+	private void collectMRTRWStats(MRTRWTask[] tasks) throws Exception {
+		long transactionTotal = 0;
+
+		while (true) {
+			long time = System.currentTimeMillis();
+
+			int numWrites = this.counters.write.count.getAndSet(0);
+			int timeoutWrites = this.counters.write.timeouts.getAndSet(0);
+			int errorWrites = this.counters.write.errors.getAndSet(0);
+
+			int numReads = this.counters.read.count.getAndSet(0);
+			int timeoutReads = this.counters.read.timeouts.getAndSet(0);
+			int errorReads = this.counters.read.errors.getAndSet(0);
+
+			int numTxns = this.counters.transaction.count.getAndSet(0);
+			int timeoutTxns = this.counters.transaction.timeouts.getAndSet(0);
+			int errorTxns = this.counters.transaction.errors.getAndSet(0);
+
+			int notFound = 0;
+
+			if (args.reportNotFound) {
+				notFound = this.counters.readNotFound.getAndSet(0);
+			}
+			this.counters.periodBegin.set(time);
+
+			LocalDateTime dt = Instant.ofEpochMilli(time).atZone(ZoneId.systemDefault()).toLocalDateTime();
+			System.out.print(dt.format(TimeFormatter));
+			System.out.print(" write(tps=" + numWrites + " timeouts=" + timeoutWrites + " errors=" + errorWrites + ")");
+			System.out.print(" read(tps=" + numReads + " timeouts=" + timeoutReads + " errors=" + errorReads);
+			if (this.counters.transaction.latency != null) {
+				System.out.print(" txns(tps=" + numTxns + " timeouts=" + timeoutTxns + " errors=" + errorTxns);
+			}
+			if (args.reportNotFound) {
+				System.out.print(" nf=" + notFound);
+			}
+			System.out.print(")");
+
+			System.out.print(" total(tps=" + (numWrites + numReads) + " timeouts=" + (timeoutWrites + timeoutReads)
+					+ " errors=" + (errorWrites + errorReads) + ")");
+			// System.out.print(" buffused=" + used
+			// System.out.print(" nodeused=" + ((AsyncNode)nodes[0]).openCount.get() + ',' +
+			// ((AsyncNode)nodes[1]).openCount.get() + ',' +
+			// ((AsyncNode)nodes[2]).openCount.get()
+			System.out.println();
+
+			if (this.counters.write.latency != null) {
+				this.counters.write.latency.printHeader(System.out);
+				this.counters.write.latency.printResults(System.out, "write");
+				this.counters.read.latency.printResults(System.out, "read");
+				if (this.counters.transaction != null && this.counters.transaction.latency != null) {
+					this.counters.transaction.latency.printResults(System.out, "txn");
+				}
+			}
+
+			if (args.transactionLimit > 0) {
+				transactionTotal += numWrites + timeoutWrites + errorWrites + numReads + timeoutReads + errorReads;
+
+				if (transactionTotal >= args.transactionLimit) {
+					for (MRTRWTask task : tasks) {
+						if (task != null) {
+							task.stop();
+						}
 					}
 
 					if (this.counters.write.latency != null) {
