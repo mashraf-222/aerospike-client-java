@@ -332,6 +332,7 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		if (policy == null) {
 			policy = new ClientPolicy();
 		}
+
 		this.readPolicyDefault = policy.readPolicyDefault;
 		this.writePolicyDefault = policy.writePolicyDefault;
 		this.scanPolicyDefault = policy.scanPolicyDefault;
@@ -346,17 +347,24 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		this.txnRollPolicyDefault = policy.txnRollPolicyDefault;
 		this.operatePolicyReadDefault = new WritePolicy(this.readPolicyDefault);
 
-		String configEnvValue = getConfigPathEnv();
-		if (configEnvValue != null ) {
-			this.configProvider = new YamlConfigProvider(configEnvValue);
+		String configEnv = System.getenv(CONFIG_PATH_ENV);
+
+		if (configEnv == null) {
+			configEnv = System.getenv(CONFIG_PATH_SYS_PROP);
+		}
+
+		if (configEnv != null) {
+			this.configProvider = new YamlConfigProvider(configEnv);
 			policy = new ClientPolicy(policy, this.configProvider);
 		}
 
 		mergeDefaultPoliciesWithConfig();
 		version = this.getClass().getPackage().getImplementationVersion();
+
 		if (version == null) {
 			version = "development";
 		}
+
 		cluster = new Cluster(this, policy, hosts);
 	}
 
@@ -398,12 +406,6 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 			this.txnRollPolicyDefault = new TxnRollPolicy();
 			this.operatePolicyReadDefault = new WritePolicy(this.readPolicyDefault);
 		}
-	}
-
-
-	private String getConfigPathEnv() {
-		return System.getenv(CONFIG_PATH_ENV) != null ? System.getenv(CONFIG_PATH_ENV) :
-				System.getProperty(CONFIG_PATH_SYS_PROP, "");
 	}
 
 	/**
