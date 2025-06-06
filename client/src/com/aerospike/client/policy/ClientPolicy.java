@@ -460,7 +460,7 @@ public class ClientPolicy {
 		if (dynCC.rackAware != null) {
 			this.rackAware = dynCC.rackAware.value;
 		}
-		if (dynCC.timeout != null) {
+		if (dynCC.rackIds != null) {
 			this.rackIds = dynCC.rackIds;
 		}
 		if (dynCC.tendInterval != null) {
