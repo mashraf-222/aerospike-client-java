@@ -1112,7 +1112,8 @@ public class Cluster implements Runnable, Closeable {
 					return;
 				}
 
-				if (config != null && config.dynamicConfiguration.dynamicMetricsConfig.enable != null) {
+				if (config != null && config.hasMetrics() &&
+						config.dynamicConfiguration.dynamicMetricsConfig.enable != null) {
 					if (!metricsEnabled && config.dynamicConfiguration.dynamicMetricsConfig.enable.value) {
 						enableMetricsInternal(metricsPolicy);
 					}
