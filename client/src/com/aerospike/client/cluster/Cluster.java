@@ -460,7 +460,7 @@ public class Cluster implements Runnable, Closeable {
 			addSeeds(seedsToAdd.toArray(new Host[seedsToAdd.size()]));
 		}
 
-		if (config != null && config.dynamicConfiguration.dynamicMetricsConfig.enable != null &&
+		if (config != null && config.hasMetrics() && config.dynamicConfiguration.dynamicMetricsConfig.enable != null &&
 			config.dynamicConfiguration.dynamicMetricsConfig.enable.value) {
 			synchronized(metricsLock) {
 				enableMetricsInternal(metricsPolicy);
@@ -1133,7 +1133,7 @@ public class Cluster implements Runnable, Closeable {
 
 	public final void enableMetrics(MetricsPolicy policy) {
 		if (config != null) {
-			if (config.dynamicConfiguration.dynamicMetricsConfig.enable != null) {
+			if (config.hasMetrics() && config.dynamicConfiguration.dynamicMetricsConfig.enable != null) {
 				if (!config.dynamicConfiguration.dynamicMetricsConfig.enable.value) {
 					Log.warn("When a config exists, metrics can not be enabled via enableMetrics unless they" +
 							" are enabled in the config provider.");
@@ -1174,7 +1174,7 @@ public class Cluster implements Runnable, Closeable {
 
 	public final void disableMetrics() {
 		if (config != null) {
-			if (config.dynamicConfiguration.dynamicMetricsConfig.enable != null &&
+			if (config.hasMetrics() && config.dynamicConfiguration.dynamicMetricsConfig.enable != null &&
 				config.dynamicConfiguration.dynamicMetricsConfig.enable.value) {
 				Log.warn("Metrics can not be disabled via disableMetrics() when they are enabled via config.");
 				return;

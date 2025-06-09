@@ -350,7 +350,7 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		String configEnv = System.getenv(CONFIG_PATH_ENV);
 
 		if (configEnv == null) {
-			configEnv = System.getenv(CONFIG_PATH_SYS_PROP);
+			configEnv = System.getProperty(CONFIG_PATH_SYS_PROP, null);
 		}
 
 		if (configEnv != null) {
