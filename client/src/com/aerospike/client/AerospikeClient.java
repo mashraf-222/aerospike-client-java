@@ -347,18 +347,32 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		this.txnRollPolicyDefault = policy.txnRollPolicyDefault;
 		this.operatePolicyReadDefault = new WritePolicy(this.readPolicyDefault);
 
-		String configEnv = System.getenv(CONFIG_PATH_ENV);
+		String configPath = System.getenv(CONFIG_PATH_ENV);
 
-		if (configEnv == null) {
-			configEnv = System.getProperty(CONFIG_PATH_SYS_PROP, null);
+		if (configPath == null) {
+			configPath = System.getProperty(CONFIG_PATH_SYS_PROP);
 		}
 
-		if (configEnv != null) {
-			this.configProvider = new YamlConfigProvider(configEnv);
+		if (configPath != null) {
+			this.configProvider = new YamlConfigProvider(configPath);
 			policy = new ClientPolicy(policy, this.configProvider);
+			mergeDefaultPoliciesWithConfig();
+		}
+		else {
+			mergedReadPolicyDefault = readPolicyDefault;
+			mergedWritePolicyDefault = writePolicyDefault;
+			mergedScanPolicyDefault = scanPolicyDefault;
+			mergedQueryPolicyDefault = queryPolicyDefault;
+			mergedBatchPolicyDefault = batchPolicyDefault;
+			mergedBatchParentPolicyWriteDefault = batchParentPolicyWriteDefault;
+			mergedBatchWritePolicyDefault = batchWritePolicyDefault;
+			mergedBatchDeletePolicyDefault = batchDeletePolicyDefault;
+			mergedBatchUDFPolicyDefault = batchUDFPolicyDefault;
+			mergedTxnVerifyPolicyDefault = txnVerifyPolicyDefault;
+			mergedTxnRollPolicyDefault = txnRollPolicyDefault;
+			mergedOperatePolicyReadDefault = operatePolicyReadDefault;
 		}
 
-		mergeDefaultPoliciesWithConfig();
 		version = this.getClass().getPackage().getImplementationVersion();
 
 		if (version == null) {
@@ -602,11 +616,11 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	public void mergeDefaultPoliciesWithConfig() {
 		mergedReadPolicyDefault = new Policy(readPolicyDefault, configProvider);
 		mergedWritePolicyDefault = new WritePolicy(writePolicyDefault, configProvider);
-		mergedQueryPolicyDefault = new QueryPolicy(queryPolicyDefault, configProvider);
 		mergedScanPolicyDefault = new ScanPolicy(scanPolicyDefault, configProvider);
+		mergedQueryPolicyDefault = new QueryPolicy(queryPolicyDefault, configProvider);
 		mergedBatchPolicyDefault = new BatchPolicy(batchPolicyDefault, configProvider);
-		mergedBatchWritePolicyDefault = new BatchWritePolicy(batchWritePolicyDefault, configProvider);
 		mergedBatchParentPolicyWriteDefault = new BatchPolicy(batchParentPolicyWriteDefault, configProvider);
+		mergedBatchWritePolicyDefault = new BatchWritePolicy(batchWritePolicyDefault, configProvider);
 		mergedBatchDeletePolicyDefault = new BatchDeletePolicy(batchDeletePolicyDefault, configProvider);
 		mergedBatchUDFPolicyDefault = new BatchUDFPolicy(batchUDFPolicyDefault, configProvider);
 		mergedTxnVerifyPolicyDefault = new TxnVerifyPolicy(txnVerifyPolicyDefault, configProvider);
