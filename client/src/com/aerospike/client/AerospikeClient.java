@@ -4692,7 +4692,7 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 			policy = new Policy(policy, configProvider);
 		}
 
-		String command = buildCreateIndexInfoCommand(namespace, setName, indexName, binName, indexType, indexCollectionType, ctx);
+		String command = buildCreateIndexInfoCommand(namespace, setName, indexName, binName, indexType, indexCollectionType, ctx, null);
 
 		// Send index command to one node. That node will distribute the command to other nodes.
 		String response = sendInfoCommand(policy, command);
@@ -4746,7 +4746,91 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 			policy = new Policy(policy, configProvider);
 		}
 
-		String command = buildCreateIndexInfoCommand(namespace, setName, indexName, binName, indexType, indexCollectionType, ctx);
+		String command = buildCreateIndexInfoCommand(namespace, setName, indexName, binName, indexType, indexCollectionType, ctx, null);
+		sendIndexInfoCommand(eventLoop, listener, policy, namespace, indexName, command, true);
+	}
+
+	/**
+	 * Create an expression-based secondary index with the provided index collection type
+	 * This asynchronous server call will return before command is complete.
+	 * The user can optionally wait for command completion by using the returned
+	 * IndexTask instance.
+	 *
+	 * @param policy				generic configuration parameters, pass in null for defaults
+	 * @param namespace				namespace - equivalent to database name
+	 * @param setName				optional set name - equivalent to database table
+	 * @param indexName				name of secondary index
+	 * @param indexType				underlying data type of secondary index
+	 * @param indexCollectionType	index collection type
+	 * @param exp					expression on which to build the index
+	 * @throws AerospikeException
+	 */
+	public final IndexTask createIndex(
+			Policy policy,
+			String namespace,
+			String setName,
+			String indexName,
+			IndexType indexType,
+			IndexCollectionType indexCollectionType,
+			Expression exp
+	) throws AerospikeException {
+		if (policy == null) {
+			policy = mergedWritePolicyDefault;
+		} else if (configProvider != null) {
+			policy = new Policy(policy, configProvider);
+		}
+
+		String command = buildCreateIndexInfoCommand(namespace, setName, indexName, null, indexType, indexCollectionType, null, exp);
+
+		// Send index command to one node. That node will distribute the command to other nodes.
+		String response = sendInfoCommand(policy, command);
+
+		if (response.equalsIgnoreCase("OK")) {
+			// Return task that could optionally be polled for completion.
+			return new IndexTask(cluster, policy, namespace, indexName, true);
+		}
+
+		int code = parseIndexErrorCode(response);
+		throw new AerospikeException(code, "Create index failed: " + response);
+	}
+
+	/**
+	 * Asynchronously create an expression-based secondary index with the provided index collection type
+	 * This asynchronous server call will return before command is complete.
+	 * The user can optionally wait for command completion by using the returned
+	 * IndexTask instance.
+	 *
+	 * @param policy				generic configuration parameters, pass in null for defaults
+	 * @param namespace				namespace - equivalent to database name
+	 * @param setName				optional set name - equivalent to database table
+	 * @param indexName				name of secondary index
+	 * @param indexType				underlying data type of secondary index
+	 * @param indexCollectionType	index collection type
+	 * @param exp					expression on which to build the index
+	 * @throws AerospikeException
+	 */
+	public final void createIndex(
+			EventLoop eventLoop,
+			IndexListener listener,
+			Policy policy,
+			String namespace,
+			String setName,
+			String indexName,
+			IndexType indexType,
+			IndexCollectionType indexCollectionType,
+			Expression exp
+	) throws AerospikeException {
+		if (eventLoop == null) {
+			eventLoop = cluster.eventLoops.next();
+		}
+
+		if (policy == null) {
+			policy = mergedWritePolicyDefault;
+		} else if (configProvider != null) {
+			policy = new Policy(policy, configProvider);
+		}
+
+		String command = buildCreateIndexInfoCommand(namespace, setName, indexName, null, indexType, indexCollectionType, null, exp);
 		sendIndexInfoCommand(eventLoop, listener, policy, namespace, indexName, command, true);
 	}
 
@@ -5190,7 +5274,8 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		String binName,
 		IndexType indexType,
 		IndexCollectionType indexCollectionType,
-		CTX[] ctx
+		CTX[] ctx,
+		Expression exp
 	) {
 		StringBuilder sb = new StringBuilder(1024);
 		sb.append("sindex-create:ns=");
@@ -5212,14 +5297,25 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 			sb.append(base64);
 		}
 
+		if (exp != null && exp.size() > 0) {
+			String base64 = exp.getBase64();
+
+			sb.append(";exp=");
+			sb.append(base64);
+		}
+
 		if (indexCollectionType != IndexCollectionType.DEFAULT) {
 			sb.append(";indextype=");
 			sb.append(indexCollectionType);
 		}
 
-		sb.append(";indexdata=");
-		sb.append(binName);
-		sb.append(",");
+		if (binName != null) {
+			sb.append(";indexdata=");
+			sb.append(binName);
+			sb.append(",");
+		} else {
+			sb.append(";type=");
+		}
 		sb.append(indexType);
 		return sb.toString();
 	}
