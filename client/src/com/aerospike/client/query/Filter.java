@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 Aerospike, Inc.
+ * Copyright 2012-2025 Aerospike, Inc.
  *
  * Portions may be licensed to Aerospike, Inc. under one or more contributor
  * license agreements WHICH ARE COMPATIBLE WITH THE APACHE LICENSE, VERSION 2.0.
@@ -22,6 +22,7 @@ import com.aerospike.client.Value;
 import com.aerospike.client.cdt.CTX;
 import com.aerospike.client.command.Buffer;
 import com.aerospike.client.command.ParticleType;
+import com.aerospike.client.exp.Expression;
 import com.aerospike.client.util.Pack;
 
 /**
@@ -128,6 +129,37 @@ public final class Filter {
 	}
 
 	/**
+	 * Create a range filter for an Expression-based Secondary Index (SI) query, using the actual Expression that was
+	 * used to create the SI.
+	 * Range arguments must be longs or integers which can be cast to longs.
+	 * String ranges are not supported.
+	 *
+	 * @param exp			the Expression
+	 * @param begin			filter begin value inclusive
+	 * @param end			filter end value inclusive
+	 * @return				filter instance
+	 */
+	public static Filter range(Expression exp, long begin, long end) {
+		return new Filter(null, exp.getBytes(), IndexCollectionType.DEFAULT, ParticleType.INTEGER,
+				Value.get(begin), Value.get(end));
+	}
+
+	/**
+	 * Create a range filter for an Expression-based Secondary Index (SI) query, using the SI name
+	 * Range arguments must be longs or integers which can be cast to longs.
+	 * String ranges are not supported.
+	 *
+	 * @param index_name	the name that was assigned to the SI
+	 * @param begin			filter begin value inclusive
+	 * @param end			filter end value inclusive
+	 * @return				filter instance
+	 */
+	public static Filter rangeByIndex(String index_name, long begin, long end) {
+		return new Filter(index_name, null, IndexCollectionType.DEFAULT, ParticleType.INTEGER,
+				Value.get(begin), Value.get(end));
+	}
+
+	/**
 	 * Create range filter for query on collection index.
 	 * Range arguments must be longs or integers which can be cast to longs.
 	 * String ranges are not supported.
@@ -231,23 +263,31 @@ public final class Filter {
 	}
 
 	private final String name;
+	private final String index_name;
 	private final IndexCollectionType colType;
 	private final byte[] packedCtx;
 	private final int valType;
 	private final Value begin;
 	private final Value end;
+	private final byte[] packedExp;
 
 	private Filter(String name, IndexCollectionType colType, int valType, Value begin, Value end, CTX[] ctx) {
-		this(name, colType, valType, begin, end, (ctx != null && ctx.length > 0) ? Pack.pack(ctx) : null);
+		this(name, null, colType, valType, begin, end, (ctx != null && ctx.length > 0) ? Pack.pack(ctx) : null, null);
+	}
+	private Filter(String index_name, byte[] exp, IndexCollectionType colType, int valType, Value begin, Value end) {
+		this(null, index_name, colType, valType, begin, end, null, exp);
 	}
 
-	Filter(String name, IndexCollectionType colType, int valType, Value begin, Value end, byte[] packedCtx) {
+	Filter(String name, String index_name, IndexCollectionType colType, int valType, Value begin, Value end,
+		   byte[] packedCtx, byte[] packedExp) {
 		this.name = name;
+		this.index_name = index_name;
 		this.colType = colType;
 		this.valType = valType;
 		this.begin = begin;
 		this.end = end;
 		this.packedCtx = packedCtx;
+		this.packedExp = packedExp;
 	}
 
 	/**
@@ -302,6 +342,14 @@ public final class Filter {
 	}
 
 	/**
+	 * Index name.
+	 * For internal use only.
+	 */
+	public String getIndexName() {
+		return index_name;
+	}
+
+	/**
 	 * Index collection type.
 	 * For internal use only.
 	 */
@@ -339,6 +387,14 @@ public final class Filter {
 	 */
 	public byte[] getPackedCtx() {
 		return packedCtx;
+	}
+
+	/**
+	 * Retrieve packed Expression.
+	 * For internal use only.
+	 */
+	public byte[] getPackedExp() {
+		return packedExp;
 	}
 
 	/**

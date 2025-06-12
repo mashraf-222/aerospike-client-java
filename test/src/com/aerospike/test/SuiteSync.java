@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 Aerospike, Inc.
+ * Copyright 2012-2025 Aerospike, Inc.
  *
  * Portions may be licensed to Aerospike, Inc. under one or more contributor
  * license agreements WHICH ARE COMPATIBLE WITH THE APACHE LICENSE, VERSION 2.0.
@@ -53,6 +53,7 @@ import com.aerospike.test.sync.basic.TestTouch;
 import com.aerospike.test.sync.basic.TestTxn;
 import com.aerospike.test.sync.basic.TestUDF;
 import com.aerospike.test.sync.query.TestIndex;
+import com.aerospike.test.sync.query.TestExpSecondaryIndex;
 import com.aerospike.test.sync.query.TestQueryAverage;
 import com.aerospike.test.sync.query.TestQueryBlob;
 import com.aerospike.test.sync.query.TestQueryCollection;
@@ -98,6 +99,7 @@ import com.aerospike.test.util.Args;
 	TestTxn.class,
 	TestUDF.class,
 	TestIndex.class,
+	TestExpSecondaryIndex.class,
 	TestQueryAverage.class,
 	TestQueryBlob.class,
 	TestQueryCollection.class,
