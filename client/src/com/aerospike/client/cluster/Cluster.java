@@ -130,10 +130,10 @@ public class Cluster implements Runnable, Closeable {
 	public final EventState[] eventState;
 
 	// Maximum socket idle to validate connections in command.
-	private final long maxSocketIdleNanosTran;
+	private long maxSocketIdleNanosTran;
 
 	// Maximum socket idle to trim peak connections to min connections.
-	private final long maxSocketIdleNanosTrim;
+	private long maxSocketIdleNanosTrim;
 
 	// Minimum sync connections per node.
 	protected int minConnsPerNode;
@@ -157,22 +157,22 @@ public class Cluster implements Runnable, Closeable {
 	int errorRateWindow;
 
 	// Initial connection timeout.
-	public final int connectTimeout;
+	public int connectTimeout;
 
 	// Login timeout.
-	public final int loginTimeout;
+	public int loginTimeout;
 
 	// Cluster close timeout.
 	public final int closeTimeout;
 
 	// Rack id.
-	public final int[] rackIds;
+	public int[] rackIds;
 
 	// Count of add node failures in the most recent cluster tend iteration.
 	private volatile int invalidNodeCount;
 
 	// Interval in milliseconds between cluster tends.
-	private final int tendInterval;
+	private int tendInterval;
 
 	// Cluster tend counter
 	private int tendCount;
@@ -188,10 +188,10 @@ public class Cluster implements Runnable, Closeable {
 	protected volatile boolean tendValid;
 
 	// Should use "services-alternate" instead of "services" in info request?
-	protected final boolean useServicesAlternate;
+	protected boolean useServicesAlternate;
 
 	// Request server rack ids.
-	final boolean rackAware;
+	boolean rackAware;
 
 	// Verify clusterName if populated.
 	public final boolean validateClusterName;
@@ -395,6 +395,45 @@ public class Cluster implements Runnable, Closeable {
 		else {
 			initTendThread(policy.failIfNotConnected);
 		}
+	}
+
+	private void applyClientPolicyUpdates() {
+		connectTimeout = client.getClientPolicy().timeout;
+		errorRateWindow = client.getClientPolicy().errorRateWindow;
+		maxErrorRate = client.getClientPolicy().maxErrorRate;
+		loginTimeout = client.getClientPolicy().loginTimeout;
+
+		if (client.getClientPolicy().maxSocketIdle < 0) {
+			throw new AerospikeException("Invalid maxSocketIdle: " + client.getClientPolicy().maxSocketIdle);
+		} else if (client.getClientPolicy().maxSocketIdle == 0) {
+			maxSocketIdleNanosTran = 0;
+			maxSocketIdleNanosTrim = TimeUnit.SECONDS.toNanos(55);
+		}
+		else {
+			maxSocketIdleNanosTran = TimeUnit.SECONDS.toNanos(client.getClientPolicy().maxSocketIdle);
+			maxSocketIdleNanosTrim = maxSocketIdleNanosTran;
+		}
+
+		rackAware = client.getClientPolicy().rackAware;
+		for (Node node : nodes) {
+			node.racks = rackAware ? new HashMap<>() : null;
+		}
+
+		if (client.getClientPolicy().rackIds != null && !client.getClientPolicy().rackIds.isEmpty()) {
+			List<Integer> list = client.getClientPolicy().rackIds;
+			int max = list.size();
+			rackIds = new int[max];
+
+			for (int i = 0; i < max; i++) {
+				rackIds[i] = list.get(i);
+			}
+		}
+		else {
+			rackIds = new int[] {client.getClientPolicy().rackId};
+		}
+
+		tendInterval = client.getClientPolicy().tendInterval;
+		useServicesAlternate = client.getClientPolicy().useServicesAlternate;
 	}
 
 	public void forceSingleNode() {
@@ -1101,6 +1140,7 @@ public class Cluster implements Runnable, Closeable {
 		if (client.getConfigProvider().loadConfiguration()) {
 			config = client.getConfigProvider().fetchConfiguration();
 			client.mergePoliciesWithConfig();
+			applyClientPolicyUpdates();
 
 			synchronized(metricsLock) {
 				metricsPolicy = mergeMetricsPolicyWithConfig(metricsPolicy);
