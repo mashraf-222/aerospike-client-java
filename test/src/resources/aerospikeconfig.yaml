@@ -10,6 +10,7 @@ static:
     async_min_connections_per_node: 1
 dynamic:
   client:
+    app_id: unit_tester
     timeout: 2002
     error_rate_window: 5
     max_error_rate: 13
@@ -135,7 +136,6 @@ dynamic:
     enable: true
     latency_shift: 0
     latency_columns: 0
-    app_id: unit_tester
     labels:
       region: us-west
       zone: usw1-az3

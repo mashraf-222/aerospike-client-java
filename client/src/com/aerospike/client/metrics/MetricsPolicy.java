@@ -87,11 +87,6 @@ public final class MetricsPolicy {
 	public int latencyShift = 1;
 
 	/**
-	 * Application ID. Metrics are loosely tied to this. Changing the appId will not reset the metric counters.
-	 */
-	public String appId;
-
-	/**
 	 * Labels that can be sent to the metrics output
 	 */
 	public Map<String,String> labels;
@@ -110,9 +105,6 @@ public final class MetricsPolicy {
 		DynamicMetricsConfig dynMC = config.dynamicConfiguration.dynamicMetricsConfig;
 		if (dynMC == null) {
 			return;
-		}
-		if (dynMC.app_id != null) {
-			this.appId = dynMC.app_id.value;
 		}
 		if (dynMC.labels != null) {
 			this.labels = dynMC.labels;
@@ -145,7 +137,6 @@ public final class MetricsPolicy {
 		this.interval = other.interval;
 		this.latencyColumns = other.latencyColumns;
 		this.latencyShift = other.latencyShift;
-		this.appId = other.appId;
 		this.labels = other.labels;
 		this.metricsRestartRequired = other.metricsRestartRequired;
 	}
@@ -179,8 +170,6 @@ public final class MetricsPolicy {
 	}
 
 	public void setLatencyShift(int latencyShift) { this.latencyShift = latencyShift; }
-
-	public void setAppId(String appId) { this.appId = appId; }
 
 	public void setLabels(Map<String, String> labels) { this.labels = labels; }
 

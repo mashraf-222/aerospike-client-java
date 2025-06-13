@@ -37,8 +37,8 @@ public class TestConfigLoadYAML extends TestSync {
         Configuration yamlConf = yamlLoader.fetchConfiguration();
         assertNotNull(yamlConf);
         // System.out.println(yamlConf);
-        assertNotNull(yamlConf.dynamicConfiguration.dynamicMetricsConfig.app_id);
-        assert yamlConf.dynamicConfiguration.dynamicMetricsConfig.app_id.value.equals("unit_tester");
+        assertNotNull(yamlConf.dynamicConfiguration.dynamicClientConfig.appID);
+        assert yamlConf.dynamicConfiguration.dynamicClientConfig.appID.value.equals("unit_tester");
         assert yamlConf.staticConfiguration.staticClientConfig.maxConnectionsPerNode.value == 99;
     }
     @Test
