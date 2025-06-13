@@ -62,6 +62,14 @@ public class Configuration {
                 dynamicConfiguration.dynamicBatchDeleteConfig.sendKey != null;
     }
 
+    public String getAppID() {
+        if (dynamicConfiguration.dynamicClientConfig.getAppId() != null) {
+            return dynamicConfiguration.dynamicClientConfig.appId.value;
+        } else {
+            return null;
+        }
+    }
+
     @Override
     public String toString() {
         return "\n{" +
