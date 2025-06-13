@@ -444,8 +444,8 @@ public class ClientPolicy {
 		if (dynCC == null) {
 			return;
 		}
-		if (dynCC.appID != null) {
-			this.appId = dynCC.appID.value;
+		if (dynCC.appId != null) {
+			this.appId = dynCC.appId.value;
 		}
 		if (dynCC.timeout != null) {
 			this.timeout = dynCC.timeout.value;

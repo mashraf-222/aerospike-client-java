@@ -63,8 +63,8 @@ public class Configuration {
     }
 
     public String getAppID() {
-        if (dynamicConfiguration.dynamicClientConfig.getAppID() != null) {
-            return dynamicConfiguration.dynamicClientConfig.appID.value;
+        if (dynamicConfiguration.dynamicClientConfig.getAppId() != null) {
+            return dynamicConfiguration.dynamicClientConfig.appId.value;
         } else {
             return null;
         }

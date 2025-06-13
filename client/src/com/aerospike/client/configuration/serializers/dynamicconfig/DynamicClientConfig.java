@@ -25,7 +25,7 @@ import com.aerospike.client.configuration.serializers.dynamicconfig.primitivepro
 import com.aerospike.client.Log;
 
 public class DynamicClientConfig {
-    public StringProperty appID;
+    public StringProperty appId;
     public IntProperty timeout;
     public IntProperty errorRateWindow;
     public IntProperty maxErrorRate;
@@ -39,7 +39,7 @@ public class DynamicClientConfig {
 
     public DynamicClientConfig() {}
 
-    public void setAppID(StringProperty appID) { this.appID = appID; }
+    public void setAppId(StringProperty appId) { this.appId = appId; }
 
     public void setTimeout(IntProperty timeout) { this.timeout = timeout; }
 
@@ -61,7 +61,7 @@ public class DynamicClientConfig {
 
     public void setUseServiceAlternative(BooleanProperty useServiceAlternative) { this.useServiceAlternative = useServiceAlternative; }
 
-    public StringProperty getAppID() { return appID; }
+    public StringProperty getAppId() { return appId; }
 
     public List<Integer> getRackIds() { return rackIds; }
 
@@ -87,7 +87,7 @@ public class DynamicClientConfig {
     public String toString() {
         StringBuffer propsString = new StringBuffer("{");
         try {
-            propsString.append(" app_id=").append(appID.value).append(", ");
+            propsString.append(" app_id=").append(appId.value).append(", ");
             propsString.append(" timeout=").append(timeout.value).append(", ");
             propsString.append(" error_rate_window=").append(errorRateWindow.value).append(", ");
             propsString.append(" max_error_rate=").append(maxErrorRate.value).append(", ");
