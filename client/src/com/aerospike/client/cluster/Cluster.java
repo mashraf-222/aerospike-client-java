@@ -398,42 +398,43 @@ public class Cluster implements Runnable, Closeable {
 	}
 
 	private void applyClientPolicyUpdates() {
-		connectTimeout = client.getClientPolicy().timeout;
-		errorRateWindow = client.getClientPolicy().errorRateWindow;
-		maxErrorRate = client.getClientPolicy().maxErrorRate;
-		loginTimeout = client.getClientPolicy().loginTimeout;
+		ClientPolicy clientPolicy = client.getClientPolicy();
+		connectTimeout = clientPolicy.timeout;
+		errorRateWindow = clientPolicy.errorRateWindow;
+		maxErrorRate = clientPolicy.maxErrorRate;
+		loginTimeout = clientPolicy.loginTimeout;
 
-		if (client.getClientPolicy().maxSocketIdle < 0) {
-			throw new AerospikeException("Invalid maxSocketIdle: " + client.getClientPolicy().maxSocketIdle);
-		} else if (client.getClientPolicy().maxSocketIdle == 0) {
+		if (clientPolicy.maxSocketIdle == 0) {
 			maxSocketIdleNanosTran = 0;
 			maxSocketIdleNanosTrim = TimeUnit.SECONDS.toNanos(55);
 		}
 		else {
-			maxSocketIdleNanosTran = TimeUnit.SECONDS.toNanos(client.getClientPolicy().maxSocketIdle);
+			maxSocketIdleNanosTran = TimeUnit.SECONDS.toNanos(clientPolicy.maxSocketIdle);
 			maxSocketIdleNanosTrim = maxSocketIdleNanosTran;
 		}
 
-		rackAware = client.getClientPolicy().rackAware;
+		rackAware = clientPolicy.rackAware;
 		for (Node node : nodes) {
 			node.racks = rackAware ? new HashMap<>() : null;
 		}
 
-		if (client.getClientPolicy().rackIds != null && !client.getClientPolicy().rackIds.isEmpty()) {
-			List<Integer> list = client.getClientPolicy().rackIds;
+		int[] rackIdsTemp;
+		if (clientPolicy.rackIds != null && !clientPolicy.rackIds.isEmpty()) {
+			List<Integer> list = clientPolicy.rackIds;
 			int max = list.size();
-			rackIds = new int[max];
+			rackIdsTemp = new int[max];
 
 			for (int i = 0; i < max; i++) {
-				rackIds[i] = list.get(i);
+				rackIdsTemp[i] = list.get(i);
 			}
 		}
 		else {
-			rackIds = new int[] {client.getClientPolicy().rackId};
+			rackIdsTemp = new int[] {clientPolicy.rackId};
 		}
+		this.rackIds = rackIdsTemp;
 
-		tendInterval = client.getClientPolicy().tendInterval;
-		useServicesAlternate = client.getClientPolicy().useServicesAlternate;
+		tendInterval = clientPolicy.tendInterval;
+		useServicesAlternate = clientPolicy.useServicesAlternate;
 	}
 
 	public void forceSingleNode() {
