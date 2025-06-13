@@ -246,6 +246,8 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	private final WritePolicy operatePolicyReadDefault;
 	private WritePolicy mergedOperatePolicyReadDefault;
 
+	private ClientPolicy mergedClientPolicy;
+
 	//-------------------------------------------------------
 	// Constructors
 	//-------------------------------------------------------
@@ -355,10 +357,11 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 
 		if (configPath != null) {
 			this.configProvider = new YamlConfigProvider(configPath);
-			policy = new ClientPolicy(policy, this.configProvider);
-			mergeDefaultPoliciesWithConfig();
+			mergedClientPolicy = new ClientPolicy(policy, this.configProvider);
+			mergePoliciesWithConfig();
 		}
 		else {
+			mergedClientPolicy = policy;
 			mergedReadPolicyDefault = readPolicyDefault;
 			mergedWritePolicyDefault = writePolicyDefault;
 			mergedScanPolicyDefault = scanPolicyDefault;
@@ -379,7 +382,7 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 			version = "development";
 		}
 
-		cluster = new Cluster(this, policy, hosts);
+		cluster = new Cluster(this, mergedClientPolicy, hosts);
 	}
 
 	//-------------------------------------------------------
@@ -427,6 +430,13 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	 */
 	public ConfigurationProvider getConfigProvider() {
 		return configProvider;
+	}
+
+	/**
+	 * Returns the mergedClientPolicy
+	 */
+	public ClientPolicy getClientPolicy() {
+		return mergedClientPolicy;
 	}
 
 	//-------------------------------------------------------
@@ -610,10 +620,10 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	}
 
 	/**
-	 * Merge the default policies with the config properties.  This should be done at init and every time
-	 * the config is updated
+	 * Merge the default policies and the current clientPolicy with any applicable config properties.  This should
+	 * be done at init and every time the config is updated
 	 */
-	public void mergeDefaultPoliciesWithConfig() {
+	public void mergePoliciesWithConfig() {
 		mergedReadPolicyDefault = new Policy(readPolicyDefault, configProvider);
 		mergedWritePolicyDefault = new WritePolicy(writePolicyDefault, configProvider);
 		mergedScanPolicyDefault = new ScanPolicy(scanPolicyDefault, configProvider);
@@ -626,6 +636,7 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		mergedTxnVerifyPolicyDefault = new TxnVerifyPolicy(txnVerifyPolicyDefault, configProvider);
 		mergedTxnRollPolicyDefault = new TxnRollPolicy(txnRollPolicyDefault, configProvider);
 		mergedOperatePolicyReadDefault = new WritePolicy(operatePolicyReadDefault, configProvider);
+		mergedClientPolicy = new ClientPolicy(mergedClientPolicy, configProvider);
 	}
 
 	//-------------------------------------------------------

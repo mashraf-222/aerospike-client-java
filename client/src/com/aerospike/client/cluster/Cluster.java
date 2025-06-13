@@ -1105,7 +1105,7 @@ public class Cluster implements Runnable, Closeable {
 	private void loadConfiguration() {
 		if (client.getConfigProvider().loadConfiguration()) {
 			config = client.getConfigProvider().fetchConfiguration();
-			client.mergeDefaultPoliciesWithConfig();
+			client.mergePoliciesWithConfig();
 
 			synchronized(metricsLock) {
 				metricsPolicy = mergeMetricsPolicyWithConfig(metricsPolicy);
@@ -1143,6 +1143,7 @@ public class Cluster implements Runnable, Closeable {
 				if (!config.dynamicConfiguration.dynamicMetricsConfig.enable.value) {
 					Log.warn("When a config exists, metrics can not be enabled via enableMetrics unless they" +
 							" are enabled in the config provider.");
+					this.metricsPolicy = mergeMetricsPolicyWithConfig(policy);
 					return;
 				}
 			}
