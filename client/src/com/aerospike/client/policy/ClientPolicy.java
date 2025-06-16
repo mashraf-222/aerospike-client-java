@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
-import com.aerospike.client.AerospikeException;
 import com.aerospike.client.Log;
 import com.aerospike.client.async.EventLoops;
 import com.aerospike.client.configuration.ConfigurationProvider;

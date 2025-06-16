@@ -62,6 +62,9 @@ import com.aerospike.client.util.ThreadLocalData;
 import com.aerospike.client.util.Util;
 
 public class Cluster implements Runnable, Closeable {
+	// The value 55 is used here because the server default timeout is 60
+	private final static long MAX_SOCKET_IDLE_TRIM_DEFAULT_SECS = 55;
+
 	// Client back pointer.
 	public final AerospikeClient client;
 
@@ -212,9 +215,6 @@ public class Cluster implements Runnable, Closeable {
 	private final AtomicLong commandCount = new AtomicLong();
 	private final AtomicLong delayQueueTimeoutCount = new AtomicLong();
 
-	// The value 55 is used here because the server default timeout is 60
-	private final static long MAX_SOCKET_IDLE_TRIM_DEFAULT_SECS = 55;
-
 	public Cluster(AerospikeClient client, ClientPolicy policy, Host[] hosts) {
 		this.client = client;
 		this.clusterName = policy.clusterName;
@@ -301,7 +301,7 @@ public class Cluster implements Runnable, Closeable {
 
 		connPoolsPerNode = policy.connPoolsPerNode;
 
-		applyCommonClientPolicyUpdates(policy);
+		applyCommonClientPolicyParameters(policy);
 
 		closeTimeout = policy.closeTimeout;
 		ipMap = policy.ipMap;
@@ -374,7 +374,7 @@ public class Cluster implements Runnable, Closeable {
 	 * A common place to apply certain Client Policy parameters. The allowed parameters for dynamic client config
 	 * dictate which Client Policy parameters can be applied here.
 	 */
-	private void applyCommonClientPolicyUpdates(ClientPolicy clientPolicy) {
+	private void applyCommonClientPolicyParameters(ClientPolicy clientPolicy) {
 		connectTimeout = clientPolicy.timeout;
 		errorRateWindow = clientPolicy.errorRateWindow;
 		maxErrorRate = clientPolicy.maxErrorRate;
@@ -393,15 +393,6 @@ public class Cluster implements Runnable, Closeable {
 		}
 
 		rackAware = clientPolicy.rackAware;
-		if (nodes !=  null) {
-			for (Node node : nodes) {
-				if (rackAware && node.racks == null) {
-					node.racks = new HashMap<>();
-				} else if (!rackAware && node.racks != null) {
-					node.racks = null;
-				}
-			}
-		}
 
 		int[] rackIdsTemp;
 		if (clientPolicy.rackIds != null && !clientPolicy.rackIds.isEmpty()) {
@@ -415,7 +406,20 @@ public class Cluster implements Runnable, Closeable {
 		} else {
 			rackIdsTemp = new int[] {clientPolicy.rackId};
 		}
-		this.rackIds = rackIdsTemp;
+
+		if (this.rackIds != rackIdsTemp) {
+			this.rackIds = rackIdsTemp;
+
+			if (nodes != null) {
+				for (Node node : nodes) {
+					if (rackAware && node.racks == null) {
+						node.racks = new HashMap<>();
+					} else if (!rackAware && node.racks != null) {
+						node.racks = null;
+					}
+				}
+			}
+		}
 
 		tendInterval = clientPolicy.tendInterval;
 		useServicesAlternate = clientPolicy.useServicesAlternate;
@@ -1125,7 +1129,7 @@ public class Cluster implements Runnable, Closeable {
 		if (client.getConfigProvider().loadConfiguration()) {
 			config = client.getConfigProvider().fetchConfiguration();
 			client.mergePoliciesWithConfig();
-			applyCommonClientPolicyUpdates(client.getClientPolicy());
+			applyCommonClientPolicyParameters(client.getClientPolicy());
 
 			synchronized(metricsLock) {
 				metricsPolicy = mergeMetricsPolicyWithConfig(metricsPolicy);
