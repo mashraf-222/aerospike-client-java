@@ -380,6 +380,9 @@ public class Cluster implements Runnable, Closeable {
 		maxErrorRate = clientPolicy.maxErrorRate;
 		loginTimeout = clientPolicy.loginTimeout;
 
+		if (clientPolicy.maxSocketIdle < 0) {
+			throw new AerospikeException("Invalid maxSocketIdle: " + clientPolicy.maxSocketIdle);
+		}
 		if (clientPolicy.maxSocketIdle == 0) {
 			maxSocketIdleNanosTran = 0;
 			maxSocketIdleNanosTrim = TimeUnit.SECONDS.toNanos(MAX_SOCKET_IDLE_TRIM_DEFAULT_SECS);
