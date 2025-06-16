@@ -212,6 +212,9 @@ public class Cluster implements Runnable, Closeable {
 	private final AtomicLong commandCount = new AtomicLong();
 	private final AtomicLong delayQueueTimeoutCount = new AtomicLong();
 
+	// The value 55 is used here because the server default timeout is 60
+	private final static long MAX_SOCKET_IDLE_TRIM_DEFAULT_SECS = 55;
+
 	public Cluster(AerospikeClient client, ClientPolicy policy, Host[] hosts) {
 		this.client = client;
 		this.clusterName = policy.clusterName;
@@ -282,19 +285,6 @@ public class Cluster implements Runnable, Closeable {
 			this.user = null;
 		}
 
-		if (policy.maxSocketIdle < 0) {
-			throw new AerospikeException("Invalid maxSocketIdle: " + policy.maxSocketIdle);
-		}
-
-		if (policy.maxSocketIdle == 0) {
-			maxSocketIdleNanosTran = 0;
-			maxSocketIdleNanosTrim = TimeUnit.SECONDS.toNanos(55);
-		}
-		else {
-			maxSocketIdleNanosTran = TimeUnit.SECONDS.toNanos(policy.maxSocketIdle);
-			maxSocketIdleNanosTrim = maxSocketIdleNanosTran;
-		}
-
 		minConnsPerNode = policy.minConnsPerNode;
 		maxConnsPerNode = policy.maxConnsPerNode;
 
@@ -310,30 +300,13 @@ public class Cluster implements Runnable, Closeable {
 		}
 
 		connPoolsPerNode = policy.connPoolsPerNode;
-		maxErrorRate = policy.maxErrorRate;
-		errorRateWindow = policy.errorRateWindow;
-		connectTimeout = policy.timeout;
-		loginTimeout = policy.loginTimeout;
+
+		applyCommonClientPolicyUpdates(policy);
+
 		closeTimeout = policy.closeTimeout;
-		tendInterval = policy.tendInterval;
 		ipMap = policy.ipMap;
 		keepAlive = policy.keepAlive;
 		threadFactory = Thread.ofVirtual().name("Aerospike-", 0L).factory();
-		useServicesAlternate = policy.useServicesAlternate;
-		rackAware = policy.rackAware;
-
-		if (policy.rackIds != null && policy.rackIds.size() > 0) {
-			List<Integer> list = policy.rackIds;
-			int max = list.size();
-			rackIds = new int[max];
-
-			for (int i = 0; i < max; i++) {
-				rackIds[i] = list.get(i);
-			}
-		}
-		else {
-			rackIds = new int[] {policy.rackId};
-		}
 
 		nodesMap = new HashMap<String,Node>();
 		nodes = new Node[0];
@@ -397,8 +370,11 @@ public class Cluster implements Runnable, Closeable {
 		}
 	}
 
-	private void applyClientPolicyUpdates() {
-		ClientPolicy clientPolicy = client.getClientPolicy();
+	/**
+	 * A common place to apply certain Client Policy parameters. The allowed parameters for dynamic client config
+	 * dictate which Client Policy parameters can be applied here.
+	 */
+	private void applyCommonClientPolicyUpdates(ClientPolicy clientPolicy) {
 		connectTimeout = clientPolicy.timeout;
 		errorRateWindow = clientPolicy.errorRateWindow;
 		maxErrorRate = clientPolicy.maxErrorRate;
@@ -406,7 +382,7 @@ public class Cluster implements Runnable, Closeable {
 
 		if (clientPolicy.maxSocketIdle == 0) {
 			maxSocketIdleNanosTran = 0;
-			maxSocketIdleNanosTrim = TimeUnit.SECONDS.toNanos(55);
+			maxSocketIdleNanosTrim = TimeUnit.SECONDS.toNanos(MAX_SOCKET_IDLE_TRIM_DEFAULT_SECS);
 		}
 		else {
 			maxSocketIdleNanosTran = TimeUnit.SECONDS.toNanos(clientPolicy.maxSocketIdle);
@@ -414,8 +390,14 @@ public class Cluster implements Runnable, Closeable {
 		}
 
 		rackAware = clientPolicy.rackAware;
-		for (Node node : nodes) {
-			node.racks = rackAware ? new HashMap<>() : null;
+		if (nodes !=  null) {
+			for (Node node : nodes) {
+				if (rackAware && node.racks == null) {
+					node.racks = new HashMap<>();
+				} else if (!rackAware && node.racks != null) {
+					node.racks = null;
+				}
+			}
 		}
 
 		int[] rackIdsTemp;
@@ -427,8 +409,7 @@ public class Cluster implements Runnable, Closeable {
 			for (int i = 0; i < max; i++) {
 				rackIdsTemp[i] = list.get(i);
 			}
-		}
-		else {
+		} else {
 			rackIdsTemp = new int[] {clientPolicy.rackId};
 		}
 		this.rackIds = rackIdsTemp;
@@ -1141,7 +1122,7 @@ public class Cluster implements Runnable, Closeable {
 		if (client.getConfigProvider().loadConfiguration()) {
 			config = client.getConfigProvider().fetchConfiguration();
 			client.mergePoliciesWithConfig();
-			applyClientPolicyUpdates();
+			applyCommonClientPolicyUpdates(client.getClientPolicy());
 
 			synchronized(metricsLock) {
 				metricsPolicy = mergeMetricsPolicyWithConfig(metricsPolicy);
