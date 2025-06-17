@@ -717,7 +717,7 @@ public class Cluster implements Runnable, Closeable {
 			}
 			catch (Throwable t) {
 				if (Log.warnEnabled()) {
-					Log.warn("Dynamic configuration failed: " + Util.getErrorMessage(t));
+					Log.warn("Dynamic configuration failed: " + t);
 				}
 			}
 		}

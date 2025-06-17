@@ -77,7 +77,7 @@ public class YamlConfigProvider implements ConfigurationProvider {
 			loadConfiguration();
 		}
 		catch (Throwable t) {
-			throw new AerospikeException("Failed to parse " + configPath + ": " + Util.getErrorMessage(t));
+			throw new AerospikeException("Failed to parse " + configPath + ": " + t);
 		}
 	}
 
