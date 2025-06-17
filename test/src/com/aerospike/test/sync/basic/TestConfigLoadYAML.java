@@ -51,7 +51,7 @@ public class TestConfigLoadYAML extends TestSync {
 			Configuration yamlConf = yamlLoader.fetchConfiguration();
 			assertNull(yamlConf);
 		});
-		assertTrue(ae.getMessage().contains("Unable to parse YAML file"));
+		assertTrue(ae.getMessage().contains("Failed to parse"));
 	}
 
 	@Test
@@ -63,7 +63,7 @@ public class TestConfigLoadYAML extends TestSync {
 			Configuration yamlConf = yamlLoader.fetchConfiguration();
 			assertNull(yamlConf);
 		});
-		assertTrue(ae.getMessage().contains("Unable to parse YAML file"));
+		assertTrue(ae.getMessage().contains("Failed to parse"));
 	}
 
 
