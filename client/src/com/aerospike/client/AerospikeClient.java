@@ -150,15 +150,6 @@ import com.aerospike.client.util.Util;
  */
 public class AerospikeClient implements IAerospikeClient, Closeable {
 	//-------------------------------------------------------
-	// Constants
-	//-------------------------------------------------------
-
-	private static final String CONFIG_PATH_ENV = "AEROSPIKE_CLIENT_CONFIG_URL";
-
-	// System property CONFIG_PATH_SYS_PROP is only intended to be used for testing
-	private static final String CONFIG_PATH_SYS_PROP = "AEROSPIKE_CLIENT_CONFIG_SYS_PROP";
-
-	//-------------------------------------------------------
 	// Member variables.
 	//-------------------------------------------------------
 
@@ -349,20 +340,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		this.txnRollPolicyDefault = policy.txnRollPolicyDefault;
 		this.operatePolicyReadDefault = new WritePolicy(this.readPolicyDefault);
 
-		String configPath = System.getenv(CONFIG_PATH_ENV);
+		this.configProvider = YamlConfigProvider.getConfigProvider();
 
-		if (configPath == null) {
-			configPath = System.getProperty(CONFIG_PATH_SYS_PROP);
-		}
-
-		if (configPath != null) {
-			try {
-				this.configProvider = new YamlConfigProvider(configPath);
-			} catch (AerospikeException ae) {
-				if (Log.warnEnabled()) {
-					Log.warn(ae.getMessage());
-				}
-			}
+		if (configProvider != null) {
 			mergedClientPolicy = new ClientPolicy(policy, this.configProvider);
 			mergePoliciesWithConfig();
 		}
