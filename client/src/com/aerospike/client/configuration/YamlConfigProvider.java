@@ -19,7 +19,6 @@ package com.aerospike.client.configuration;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -28,6 +27,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 
+import com.aerospike.client.AerospikeException;
 import org.yaml.snakeyaml.constructor.Constructor;
 import org.yaml.snakeyaml.error.YAMLException;
 import org.yaml.snakeyaml.LoaderOptions;
@@ -43,14 +43,14 @@ public class YamlConfigProvider implements ConfigurationProvider {
     private static final String DEFAULT_CONFIG_URL_PREFIX = "file://";
     private static Path configurationPath;
     private Configuration configuration;
-    public long lastModified;
+    private long lastModified;
 
     public YamlConfigProvider(String configEnvValue) {
         setConfigPath(configEnvValue);
         loadConfiguration();
     }
 
-    public void setConfigPath(String configEnvValue) {
+    private void setConfigPath(String configEnvValue) {
         try {
             if (!configEnvValue.startsWith(DEFAULT_CONFIG_URL_PREFIX)) {
                 configEnvValue = DEFAULT_CONFIG_URL_PREFIX + configEnvValue;
@@ -63,7 +63,7 @@ public class YamlConfigProvider implements ConfigurationProvider {
         }
     }
 
-    public static Path convertURLToPath(URL url) throws URISyntaxException {
+    private static Path convertURLToPath(URL url) throws URISyntaxException {
         URI uri = url.toURI();
         return Paths.get(uri);
     }
@@ -79,43 +79,53 @@ public class YamlConfigProvider implements ConfigurationProvider {
         return configuration;
     }
 
+    /**
+     * Attempt to load a YAML configuration from the configurationPath
+     * @return True if a YAML config file could be loaded and parsed
+     */
+
     public boolean loadConfiguration() {
         if (configurationPath == null) {
             Log.error("The YAML config file path has not been set. Check the config env variable");
             return false;
         }
-        ConfigurationTypeDescription configurationTypeDescription = new ConfigurationTypeDescription();
-        LoaderOptions yamlLoaderOptions = new LoaderOptions();
-
-        Map<Class<?>, TypeDescription> typeDescriptions = configurationTypeDescription.buildTypeDescriptions(YAML_SERIALIZERS_PATH, Configuration.class);
-        Constructor typeDescriptionConstructor = new Constructor(Configuration.class, yamlLoaderOptions);
-        Yaml yaml = new Yaml(typeDescriptionConstructor);
-
-        typeDescriptions.values().forEach(typeDescriptionConstructor::addTypeDescription);
-        try(FileInputStream fileInputStream = new FileInputStream(configurationPath.toString())) {
-            File file = new File(configurationPath.toString());
-            long newLastModified = file.lastModified();
-            if (newLastModified > lastModified) {
-                if (lastModified == 0) {
+        File file = new File(configurationPath.toString());
+        if (!file.exists()) {
+            if (Log.warnEnabled()) {
+                Log.warn("No YAML config file could be located at: " + configurationPath.toString());
+                return false;
+            }
+        }
+        long newLastModified = file.lastModified();
+        if (newLastModified > lastModified) {
+            if (lastModified == 0) {
+                if (Log.debugEnabled()) {
                     Log.debug("Initial read of YAML config file...");
-                } else {
+                }
+            } else {
+                if (Log.debugEnabled()) {
                     Log.debug("YAML config file has been modified.  Loading...");
                 }
-                lastModified = newLastModified;
-                configuration = yaml.load(fileInputStream);
-                Log.debug("Config successfully loaded.");
-                return true;
             }
-            else {
-                Log.debug("YAML config file has NOT been modified.  NOT loading.");
-            }
-        } catch (FileNotFoundException e) {
-            Log.error("YAML configuration file could not be found at: " + configurationPath + ". " + e.getMessage());
-        } catch (IOException e) {
-            Log.error("YAML Configuration file could not be read from: " + configurationPath + ". " + e.getMessage());
-        } catch (YAMLException e) {
-            Log.error("Unable to parse YAML file: " + e.getMessage());
+            lastModified = newLastModified;
         }
-        return false;
+        try {
+            ConfigurationTypeDescription configurationTypeDescription = new ConfigurationTypeDescription();
+            LoaderOptions yamlLoaderOptions = new LoaderOptions();
+            Map<Class<?>, TypeDescription> typeDescriptions = configurationTypeDescription.buildTypeDescriptions(YAML_SERIALIZERS_PATH, Configuration.class);
+            Constructor typeDescriptionConstructor = new Constructor(Configuration.class, yamlLoaderOptions);
+            typeDescriptions.values().forEach(typeDescriptionConstructor::addTypeDescription);
+            Yaml yaml = new Yaml(typeDescriptionConstructor);
+            FileInputStream fileInputStream = new FileInputStream(configurationPath.toString());
+            configuration = yaml.load(fileInputStream);
+            if (Log.debugEnabled()) {
+                Log.debug("YAML config successfully loaded.");
+            }
+            return true;
+        } catch (IOException e) {
+            throw new AerospikeException("YAML Configuration file could not be read from: " + configurationPath + ". " + e.getMessage());
+        } catch (YAMLException e) {
+            throw new AerospikeException("Unable to parse YAML file: " + e.getMessage());
+        }
     }
 }

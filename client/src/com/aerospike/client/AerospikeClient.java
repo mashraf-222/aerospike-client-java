@@ -356,7 +356,13 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (configPath != null) {
-			this.configProvider = new YamlConfigProvider(configPath);
+			try {
+				this.configProvider = new YamlConfigProvider(configPath);
+			} catch (AerospikeException ae) {
+				if (Log.warnEnabled()) {
+					Log.warn(ae.getMessage());
+				}
+			}
 			mergedClientPolicy = new ClientPolicy(policy, this.configProvider);
 			mergePoliciesWithConfig();
 		}
