@@ -64,7 +64,7 @@ import com.aerospike.client.util.Util;
 
 public class Cluster implements Runnable, Closeable {
 	private final static long MAX_SOCKET_IDLE_TRIM_DEFAULT_SECS = 55;
-	private final static long DEFAULT_CONFIG_INTERVAL_MS = 1000;
+	private final static long DEFAULT_CONFIG_INTERVAL_MS = 60000;
 
 	// Client back pointer.
 	public final AerospikeClient client;
