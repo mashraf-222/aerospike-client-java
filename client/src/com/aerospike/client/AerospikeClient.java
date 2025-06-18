@@ -340,7 +340,14 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		this.txnRollPolicyDefault = policy.txnRollPolicyDefault;
 		this.operatePolicyReadDefault = new WritePolicy(this.readPolicyDefault);
 
-		createConfigProvider();
+		String configPath = YamlConfigProvider.getConfigPath();
+
+		if (configPath != null) {
+			this.configProvider = YamlConfigProvider.getConfigProvider(configPath);
+		}
+		else {
+			this.configProvider = null;
+		}
 
 		if (configProvider != null) {
 			mergedClientPolicy = new ClientPolicy(policy, this.configProvider);
@@ -368,7 +375,7 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 			version = "development";
 		}
 
-		cluster = new Cluster(this, mergedClientPolicy, hosts);
+		cluster = new Cluster(this, mergedClientPolicy, configPath, hosts);
 	}
 
 	//-------------------------------------------------------
@@ -412,22 +419,21 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	}
 
 	/**
-	 *  Create the client's ConfigurationProvider
-	 */
-	public ConfigurationProvider createConfigProvider() {
-		this.configProvider = YamlConfigProvider.getConfigProvider();
-		return this.configProvider;
-	}
-
-	/**
-	 * Returns the client's ConfigurationProvider
+	 * Return the client's ConfigurationProvider.
 	 */
 	public ConfigurationProvider getConfigProvider() {
 		return configProvider;
 	}
 
 	/**
-	 * Returns the mergedClientPolicy
+	 * Set client's ConfigurationProvider. For internal use only.
+	 */
+	public void setConfigProvider(ConfigurationProvider provider) {
+		this.configProvider = provider;
+	}
+
+	/**
+	 * Return the mergedClientPolicy.
 	 */
 	public ClientPolicy getClientPolicy() {
 		return mergedClientPolicy;

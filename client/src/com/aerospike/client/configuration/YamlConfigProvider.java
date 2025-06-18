@@ -38,18 +38,17 @@ public class YamlConfigProvider implements ConfigurationProvider {
 	private static final String YAML_SERIALIZERS_PATH = "com.aerospike.client.configuration.serializers.";
 	private static final String DEFAULT_CONFIG_URL_PREFIX = "file://";
 
-	public static YamlConfigProvider getConfigProvider() {
+	public static String getConfigPath() {
 		String configPath = System.getenv(CONFIG_PATH_ENV);
 
 		if (configPath == null) {
-			// System property CONFIG_PATH_SYS_PROP is only intended to be used for testing
+			// System property CONFIG_PATH_SYS_PROP is only intended to be used for testing.
 			configPath = System.getProperty(CONFIG_PATH_SYS_PROP);
-
-			if (configPath == null) {
-				return null;
-			}
 		}
+		return configPath;
+	}
 
+	public static YamlConfigProvider getConfigProvider(String configPath) {
 		try {
 			return new YamlConfigProvider(configPath);
 		}

@@ -88,6 +88,6 @@ public class TestConfigLoadYAML extends TestSync {
 		assertNotNull(yamlConf);
 		assertNull(yamlConf.staticConfiguration);
 		assertNotNull(yamlConf.dynamicConfiguration);
-		assert yamlConf.dynamicConfiguration.dynamicClientConfig.tendInterval.value == 250;
+		assert yamlConf.dynamicConfiguration.dynamicClientConfig.tendInterval.value == 500;
 	}
 }
