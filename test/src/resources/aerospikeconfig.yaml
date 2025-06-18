@@ -134,8 +134,8 @@ dynamic:
     respond_all_keys: false
   metrics:
     enable: true
-    latency_shift: 0
-    latency_columns: 0
+    latency_shift: 2
+    latency_columns: 7
     labels:
       region: us-west
       zone: usw1-az3
