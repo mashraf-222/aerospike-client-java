@@ -340,7 +340,7 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		this.txnRollPolicyDefault = policy.txnRollPolicyDefault;
 		this.operatePolicyReadDefault = new WritePolicy(this.readPolicyDefault);
 
-		this.configProvider = YamlConfigProvider.getConfigProvider();
+		createConfigProvider();
 
 		if (configProvider != null) {
 			mergedClientPolicy = new ClientPolicy(policy, this.configProvider);
@@ -412,7 +412,15 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	}
 
 	/**
-	 * Returns the client's ConfigurationProvider, if any was added to the clientPolicy
+	 *  Create the client's ConfigurationProvider
+	 */
+	public ConfigurationProvider createConfigProvider() {
+		this.configProvider = YamlConfigProvider.getConfigProvider();
+		return this.configProvider;
+	}
+
+	/**
+	 * Returns the client's ConfigurationProvider
 	 */
 	public ConfigurationProvider getConfigProvider() {
 		return configProvider;

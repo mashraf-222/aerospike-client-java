@@ -47,6 +47,7 @@ import com.aerospike.client.async.NettyTlsContext;
 import com.aerospike.client.async.NioEventLoops;
 import com.aerospike.client.cluster.Node.AsyncPool;
 import com.aerospike.client.command.Buffer;
+import com.aerospike.client.configuration.ConfigurationProvider;
 import com.aerospike.client.configuration.serializers.Configuration;
 import com.aerospike.client.configuration.serializers.StaticConfiguration;
 import com.aerospike.client.configuration.serializers.staticconfig.StaticClientConfig;
@@ -63,6 +64,7 @@ import com.aerospike.client.util.Util;
 
 public class Cluster implements Runnable, Closeable {
 	private final static long MAX_SOCKET_IDLE_TRIM_DEFAULT_SECS = 55;
+	private final static long DEFAULT_CONFIG_INTERVAL_MS = 1000;
 
 	// Client back pointer.
 	public final AerospikeClient client;
@@ -180,7 +182,7 @@ public class Cluster implements Runnable, Closeable {
 	private int tendCount;
 
 	// YAML config file monitor frequency - expressed as a multiple of the tendInterval
-	public int configInterval;
+	public long configInterval;
 
 	// Has cluster instance been closed.
 	private AtomicBoolean closed;
@@ -301,6 +303,12 @@ public class Cluster implements Runnable, Closeable {
 		connPoolsPerNode = policy.connPoolsPerNode;
 
 		applyCommonClientPolicyParameters(policy, true);
+
+		if (tendInterval > 0 && DEFAULT_CONFIG_INTERVAL_MS > tendInterval) {
+			configInterval = DEFAULT_CONFIG_INTERVAL_MS / tendInterval;
+		} else {
+			configInterval = 10;
+		}
 
 		closeTimeout = policy.closeTimeout;
 		ipMap = policy.ipMap;
@@ -711,9 +719,15 @@ public class Cluster implements Runnable, Closeable {
 		}
 
 		// Check configuration file for updates.
-		if (configInterval > 0 && tendCount % configInterval == 0) {
+		if (tendCount % configInterval == 0) {
 			try {
-				loadConfiguration();
+				ConfigurationProvider cp = client.getConfigProvider();
+				if (cp == null) {
+					cp = client.createConfigProvider();
+					loadConfiguration(cp, true);
+				} else {
+					loadConfiguration(cp, false);
+				}
 			}
 			catch (Throwable t) {
 				if (Log.warnEnabled()) {
@@ -1149,9 +1163,9 @@ public class Cluster implements Runnable, Closeable {
 		}
 	}
 
-	private void loadConfiguration() {
-		if (client.getConfigProvider().loadConfiguration()) {
-			config = client.getConfigProvider().fetchConfiguration();
+	private void loadConfiguration(ConfigurationProvider cp, boolean init) {
+		if (init || cp.loadConfiguration()) {
+			config = cp.fetchConfiguration();
 			client.mergePoliciesWithConfig();
 			applyCommonClientPolicyParameters(client.getClientPolicy(), false);
 
@@ -1169,8 +1183,7 @@ public class Cluster implements Runnable, Closeable {
 						config.dynamicConfiguration.dynamicMetricsConfig.enable != null) {
 					if (!metricsEnabled && config.dynamicConfiguration.dynamicMetricsConfig.enable.value) {
 						enableMetricsInternal(metricsPolicy);
-					}
-					else if (metricsEnabled && !config.dynamicConfiguration.dynamicMetricsConfig.enable.value) {
+					} else if (metricsEnabled && !config.dynamicConfiguration.dynamicMetricsConfig.enable.value) {
 						disableMetricsInternal();
 					}
 				}
