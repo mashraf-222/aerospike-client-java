@@ -49,6 +49,8 @@ import com.aerospike.client.async.NettyTlsContext;
 import com.aerospike.client.async.NioEventLoops;
 import com.aerospike.client.cluster.Node.AsyncPool;
 import com.aerospike.client.command.Buffer;
+import com.aerospike.client.configuration.ConfigurationProvider;
+import com.aerospike.client.configuration.YamlConfigProvider;
 import com.aerospike.client.configuration.serializers.Configuration;
 import com.aerospike.client.configuration.serializers.StaticConfiguration;
 import com.aerospike.client.configuration.serializers.staticconfig.StaticClientConfig;
@@ -64,6 +66,10 @@ import com.aerospike.client.util.ThreadLocalData;
 import com.aerospike.client.util.Util;
 
 public class Cluster implements Runnable, Closeable {
+	private final static long MAX_SOCKET_IDLE_TRIM_DEFAULT_SECS = 55;
+	private final static int DEFAULT_CONFIG_INTERVAL_MS = 60000;
+	private final static int TEND_INTERVAL_MIN_MS = 250;
+
 	// Client back pointer.
 	public final AerospikeClient client;
 
@@ -132,10 +138,10 @@ public class Cluster implements Runnable, Closeable {
 	public final EventState[] eventState;
 
 	// Maximum socket idle to validate connections in command.
-	private final long maxSocketIdleNanosTran;
+	private long maxSocketIdleNanosTran;
 
 	// Maximum socket idle to trim peak connections to min connections.
-	private final long maxSocketIdleNanosTrim;
+	private long maxSocketIdleNanosTrim;
 
 	// Minimum sync connections per node.
 	protected int minConnsPerNode;
@@ -159,28 +165,31 @@ public class Cluster implements Runnable, Closeable {
 	int errorRateWindow;
 
 	// Initial connection timeout.
-	public final int connectTimeout;
+	public int connectTimeout;
 
 	// Login timeout.
-	public final int loginTimeout;
+	public int loginTimeout;
 
 	// Cluster close timeout.
 	public final int closeTimeout;
 
 	// Rack id.
-	public final int[] rackIds;
+	public int[] rackIds;
 
 	// Count of add node failures in the most recent cluster tend iteration.
 	private volatile int invalidNodeCount;
 
 	// Interval in milliseconds between cluster tends.
-	private final int tendInterval;
+	private int tendInterval;
 
 	// Cluster tend counter
 	private int tendCount;
 
-	// YAML config file monitor frequency - expressed as a multiple of the tendInterval
-	public int configInterval;
+	// Milliseconds between dynamic configuration check for file modifications.
+	public final int configInterval;
+
+	// Dynamic configuration path. If not null, dynamic configuration is enabled.
+	private final String configPath;
 
 	// Has cluster instance been closed.
 	private AtomicBoolean closed;
@@ -193,10 +202,10 @@ public class Cluster implements Runnable, Closeable {
 	private final boolean sharedThreadPool;
 
 	// Should use "services-alternate" instead of "services" in info request?
-	protected final boolean useServicesAlternate;
+	protected boolean useServicesAlternate;
 
 	// Request server rack ids.
-	final boolean rackAware;
+	boolean rackAware;
 
 	// Verify clusterName if populated.
 	public final boolean validateClusterName;
@@ -217,26 +226,13 @@ public class Cluster implements Runnable, Closeable {
 	private final AtomicLong commandCount = new AtomicLong();
 	private final AtomicLong delayQueueTimeoutCount = new AtomicLong();
 
-	public Cluster(AerospikeClient client, ClientPolicy policy, Host[] hosts) {
+	public Cluster(AerospikeClient client, ClientPolicy policy, String configPath, Host[] hosts) {
 		this.client = client;
+		this.configPath = configPath;
 		this.clusterName = policy.clusterName;
 		this.validateClusterName = policy.validateClusterName;
 		this.tlsPolicy = policy.tlsPolicy;
 		this.authMode = policy.authMode;
-
-		this.configInterval = -1;
-		if (client.getConfigProvider() != null) {
-			config = client.getConfigProvider().fetchConfiguration();
-			if (config != null) {
-				StaticConfiguration sConfig = config.getStaticConfiguration();
-				if (sConfig != null) {
-					StaticClientConfig staCC = sConfig.getStaticClientConfig();
-					if (staCC != null && staCC.configInterval != null) {
-						this.configInterval = staCC.configInterval.value;
-					}
-				}
-			}
-		}
 
 		// Default TLS names when TLS enabled.
 		if (tlsPolicy != null) {
@@ -287,19 +283,6 @@ public class Cluster implements Runnable, Closeable {
 			this.user = null;
 		}
 
-		if (policy.maxSocketIdle < 0) {
-			throw new AerospikeException("Invalid maxSocketIdle: " + policy.maxSocketIdle);
-		}
-
-		if (policy.maxSocketIdle == 0) {
-			maxSocketIdleNanosTran = 0;
-			maxSocketIdleNanosTrim = TimeUnit.SECONDS.toNanos(55);
-		}
-		else {
-			maxSocketIdleNanosTran = TimeUnit.SECONDS.toNanos(policy.maxSocketIdle);
-			maxSocketIdleNanosTrim = maxSocketIdleNanosTran;
-		}
-
 		minConnsPerNode = policy.minConnsPerNode;
 		maxConnsPerNode = policy.maxConnsPerNode;
 
@@ -315,12 +298,26 @@ public class Cluster implements Runnable, Closeable {
 		}
 
 		connPoolsPerNode = policy.connPoolsPerNode;
-		maxErrorRate = policy.maxErrorRate;
-		errorRateWindow = policy.errorRateWindow;
-		connectTimeout = policy.timeout;
-		loginTimeout = policy.loginTimeout;
+
+		int configIntervalDuration = DEFAULT_CONFIG_INTERVAL_MS;
+
+		if (client.getConfigProvider() != null) {
+			config = client.getConfigProvider().fetchConfiguration();
+			if (config != null) {
+				StaticConfiguration sConfig = config.getStaticConfiguration();
+				if (sConfig != null) {
+					StaticClientConfig staCC = sConfig.getStaticClientConfig();
+					if (staCC != null && staCC.configInterval != null) {
+						configIntervalDuration = staCC.configInterval.value;
+					}
+				}
+			}
+		}
+		this.configInterval = configIntervalDuration;
+
+		applyCommonClientPolicyParameters(policy, true);
+
 		closeTimeout = policy.closeTimeout;
-		tendInterval = policy.tendInterval;
 		ipMap = policy.ipMap;
 		keepAlive = policy.keepAlive;
 
@@ -331,21 +328,6 @@ public class Cluster implements Runnable, Closeable {
 			threadPool = policy.threadPool;
 		}
 		sharedThreadPool = policy.sharedThreadPool;
-		useServicesAlternate = policy.useServicesAlternate;
-		rackAware = policy.rackAware;
-
-		if (policy.rackIds != null && policy.rackIds.size() > 0) {
-			List<Integer> list = policy.rackIds;
-			int max = list.size();
-			rackIds = new int[max];
-
-			for (int i = 0; i < max; i++) {
-				rackIds[i] = list.get(i);
-			}
-		}
-		else {
-			rackIds = new int[] {policy.rackId};
-		}
 
 		nodesMap = new HashMap<String,Node>();
 		nodes = new Node[0];
@@ -407,6 +389,96 @@ public class Cluster implements Runnable, Closeable {
 		else {
 			initTendThread(policy.failIfNotConnected);
 		}
+	}
+
+	/**
+	 * A common place to apply certain Client Policy parameters. The allowed parameters for dynamic client config
+	 * dictate which Client Policy parameters can be applied here.
+	 */
+	private void applyCommonClientPolicyParameters(ClientPolicy clientPolicy, boolean init) {
+		if (clientPolicy.tendInterval < TEND_INTERVAL_MIN_MS) {
+			throw new AerospikeException("Invalid tendInterval: " + clientPolicy.tendInterval + ". min: " +
+				TEND_INTERVAL_MIN_MS);
+		}
+
+		if (configInterval < clientPolicy.tendInterval) {
+			throw new AerospikeException("Dynamic config interval " + configInterval +
+				" must be greater or equal to the tend interval " + clientPolicy.tendInterval);
+		}
+
+		tendInterval = clientPolicy.tendInterval;
+		connectTimeout = clientPolicy.timeout;
+		errorRateWindow = clientPolicy.errorRateWindow;
+		maxErrorRate = clientPolicy.maxErrorRate;
+		loginTimeout = clientPolicy.loginTimeout;
+
+		if (clientPolicy.maxSocketIdle < 0) {
+			throw new AerospikeException("Invalid maxSocketIdle: " + clientPolicy.maxSocketIdle);
+		}
+		if (clientPolicy.maxSocketIdle == 0) {
+			maxSocketIdleNanosTran = 0;
+			maxSocketIdleNanosTrim = TimeUnit.SECONDS.toNanos(MAX_SOCKET_IDLE_TRIM_DEFAULT_SECS);
+		}
+		else {
+			maxSocketIdleNanosTran = TimeUnit.SECONDS.toNanos(clientPolicy.maxSocketIdle);
+			maxSocketIdleNanosTrim = maxSocketIdleNanosTran;
+		}
+
+		useServicesAlternate = clientPolicy.useServicesAlternate;
+		rackAware = clientPolicy.rackAware;
+
+		if (init || !rackIdsEqual(clientPolicy.rackIds, this.rackIds)) {
+			int[] rackIdsTemp;
+
+			if (clientPolicy.rackIds != null && !clientPolicy.rackIds.isEmpty()) {
+				List<Integer> list = clientPolicy.rackIds;
+				int max = list.size();
+				rackIdsTemp = new int[max];
+
+				for (int i = 0; i < max; i++) {
+					rackIdsTemp[i] = list.get(i);
+				}
+			}
+			else {
+				rackIdsTemp = new int[] {clientPolicy.rackId};
+			}
+
+			this.rackIds = rackIdsTemp;
+
+			if (!init) {
+				for (Node node : nodes) {
+					if (rackAware && node.racks == null) {
+						node.racks = new HashMap<>();
+					}
+					else if (!rackAware && node.racks != null) {
+						node.racks = null;
+					}
+				}
+			}
+		}
+	}
+
+	private static final boolean rackIdsEqual(List<Integer> racks1, int[] racks2) {
+		if (racks1 == null) {
+			return racks2 == null;
+		}
+		else if (racks2 == null) {
+			return false;
+		}
+
+		if (racks1.size() != racks2.length) {
+			return false;
+		}
+
+		for (int i = 0; i < racks2.length; i++) {
+			int r1 = racks1.get(i);
+			int r2 = racks2[i];
+
+			if (r1 != r2) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	public void forceSingleNode() {
@@ -670,14 +742,18 @@ public class Cluster implements Runnable, Closeable {
 			}
 		}
 
+		// Convert config interval from a millisecond duration to the number of cluster tend
+		// iterations.
+		int interval = configInterval / tendInterval;
+
 		// Check configuration file for updates.
-		if (configInterval > 0 && tendCount % configInterval == 0) {
+		if (configPath != null && tendCount % interval == 0) {
 			try {
 				loadConfiguration();
 			}
 			catch (Throwable t) {
 				if (Log.warnEnabled()) {
-					Log.warn("Dynamic configuration failed: " + Util.getErrorMessage(t));
+					Log.warn("Dynamic configuration failed: " + t);
 				}
 			}
 		}
@@ -1103,28 +1179,45 @@ public class Cluster implements Runnable, Closeable {
 	}
 
 	private void loadConfiguration() {
-		if (client.getConfigProvider().loadConfiguration()) {
-			config = client.getConfigProvider().fetchConfiguration();
-			client.mergePoliciesWithConfig();
+		ConfigurationProvider provider = client.getConfigProvider();
 
-			synchronized(metricsLock) {
-				metricsPolicy = mergeMetricsPolicyWithConfig(metricsPolicy);
+		if (provider == null) {
+			provider = YamlConfigProvider.getConfigProvider(configPath);
 
-				if (metricsEnabled && metricsPolicy.isMetricsRestartRequired()) {
-					disableMetricsInternal();
+			if (provider == null) {
+				// Failed to read configuration file. Warning was already logged.
+				return;
+			}
+
+			client.setConfigProvider(provider);
+		}
+		else {
+			if (!provider.loadConfiguration()) {
+				return;
+			}
+		}
+
+		config = provider.fetchConfiguration();
+		client.mergePoliciesWithConfig();
+		applyCommonClientPolicyParameters(client.getClientPolicy(), false);
+
+		synchronized(metricsLock) {
+			metricsPolicy = mergeMetricsPolicyWithConfig(metricsPolicy);
+
+			if (metricsEnabled && metricsPolicy.isMetricsRestartRequired()) {
+				disableMetricsInternal();
+				enableMetricsInternal(metricsPolicy);
+				metricsPolicy.setMetricsRestartRequired(false);
+				return;
+			}
+
+			if (config != null && config.hasMetrics() &&
+					config.dynamicConfiguration.dynamicMetricsConfig.enable != null) {
+				if (!metricsEnabled && config.dynamicConfiguration.dynamicMetricsConfig.enable.value) {
 					enableMetricsInternal(metricsPolicy);
-					metricsPolicy.setMetricsRestartRequired(false);
-					return;
 				}
-
-				if (config != null && config.hasMetrics() &&
-						config.dynamicConfiguration.dynamicMetricsConfig.enable != null) {
-					if (!metricsEnabled && config.dynamicConfiguration.dynamicMetricsConfig.enable.value) {
-						enableMetricsInternal(metricsPolicy);
-					}
-					else if (metricsEnabled && !config.dynamicConfiguration.dynamicMetricsConfig.enable.value) {
-						disableMetricsInternal();
-					}
+				else if (metricsEnabled && !config.dynamicConfiguration.dynamicMetricsConfig.enable.value) {
+					disableMetricsInternal();
 				}
 			}
 		}

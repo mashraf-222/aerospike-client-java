@@ -150,15 +150,6 @@ import com.aerospike.client.util.Util;
  */
 public class AerospikeClient implements IAerospikeClient, Closeable {
 	//-------------------------------------------------------
-	// Constants
-	//-------------------------------------------------------
-
-	private static final String CONFIG_PATH_ENV = "AEROSPIKE_CLIENT_CONFIG_URL";
-
-	// System property CONFIG_PATH_SYS_PROP is only intended to be used for testing
-	private static final String CONFIG_PATH_SYS_PROP = "AEROSPIKE_CLIENT_CONFIG_SYS_PROP";
-
-	//-------------------------------------------------------
 	// Member variables.
 	//-------------------------------------------------------
 
@@ -349,14 +340,16 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		this.txnRollPolicyDefault = policy.txnRollPolicyDefault;
 		this.operatePolicyReadDefault = new WritePolicy(this.readPolicyDefault);
 
-		String configPath = System.getenv(CONFIG_PATH_ENV);
-
-		if (configPath == null) {
-			configPath = System.getProperty(CONFIG_PATH_SYS_PROP);
-		}
+		String configPath = YamlConfigProvider.getConfigPath();
 
 		if (configPath != null) {
-			this.configProvider = new YamlConfigProvider(configPath);
+			this.configProvider = YamlConfigProvider.getConfigProvider(configPath);
+		}
+		else {
+			this.configProvider = null;
+		}
+
+		if (configProvider != null) {
 			mergedClientPolicy = new ClientPolicy(policy, this.configProvider);
 			mergePoliciesWithConfig();
 		}
@@ -382,7 +375,7 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 			version = "development";
 		}
 
-		cluster = new Cluster(this, mergedClientPolicy, hosts);
+		cluster = new Cluster(this, mergedClientPolicy, configPath, hosts);
 	}
 
 	//-------------------------------------------------------
@@ -426,14 +419,21 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	}
 
 	/**
-	 * Returns the client's ConfigurationProvider, if any was added to the clientPolicy
+	 * Return the client's ConfigurationProvider.
 	 */
 	public ConfigurationProvider getConfigProvider() {
 		return configProvider;
 	}
 
 	/**
-	 * Returns the mergedClientPolicy
+	 * Set client's ConfigurationProvider. For internal use only.
+	 */
+	public void setConfigProvider(ConfigurationProvider provider) {
+		this.configProvider = provider;
+	}
+
+	/**
+	 * Return the mergedClientPolicy.
 	 */
 	public ClientPolicy getClientPolicy() {
 		return mergedClientPolicy;
