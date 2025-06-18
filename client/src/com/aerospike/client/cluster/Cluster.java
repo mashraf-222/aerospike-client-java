@@ -183,8 +183,8 @@ public class Cluster implements Runnable, Closeable {
 	// Cluster tend counter
 	private int tendCount;
 
-	// Cluster tend iterations between dynamic configuration check for file modifications.
-	public int configInterval;
+	// Milliseconds between dynamic configuration check for file modifications.
+	public final int configInterval;
 
 	// Dynamic configuration path. If not null, dynamic configuration is enabled.
 	private final String configPath;
@@ -294,8 +294,6 @@ public class Cluster implements Runnable, Closeable {
 
 		connPoolsPerNode = policy.connPoolsPerNode;
 
-		applyCommonClientPolicyParameters(policy, true);
-
 		int configIntervalDuration = DEFAULT_CONFIG_INTERVAL_MS;
 
 		if (client.getConfigProvider() != null) {
@@ -310,20 +308,9 @@ public class Cluster implements Runnable, Closeable {
 				}
 			}
 		}
+		this.configInterval = configIntervalDuration;
 
-		if (tendInterval < TEND_INTERVAL_MIN_MS) {
-			throw new AerospikeException("Invalid tendInterval: " + tendInterval + ". min: " +
-				TEND_INTERVAL_MIN_MS);
-		}
-
-		if (configIntervalDuration < tendInterval) {
-			throw new AerospikeException("Dynamic config interval " + configIntervalDuration +
-				" must be greater or equal to the tend interval " + tendInterval);
-		}
-
-		// Convert config interval from a millisecond duration to the number of cluster tend
-		// iterations.
-		configInterval = configIntervalDuration / tendInterval;
+		applyCommonClientPolicyParameters(policy, true);
 
 		closeTimeout = policy.closeTimeout;
 		ipMap = policy.ipMap;
@@ -397,6 +384,17 @@ public class Cluster implements Runnable, Closeable {
 	 * dictate which Client Policy parameters can be applied here.
 	 */
 	private void applyCommonClientPolicyParameters(ClientPolicy clientPolicy, boolean init) {
+		if (clientPolicy.tendInterval < TEND_INTERVAL_MIN_MS) {
+			throw new AerospikeException("Invalid tendInterval: " + clientPolicy.tendInterval + ". min: " +
+				TEND_INTERVAL_MIN_MS);
+		}
+
+		if (configInterval < clientPolicy.tendInterval) {
+			throw new AerospikeException("Dynamic config interval " + configInterval +
+				" must be greater or equal to the tend interval " + clientPolicy.tendInterval);
+		}
+
+		tendInterval = clientPolicy.tendInterval;
 		connectTimeout = clientPolicy.timeout;
 		errorRateWindow = clientPolicy.errorRateWindow;
 		maxErrorRate = clientPolicy.maxErrorRate;
@@ -414,7 +412,6 @@ public class Cluster implements Runnable, Closeable {
 			maxSocketIdleNanosTrim = maxSocketIdleNanosTran;
 		}
 
-		tendInterval = clientPolicy.tendInterval;
 		useServicesAlternate = clientPolicy.useServicesAlternate;
 		rackAware = clientPolicy.rackAware;
 
@@ -733,8 +730,12 @@ public class Cluster implements Runnable, Closeable {
 			}
 		}
 
+		// Convert config interval from a millisecond duration to the number of cluster tend
+		// iterations.
+		int interval = configInterval / tendInterval;
+
 		// Check configuration file for updates.
-		if (configPath != null && tendCount % configInterval == 0) {
+		if (configPath != null && tendCount % interval == 0) {
 			try {
 				loadConfiguration();
 			}
