@@ -74,7 +74,7 @@ public class Node implements Closeable {
 	private Connection tendConnection;
 	private byte[] sessionToken;
 	private long sessionExpiration;
-	private volatile Map<String,Integer> racks;
+	protected volatile Map<String,Integer> racks;
 	private volatile NodeMetrics metrics;
 	final AtomicInteger connsOpened;
 	final AtomicInteger connsClosed;

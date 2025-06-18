@@ -3,7 +3,7 @@
 
 static:
   client:
-    config_interval: 10
+    config_interval: 5000
     max_connections_per_node: 99
     min_connections_per_node: 1
     async_max_connections_per_node: 50
@@ -19,7 +19,7 @@ dynamic:
     max_socket_idle: 29
     rack_aware: true
     rack_ids: [2,4,6,8]
-    tend_interval: 250
+    tend_interval: 500
     use_service_alternative: true
   read:
     read_mode_ap: ONE
@@ -134,8 +134,8 @@ dynamic:
     respond_all_keys: false
   metrics:
     enable: true
-    latency_shift: 0
-    latency_columns: 0
+    latency_shift: 2
+    latency_columns: 7
     labels:
       region: us-west
       zone: usw1-az3

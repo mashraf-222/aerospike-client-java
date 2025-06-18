@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
+import com.aerospike.client.Log;
 import com.aerospike.client.async.EventLoops;
 import com.aerospike.client.configuration.ConfigurationProvider;
 import com.aerospike.client.configuration.serializers.Configuration;
@@ -415,6 +416,9 @@ public class ClientPolicy {
 	 */
 	public ClientPolicy(ClientPolicy other, ConfigurationProvider configProvider) {
 		this(other);
+		if (configProvider == null) {
+			return;
+		}
 		Configuration config = configProvider.fetchConfiguration();
 		if (config == null) {
 			return;
@@ -463,7 +467,11 @@ public class ClientPolicy {
 			this.loginTimeout = dynCC.loginTimeout.value;
 		}
 		if (dynCC.maxSocketIdle != null) {
-			this.maxSocketIdle = dynCC.maxSocketIdle.value;
+			if (dynCC.maxSocketIdle.value < 0) {
+				Log.error("Invalid maxSocketIdle in config: " + dynCC.maxSocketIdle.value);
+			} else {
+				this.maxSocketIdle = dynCC.maxSocketIdle.value;
+			}
 		}
 		if (dynCC.rackAware != null) {
 			this.rackAware = dynCC.rackAware.value;
