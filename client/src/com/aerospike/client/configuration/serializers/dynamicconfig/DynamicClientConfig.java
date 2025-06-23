@@ -21,9 +21,11 @@ import java.util.List;
 
 import com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops.BooleanProperty;
 import com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops.IntProperty;
+import com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops.StringProperty;
 import com.aerospike.client.Log;
 
 public class DynamicClientConfig {
+    public StringProperty appId;
     public IntProperty timeout;
     public IntProperty errorRateWindow;
     public IntProperty maxErrorRate;
@@ -36,6 +38,8 @@ public class DynamicClientConfig {
     public BooleanProperty useServiceAlternative;
 
     public DynamicClientConfig() {}
+
+    public void setAppId(StringProperty appId) { this.appId = appId; }
 
     public void setTimeout(IntProperty timeout) { this.timeout = timeout; }
 
@@ -56,6 +60,8 @@ public class DynamicClientConfig {
     public void setTendInterval(IntProperty tendInterval) { this.tendInterval = tendInterval; }
 
     public void setUseServiceAlternative(BooleanProperty useServiceAlternative) { this.useServiceAlternative = useServiceAlternative; }
+
+    public StringProperty getAppId() { return appId; }
 
     public List<Integer> getRackIds() { return rackIds; }
 
@@ -81,9 +87,10 @@ public class DynamicClientConfig {
     public String toString() {
         StringBuffer propsString = new StringBuffer("{");
         try {
+            propsString.append(" app_id=").append(appId.value).append(", ");
             propsString.append(" timeout=").append(timeout.value).append(", ");
             propsString.append(" error_rate_window=").append(errorRateWindow.value).append(", ");
-            propsString.append(" maxErrorRate=").append(maxErrorRate.value).append(", ");
+            propsString.append(" max_error_rate=").append(maxErrorRate.value).append(", ");
             propsString.append(" fail_if_not_connected=").append(failIfNotConnected.value).append(", ");
             propsString.append(" login_timeout=").append(loginTimeout.value).append(", ");
             propsString.append(" max_socket_idle=").append(maxSocketIdle.value).append(", ");

@@ -35,6 +35,7 @@ import com.aerospike.client.cluster.Cluster;
 import com.aerospike.client.cluster.ConnectionStats;
 import com.aerospike.client.cluster.Node;
 import com.aerospike.client.command.Buffer;
+import com.aerospike.client.policy.ClientPolicy;
 import com.aerospike.client.util.Util;
 
 /**
@@ -157,6 +158,8 @@ public final class MetricsWriter implements MetricsListener {
 
 	private void writeCluster(Cluster cluster) {
 		MetricsPolicy policy = cluster.getMetricsPolicy();
+		ClientPolicy clientPolicy = cluster.client.getClientPolicy();
+		String appId = clientPolicy.appId;
 		String clusterName = cluster.getClusterName();
 
 		if (clusterName == null) {
@@ -175,8 +178,8 @@ public final class MetricsWriter implements MetricsListener {
 		sb.append(',');
 		sb.append(cluster.client.getVersion());
 		sb.append(',');
-		if (policy.appId != null) {
-			sb.append(policy.appId);
+		if (appId != null) {
+			sb.append(appId);
 		} else {
 			byte[] userBytes = cluster.getUser();
 			if (userBytes != null && userBytes.length > 0) {

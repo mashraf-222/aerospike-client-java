@@ -39,6 +39,11 @@ public class Configuration {
         this.dynamicConfiguration = dynamicConfiguration;
     }
 
+    public boolean hasMetrics() {
+        return dynamicConfiguration != null &&
+                dynamicConfiguration.dynamicMetricsConfig != null;
+    }
+
     public boolean hasDBWCsendKey() {
 		return dynamicConfiguration != null &&
 				dynamicConfiguration.dynamicBatchWriteConfig != null &&
@@ -55,6 +60,14 @@ public class Configuration {
         return dynamicConfiguration != null &&
                 dynamicConfiguration.dynamicBatchDeleteConfig != null &&
                 dynamicConfiguration.dynamicBatchDeleteConfig.sendKey != null;
+    }
+
+    public String getAppID() {
+        if (dynamicConfiguration.dynamicClientConfig.getAppId() != null) {
+            return dynamicConfiguration.dynamicClientConfig.appId.value;
+        } else {
+            return null;
+        }
     }
 
     @Override

@@ -150,15 +150,6 @@ import com.aerospike.client.util.Util;
  */
 public class AerospikeClient implements IAerospikeClient, Closeable {
 	//-------------------------------------------------------
-	// Constants
-	//-------------------------------------------------------
-
-	private static final String CONFIG_PATH_ENV = "AEROSPIKE_CLIENT_CONFIG_URL";
-
-	// System property CONFIG_PATH_SYS_PROP is only intended to be used for testing
-	private static final String CONFIG_PATH_SYS_PROP = "AEROSPIKE_CLIENT_CONFIG_SYS_PROP";
-
-	//-------------------------------------------------------
 	// Member variables.
 	//-------------------------------------------------------
 
@@ -245,6 +236,8 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 
 	private final WritePolicy operatePolicyReadDefault;
 	private WritePolicy mergedOperatePolicyReadDefault;
+
+	private ClientPolicy mergedClientPolicy;
 
 	//-------------------------------------------------------
 	// Constructors
@@ -347,18 +340,21 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		this.txnRollPolicyDefault = policy.txnRollPolicyDefault;
 		this.operatePolicyReadDefault = new WritePolicy(this.readPolicyDefault);
 
-		String configPath = System.getenv(CONFIG_PATH_ENV);
-
-		if (configPath == null) {
-			configPath = System.getProperty(CONFIG_PATH_SYS_PROP);
-		}
+		String configPath = YamlConfigProvider.getConfigPath();
 
 		if (configPath != null) {
-			this.configProvider = new YamlConfigProvider(configPath);
-			policy = new ClientPolicy(policy, this.configProvider);
-			mergeDefaultPoliciesWithConfig();
+			this.configProvider = YamlConfigProvider.getConfigProvider(configPath);
 		}
 		else {
+			this.configProvider = null;
+		}
+
+		if (configProvider != null) {
+			mergedClientPolicy = new ClientPolicy(policy, this.configProvider);
+			mergePoliciesWithConfig();
+		}
+		else {
+			mergedClientPolicy = policy;
 			mergedReadPolicyDefault = readPolicyDefault;
 			mergedWritePolicyDefault = writePolicyDefault;
 			mergedScanPolicyDefault = scanPolicyDefault;
@@ -379,7 +375,7 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 			version = "development";
 		}
 
-		cluster = new Cluster(this, policy, hosts);
+		cluster = new Cluster(this, mergedClientPolicy, configPath, hosts);
 	}
 
 	//-------------------------------------------------------
@@ -423,10 +419,24 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	}
 
 	/**
-	 * Returns the client's ConfigurationProvider, if any was added to the clientPolicy
+	 * Return the client's ConfigurationProvider.
 	 */
 	public ConfigurationProvider getConfigProvider() {
 		return configProvider;
+	}
+
+	/**
+	 * Set client's ConfigurationProvider. For internal use only.
+	 */
+	public void setConfigProvider(ConfigurationProvider provider) {
+		this.configProvider = provider;
+	}
+
+	/**
+	 * Return the mergedClientPolicy.
+	 */
+	public ClientPolicy getClientPolicy() {
+		return mergedClientPolicy;
 	}
 
 	//-------------------------------------------------------
@@ -610,10 +620,10 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	}
 
 	/**
-	 * Merge the default policies with the config properties.  This should be done at init and every time
-	 * the config is updated
+	 * Merge the default policies and the current clientPolicy with any applicable config properties.  This should
+	 * be done at init and every time the config is updated
 	 */
-	public void mergeDefaultPoliciesWithConfig() {
+	public void mergePoliciesWithConfig() {
 		mergedReadPolicyDefault = new Policy(readPolicyDefault, configProvider);
 		mergedWritePolicyDefault = new WritePolicy(writePolicyDefault, configProvider);
 		mergedScanPolicyDefault = new ScanPolicy(scanPolicyDefault, configProvider);
@@ -626,6 +636,7 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		mergedTxnVerifyPolicyDefault = new TxnVerifyPolicy(txnVerifyPolicyDefault, configProvider);
 		mergedTxnRollPolicyDefault = new TxnRollPolicy(txnRollPolicyDefault, configProvider);
 		mergedOperatePolicyReadDefault = new WritePolicy(operatePolicyReadDefault, configProvider);
+		mergedClientPolicy = new ClientPolicy(mergedClientPolicy, configProvider);
 	}
 
 	//-------------------------------------------------------

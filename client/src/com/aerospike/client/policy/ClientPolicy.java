@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
+import com.aerospike.client.Log;
 import com.aerospike.client.async.EventLoops;
 import com.aerospike.client.configuration.ConfigurationProvider;
 import com.aerospike.client.configuration.serializers.Configuration;
@@ -405,11 +406,19 @@ public class ClientPolicy {
 	public List<Integer> rackIds;
 
 	/**
+	 * Application ID. Metrics are loosely tied to this. Changing the appId will not reset the metric counters.
+	 */
+	public String appId;
+
+	/**
 	 * Copy client policy from another client policy AND override certain policy attributes if they exist in the
 	 * configProvider.
 	 */
 	public ClientPolicy(ClientPolicy other, ConfigurationProvider configProvider) {
 		this(other);
+		if (configProvider == null) {
+			return;
+		}
 		Configuration config = configProvider.fetchConfiguration();
 		if (config == null) {
 			return;
@@ -439,6 +448,9 @@ public class ClientPolicy {
 		if (dynCC == null) {
 			return;
 		}
+		if (dynCC.appId != null) {
+			this.appId = dynCC.appId.value;
+		}
 		if (dynCC.timeout != null) {
 			this.timeout = dynCC.timeout.value;
 		}
@@ -455,7 +467,11 @@ public class ClientPolicy {
 			this.loginTimeout = dynCC.loginTimeout.value;
 		}
 		if (dynCC.maxSocketIdle != null) {
-			this.maxSocketIdle = dynCC.maxSocketIdle.value;
+			if (dynCC.maxSocketIdle.value < 0) {
+				Log.error("Invalid maxSocketIdle in config: " + dynCC.maxSocketIdle.value);
+			} else {
+				this.maxSocketIdle = dynCC.maxSocketIdle.value;
+			}
 		}
 		if (dynCC.rackAware != null) {
 			this.rackAware = dynCC.rackAware.value;
@@ -516,6 +532,7 @@ public class ClientPolicy {
 		this.rackAware = other.rackAware;
 		this.rackId = other.rackId;
 		this.rackIds = (other.rackIds != null)? new ArrayList<Integer>(other.rackIds) : null;
+		this.appId = other.appId;
 	}
 
 	/**
@@ -688,5 +705,9 @@ public class ClientPolicy {
 
 	public void setRackIds(List<Integer> rackIds) {
 		this.rackIds = rackIds;
+	}
+
+	public void setAppId(String appId) {
+		this.appId = appId;
 	}
 }
