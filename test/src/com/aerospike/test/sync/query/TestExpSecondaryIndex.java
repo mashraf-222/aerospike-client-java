@@ -44,7 +44,7 @@ import com.aerospike.test.sync.TestSync;
 
 public class TestExpSecondaryIndex extends TestSync {
 	private static final String setName = "exp_SI_test_set";
-	private static final String indexName = "exp_SI_test_idx";
+	private static final String indexName = "εχπ_ΣΙ_τεστ_ιδχ";
 	private static final List<String> countries =  List.of("Australia", "Canada", "USA");
 	private static final Expression exp = Exp.build(
 		// IF (age >= 18 AND country IN ["Australia, "Canada", "USA"])
