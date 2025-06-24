@@ -2006,7 +2006,7 @@ public class Command {
 
 			indexName = filter.getIndexName();
 			if (indexName != null) {
-				dataOffset += FIELD_HEADER_SIZE + indexName.length();
+				dataOffset += FIELD_HEADER_SIZE + Buffer.estimateSizeUtf8(indexName);
 				fieldCount++;
 			}
 

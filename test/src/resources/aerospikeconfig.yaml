@@ -133,7 +133,7 @@ dynamic:
     allow_inline_ssd: true
     respond_all_keys: false
   metrics:
-    enable: true
+    enable: false
     latency_shift: 2
     latency_columns: 7
     labels:
