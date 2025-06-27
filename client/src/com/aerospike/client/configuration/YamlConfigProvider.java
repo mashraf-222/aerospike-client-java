@@ -21,8 +21,10 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.net.URI;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Map;
 
+import com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops.StringProperty;
 import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.TypeDescription;
 import org.yaml.snakeyaml.Yaml;
@@ -37,6 +39,11 @@ public class YamlConfigProvider implements ConfigurationProvider {
 	private static final String CONFIG_PATH_SYS_PROP = "AEROSPIKE_CLIENT_CONFIG_SYS_PROP";
 	private static final String YAML_SERIALIZERS_PATH = "com.aerospike.client.configuration.serializers.";
 	private static final String DEFAULT_CONFIG_URL_PREFIX = "file://";
+	private static final List<String> SUPPORTED_SCHEMA_VERSIONS= List.of("1.0.0");
+
+	public static List<String> getSupportedVersions() {
+		return SUPPORTED_SCHEMA_VERSIONS;
+	}
 
 	public static String getConfigPath() {
 		String configPath = System.getenv(CONFIG_PATH_ENV);
@@ -65,6 +72,9 @@ public class YamlConfigProvider implements ConfigurationProvider {
 	private long lastModified;
 
 	public YamlConfigProvider(String configPath) {
+		if (Log.debugEnabled()) {
+			Log.debug("Supported YAML config schema versions: " +  getSupportedVersions());
+		}
 		try {
 			if (!configPath.startsWith(DEFAULT_CONFIG_URL_PREFIX)) {
 				configPath = DEFAULT_CONFIG_URL_PREFIX + configPath;
@@ -126,6 +136,10 @@ public class YamlConfigProvider implements ConfigurationProvider {
 			configuration = yaml.load(fileInputStream);
 			lastModified = newLastModified;
 
+			StringProperty configVersion = configuration.getVersion();
+			if (configVersion == null || !getSupportedVersions().contains(configVersion.value) ) {
+				throw new AerospikeException("YAML config must contain a valid version field.");
+			}
 			if (Log.debugEnabled()) {
 				Log.debug("YAML config successfully loaded.");
 			}

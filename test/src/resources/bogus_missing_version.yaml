@@ -1,7 +1,6 @@
 # A config YAML that is intended only for test purposes.  Property keys can be used as a template, but property values
 # should not be taken as "typical" and should not be used in aggregate outside of testing.
 
-version: 1.0.0
 static:
   client:
     config_interval: 5000

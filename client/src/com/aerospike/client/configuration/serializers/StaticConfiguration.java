@@ -17,6 +17,7 @@
 
 package com.aerospike.client.configuration.serializers;
 
+import com.aerospike.client.Log;
 import com.aerospike.client.configuration.serializers.staticconfig.*;
 
 public class StaticConfiguration {
@@ -34,9 +35,12 @@ public class StaticConfiguration {
 
     @Override
     public String toString() {
-        return "{" +
-            " \n\t\t"+ getStaticClientConfig() +
-            "\n\t}";
+        StringBuffer propsString = new StringBuffer();
+        try {
+            propsString.append(getStaticClientConfig());
+        } catch ( Exception e) {
+            Log.error(e.toString());
+        }
+        return propsString.toString();
     }
-
 }
