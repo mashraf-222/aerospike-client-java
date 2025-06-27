@@ -37,7 +37,7 @@ public class Configuration {
 
     public void setVersion(StringProperty version) {
         List<String> supportedVersions = YamlConfigProvider.getSupportedVersions();
-        if (version == null ) {
+        if (version == null) {
             Log.error("Empty YAML config schema version. This client supports these schema versions: " +
                     supportedVersions);
         } else if (!supportedVersions.contains(version.value)) {
@@ -98,13 +98,13 @@ public class Configuration {
     public String toString() {
         StringBuffer propsString = new StringBuffer("{");
         try {
-            if ( getVersion() != null ) {
+            if (getVersion() != null) {
                 propsString.append("\n\tversion= ").append(getVersion().value);
             }
             propsString.append("\n\tstatic= ").append(getStaticConfiguration());
             propsString.append("\n\tdynamic= ").append(getDynamicConfiguration());
             propsString.append("\n");
-        } catch ( Exception e) {
+        } catch (Exception e) {
             if( Log.warnEnabled() ) {
                 Log.warn(e.toString());
             }
