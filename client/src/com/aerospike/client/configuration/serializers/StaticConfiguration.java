@@ -38,7 +38,7 @@ public class StaticConfiguration {
         StringBuffer propsString = new StringBuffer();
         try {
             propsString.append(getStaticClientConfig());
-        } catch ( Exception e) {
+        } catch (Exception e) {
             Log.error(e.toString());
         }
         return propsString.toString();
