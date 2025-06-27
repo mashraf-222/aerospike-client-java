@@ -91,7 +91,6 @@ public class TestConfigLoadYAML extends TestSync {
 			Configuration yamlConf = yamlLoader.fetchConfiguration();
 			assertNull(yamlConf);
 		});
-		//YamlConfigProvider yamlLoader = new YamlConfigProvider(yamlURL);
 		assertTrue(ae.getMessage().contains("Failed to parse"));
 		assertTrue(ae.getMessage().contains("must contain a valid version field"));
 	}
