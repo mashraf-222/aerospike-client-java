@@ -41,8 +41,10 @@ public class Configuration {
             Log.error("Empty YAML config schema version. This client supports these schema versions: " +
                     supportedVersions);
         } else if (!supportedVersions.contains(version.value)) {
-            Log.warn("Invalid YAML config schema version " + version.value + ".  This client supports these " +
-                    "schema versions: " + supportedVersions);
+            if (Log.warnEnabled()) {
+                Log.warn("Invalid YAML config schema version " + version.value + ".  This client supports these " +
+                        "schema versions: " + supportedVersions);
+            }
         }
         this.version = version;
     }
@@ -105,7 +107,7 @@ public class Configuration {
             propsString.append("\n\tdynamic= ").append(getDynamicConfiguration());
             propsString.append("\n");
         } catch (Exception e) {
-            if( Log.warnEnabled() ) {
+            if (Log.warnEnabled()) {
                 Log.warn(e.toString());
             }
         }

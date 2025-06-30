@@ -141,8 +141,7 @@ public class YamlConfigProvider implements ConfigurationProvider {
 			configuration = yaml.load(fileInputStream);
 			lastModified = newLastModified;
 
-			StringProperty configVersion = configuration.getVersion();
-			if ( configVersion == null ) {
+			if ( configuration.getVersion() == null ) {
 				throw new AerospikeException("YAML config must contain a valid version field.");
 			}
 			if (Log.debugEnabled()) {
