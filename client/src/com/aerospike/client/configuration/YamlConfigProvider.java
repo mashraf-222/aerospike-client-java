@@ -24,15 +24,17 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
-import com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops.StringProperty;
+import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.TypeDescription;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
+import org.yaml.snakeyaml.representer.Representer;
 
 import com.aerospike.client.AerospikeException;
 import com.aerospike.client.Log;
 import com.aerospike.client.configuration.serializers.Configuration;
+import com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops.StringProperty;
 
 public class YamlConfigProvider implements ConfigurationProvider {
 	private static final String CONFIG_PATH_ENV = "AEROSPIKE_CLIENT_CONFIG_URL";
@@ -122,7 +124,10 @@ public class YamlConfigProvider implements ConfigurationProvider {
 		Map<Class<?>, TypeDescription> typeDescriptions = configurationTypeDescription.buildTypeDescriptions(YAML_SERIALIZERS_PATH, Configuration.class);
 		Constructor typeDescriptionConstructor = new Constructor(Configuration.class, yamlLoaderOptions);
 		typeDescriptions.values().forEach(typeDescriptionConstructor::addTypeDescription);
-		Yaml yaml = new Yaml(typeDescriptionConstructor);
+		DumperOptions dumperOptions = new DumperOptions();
+		Representer representer = new Representer(dumperOptions);
+		representer.getPropertyUtils().setSkipMissingProperties(true);
+		Yaml yaml = new Yaml(typeDescriptionConstructor, representer, dumperOptions);
 		FileInputStream fileInputStream;
 
 		try {
@@ -137,7 +142,7 @@ public class YamlConfigProvider implements ConfigurationProvider {
 			lastModified = newLastModified;
 
 			StringProperty configVersion = configuration.getVersion();
-			if (configVersion == null || !getSupportedVersions().contains(configVersion.value) ) {
+			if ( configVersion == null ) {
 				throw new AerospikeException("YAML config must contain a valid version field.");
 			}
 			if (Log.debugEnabled()) {

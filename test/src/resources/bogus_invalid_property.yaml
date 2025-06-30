@@ -1,5 +1,6 @@
 # A bogus config YAML that is intended only for test purposes.  Not to be used outside of testing.
 
+version: 1.0.0
 static:
   client:
     an_invalid_property: null
@@ -10,6 +11,7 @@ static:
     async_min_connections_per_node: 10
 dynamic:
   client:
+    app_id: unit_tester
     timeout: 2000
     error_rate_window: 5
     max_error_rate: 13

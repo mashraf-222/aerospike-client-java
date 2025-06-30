@@ -41,7 +41,7 @@ public class Configuration {
             Log.error("Empty YAML config schema version. This client supports these schema versions: " +
                     supportedVersions);
         } else if (!supportedVersions.contains(version.value)) {
-            Log.error("Invalid YAML config schema version " + version.value + ".  This client supports these " +
+            Log.warn("Invalid YAML config schema version " + version.value + ".  This client supports these " +
                     "schema versions: " + supportedVersions);
         }
         this.version = version;
