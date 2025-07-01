@@ -4821,15 +4821,15 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	 * @throws AerospikeException
 	 */
 	public final void createIndex(
-			EventLoop eventLoop,
-			IndexListener listener,
-			Policy policy,
-			String namespace,
-			String setName,
-			String indexName,
-			IndexType indexType,
-			IndexCollectionType indexCollectionType,
-			Expression exp
+		EventLoop eventLoop,
+		IndexListener listener,
+		Policy policy,
+		String namespace,
+		String setName,
+		String indexName,
+		IndexType indexType,
+		IndexCollectionType indexCollectionType,
+		Expression exp
 	) throws AerospikeException {
 		if (eventLoop == null) {
 			eventLoop = cluster.eventLoops.next();
