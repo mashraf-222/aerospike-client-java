@@ -1964,6 +1964,8 @@ public class Command {
 		Filter filter = statement.getFilter();
 		String[] binNames = statement.getBinNames();
 		byte[] packedCtx = null;
+		String indexName = null;
+		byte[] packedExp = null;
 
 		if (filter != null) {
 			IndexCollectionType type = filter.getCollectionType();
@@ -1998,9 +2000,20 @@ public class Command {
 			}
 
 			packedCtx = filter.getPackedCtx();
-
 			if (packedCtx != null) {
 				dataOffset += FIELD_HEADER_SIZE + packedCtx.length;
+				fieldCount++;
+			}
+
+			indexName = filter.getIndexName();
+			if (indexName != null) {
+				dataOffset += FIELD_HEADER_SIZE + Buffer.estimateSizeUtf8(indexName);
+				fieldCount++;
+			}
+
+			packedExp = filter.getPackedExp();
+			if (packedExp != null) {
+				dataOffset += FIELD_HEADER_SIZE + packedExp.length;
 				fieldCount++;
 			}
 		}
@@ -2165,6 +2178,16 @@ public class Command {
 				writeFieldHeader(packedCtx.length, FieldType.INDEX_CONTEXT);
 				System.arraycopy(packedCtx, 0, dataBuffer, dataOffset, packedCtx.length);
 				dataOffset += packedCtx.length;
+			}
+
+			if (indexName != null) {
+				writeField(indexName, FieldType.INDEX_NAME);
+			}
+
+			if (packedExp != null) {
+				writeFieldHeader(packedExp.length, FieldType.INDEX_EXPRESSION);
+				System.arraycopy(packedExp, 0, dataBuffer, dataOffset, packedExp.length);
+				dataOffset += packedExp.length;
 			}
 		}
 
