@@ -17,9 +17,9 @@
 package com.aerospike.test.sync.basic;
 
 import static org.junit.Assert.*;
+import org.junit.Test;
 
 import com.aerospike.client.AerospikeException;
-import org.junit.Test;
 import com.aerospike.client.configuration.serializers.Configuration;
 import com.aerospike.client.configuration.YamlConfigProvider;
 import com.aerospike.test.sync.TestSync;
@@ -28,10 +28,12 @@ public class TestConfigLoadYAML extends TestSync {
 	public static final String GOOD_YAML_CONF_RELATIVE_PATH = "/src/resources/aerospikeconfig.yaml";
 	public static final String BOGUS_YAML_IP_CONF_RELATIVE_PATH = "/src/resources/bogus_invalid_property.yaml";
 	public static final String BOGUS_YAML_IF_CONF_RELATIVE_PATH = "/src/resources/bogus_invalid_format.yaml";
+	public static final String BOGUS_YAML_MVer_CONF_RELATIVE_PATH = "/src/resources/bogus_missing_version.yaml";
+	public static final String BOGUS_YAML_IV_CONF_RELATIVE_PATH = "/src/resources/bogus_invalid_version.yaml";
 	public static final String YAML_URL_BASE = "file://" + System.getProperty("user.dir");
 
 	@Test
-	public void loadGoodYAML() {
+	public void loadGoodYaml() {
 		String yamlURL = YAML_URL_BASE + GOOD_YAML_CONF_RELATIVE_PATH;
 		System.setProperty("AEROSPIKE_CLIENT_CONFIG_SYS_PROP", yamlURL);
 		YamlConfigProvider yamlLoader = new YamlConfigProvider(yamlURL);
@@ -43,19 +45,18 @@ public class TestConfigLoadYAML extends TestSync {
 		assert yamlConf.staticConfiguration.staticClientConfig.maxConnectionsPerNode.value == 99;
 	}
 	@Test
-	public void loadBogusIPYAML() {
+	public void loadBogusYamlInvalidProperty() {
 		String yamlURL = YAML_URL_BASE + BOGUS_YAML_IP_CONF_RELATIVE_PATH;
 		System.setProperty("AEROSPIKE_CLIENT_CONFIG_SYS_PROP", yamlURL);
-		AerospikeException ae = assertThrows(AerospikeException.class, () -> {
-			YamlConfigProvider yamlLoader = new YamlConfigProvider(yamlURL);
-			Configuration yamlConf = yamlLoader.fetchConfiguration();
-			assertNull(yamlConf);
-		});
-		assertTrue(ae.getMessage().contains("Failed to parse"));
+		YamlConfigProvider yamlLoader = new YamlConfigProvider(yamlURL);
+		Configuration yamlConf = yamlLoader.fetchConfiguration();
+		assertNotNull(yamlConf);
+		assert yamlConf.dynamicConfiguration.dynamicClientConfig.appId.value.equals("unit_tester");
+		assert yamlConf.staticConfiguration.staticClientConfig.maxConnectionsPerNode.value == 10;
 	}
 
 	@Test
-	public void loadBogusMVYAML() {
+	public void loadBogusYamlInvalidFormat() {
 		String yamlURL = YAML_URL_BASE + BOGUS_YAML_IF_CONF_RELATIVE_PATH;
 		System.setProperty("AEROSPIKE_CLIENT_CONFIG_SYS_PROP", yamlURL);
 		AerospikeException ae = assertThrows(AerospikeException.class, () -> {
@@ -67,7 +68,33 @@ public class TestConfigLoadYAML extends TestSync {
 	}
 
 	@Test
-	public void getStaticYAMLConfig() {
+	public void loadBogusYamlMissingVersion() {
+		String yamlURL = YAML_URL_BASE + BOGUS_YAML_MVer_CONF_RELATIVE_PATH;
+		System.setProperty("AEROSPIKE_CLIENT_CONFIG_SYS_PROP", yamlURL);
+		AerospikeException ae = assertThrows(AerospikeException.class, () -> {
+			YamlConfigProvider yamlLoader = new YamlConfigProvider(yamlURL);
+			Configuration yamlConf = yamlLoader.fetchConfiguration();
+			assertNull(yamlConf);
+		});
+		assertTrue(ae.getMessage().contains("Failed to parse"));
+		assertTrue(ae.getMessage().contains("YAML config must contain a valid version field."));
+	}
+
+	@Test
+	public void loadBogusYamlInvalidVersion() {
+		String yamlURL = YAML_URL_BASE + BOGUS_YAML_IV_CONF_RELATIVE_PATH;
+		System.setProperty("AEROSPIKE_CLIENT_CONFIG_SYS_PROP", yamlURL);
+		YamlConfigProvider yamlLoader = new YamlConfigProvider(yamlURL);
+		Configuration yamlConf = yamlLoader.fetchConfiguration();
+		assertNotNull(yamlConf);
+		assertNotNull(yamlConf.dynamicConfiguration.dynamicClientConfig.appId);
+		assert yamlConf.dynamicConfiguration.dynamicClientConfig.appId.value.equals("unit_tester");
+		assert yamlConf.staticConfiguration.staticClientConfig.maxConnectionsPerNode.value == 99;
+	}
+
+
+	@Test
+	public void getStaticYamlConfig() {
 		String yamlURL = YAML_URL_BASE + GOOD_YAML_CONF_RELATIVE_PATH;
 		System.setProperty("AEROSPIKE_CLIENT_CONFIG_SYS_PROP", yamlURL);
 		YamlConfigProvider yamlLoader = new YamlConfigProvider(yamlURL);
@@ -79,7 +106,7 @@ public class TestConfigLoadYAML extends TestSync {
 	}
 
 	@Test
-	public void getDynamicYAMLConfig() {
+	public void getDynamicYamlConfig() {
 		String yamlURL = YAML_URL_BASE + GOOD_YAML_CONF_RELATIVE_PATH;
 		System.setProperty("AEROSPIKE_CLIENT_CONFIG_SYS_PROP", yamlURL);
 		YamlConfigProvider yamlLoader = new YamlConfigProvider(yamlURL);

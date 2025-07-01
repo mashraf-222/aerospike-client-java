@@ -17,11 +17,36 @@
 
 package com.aerospike.client.configuration.serializers;
 
+import java.util.List;
+
+import com.aerospike.client.Log;
+import com.aerospike.client.configuration.YamlConfigProvider;
+import com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops.StringProperty;
+
 public class Configuration {
+    public StringProperty version;
     public StaticConfiguration staticConfiguration;
     public DynamicConfiguration dynamicConfiguration;
 
     public Configuration() {}
+
+    public StringProperty getVersion() {
+        return version;
+    }
+
+    public void setVersion(StringProperty version) {
+        List<String> supportedVersions = YamlConfigProvider.getSupportedVersions();
+        if (version == null) {
+            Log.error("Empty YAML config schema version. This client supports these schema versions: " +
+                    supportedVersions);
+        } else if (!supportedVersions.contains(version.value)) {
+            if (Log.warnEnabled()) {
+                Log.warn("Invalid YAML config schema version " + version.value + ".  This client supports these " +
+                        "schema versions: " + supportedVersions);
+            }
+        }
+        this.version = version;
+    }
 
     public StaticConfiguration getStaticConfiguration() {
         return this.staticConfiguration;
@@ -72,9 +97,19 @@ public class Configuration {
 
     @Override
     public String toString() {
-        return "\n{" +
-            "\n\tstatic= " + getStaticConfiguration() +
-            "\n\tdynamic= " + getDynamicConfiguration() +
-            "\n}\n";
+        StringBuffer propsString = new StringBuffer("{");
+        try {
+            if (getVersion() != null) {
+                propsString.append("\n\tversion= ").append(getVersion().value);
+            }
+            propsString.append("\n\tstatic= ").append(getStaticConfiguration());
+            propsString.append("\n\tdynamic= ").append(getDynamicConfiguration());
+            propsString.append("\n");
+        } catch (Exception e) {
+            if (Log.warnEnabled()) {
+                Log.warn(e.toString());
+            }
+        }
+        return propsString.toString();
     }
 }
