@@ -21,22 +21,31 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.net.URI;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Map;
 
+import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.TypeDescription;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
+import org.yaml.snakeyaml.representer.Representer;
 
 import com.aerospike.client.AerospikeException;
 import com.aerospike.client.Log;
 import com.aerospike.client.configuration.serializers.Configuration;
+import com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops.StringProperty;
 
 public class YamlConfigProvider implements ConfigurationProvider {
 	private static final String CONFIG_PATH_ENV = "AEROSPIKE_CLIENT_CONFIG_URL";
 	private static final String CONFIG_PATH_SYS_PROP = "AEROSPIKE_CLIENT_CONFIG_SYS_PROP";
 	private static final String YAML_SERIALIZERS_PATH = "com.aerospike.client.configuration.serializers.";
 	private static final String DEFAULT_CONFIG_URL_PREFIX = "file://";
+	private static final List<String> SUPPORTED_SCHEMA_VERSIONS = List.of("1.0.0");
+
+	public static List<String> getSupportedVersions() {
+		return SUPPORTED_SCHEMA_VERSIONS;
+	}
 
 	public static String getConfigPath() {
 		String configPath = System.getenv(CONFIG_PATH_ENV);
@@ -65,6 +74,9 @@ public class YamlConfigProvider implements ConfigurationProvider {
 	private long lastModified;
 
 	public YamlConfigProvider(String configPath) {
+		if (Log.debugEnabled()) {
+			Log.debug("Supported YAML config schema versions: " +  getSupportedVersions());
+		}
 		try {
 			if (!configPath.startsWith(DEFAULT_CONFIG_URL_PREFIX)) {
 				configPath = DEFAULT_CONFIG_URL_PREFIX + configPath;
@@ -112,7 +124,10 @@ public class YamlConfigProvider implements ConfigurationProvider {
 		Map<Class<?>, TypeDescription> typeDescriptions = configurationTypeDescription.buildTypeDescriptions(YAML_SERIALIZERS_PATH, Configuration.class);
 		Constructor typeDescriptionConstructor = new Constructor(Configuration.class, yamlLoaderOptions);
 		typeDescriptions.values().forEach(typeDescriptionConstructor::addTypeDescription);
-		Yaml yaml = new Yaml(typeDescriptionConstructor);
+		DumperOptions dumperOptions = new DumperOptions();
+		Representer representer = new Representer(dumperOptions);
+		representer.getPropertyUtils().setSkipMissingProperties(true);
+		Yaml yaml = new Yaml(typeDescriptionConstructor, representer, dumperOptions);
 		FileInputStream fileInputStream;
 
 		try {
@@ -126,6 +141,9 @@ public class YamlConfigProvider implements ConfigurationProvider {
 			configuration = yaml.load(fileInputStream);
 			lastModified = newLastModified;
 
+			if ( configuration.getVersion() == null ) {
+				throw new AerospikeException("YAML config must contain a valid version field.");
+			}
 			if (Log.debugEnabled()) {
 				Log.debug("YAML config successfully loaded.");
 			}

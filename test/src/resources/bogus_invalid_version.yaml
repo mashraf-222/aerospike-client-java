@@ -1,27 +1,27 @@
-# A bogus config YAML that is intended only for test purposes.  Not to be used outside of testing.
+# A config YAML that is intended only for test purposes.  Property keys can be used as a template, but property values
+# should not be taken as "typical" and should not be used in aggregate outside of testing.
 
-version: 1.0.0
+version: 0.0.9
 static:
   client:
-    an_invalid_property: null
-    config_interval: 3
-    max_connections_per_node: 10
-    min_connections_per_node: 10
+    config_interval: 5000
+    max_connections_per_node: 99
+    min_connections_per_node: 1
     async_max_connections_per_node: 50
-    async_min_connections_per_node: 10
+    async_min_connections_per_node: 1
 dynamic:
   client:
     app_id: unit_tester
-    timeout: 2000
+    timeout: 2002
     error_rate_window: 5
     max_error_rate: 13
     fail_if_not_connected: false
     login_timeout: 2500
-    max_socket_idle: 20
+    max_socket_idle: 29
     rack_aware: true
     rack_ids: [2,4,6,8]
-    tend_interval: 250
-    use_service_alternative: false
+    tend_interval: 500
+    use_service_alternative: true
   read:
     read_mode_ap: ONE
     read_mode_sc: SESSION
@@ -29,7 +29,7 @@ dynamic:
     fail_on_filtered_out: false
     replica: PREFER_RACK
     sleep_between_retries: 2000
-    socket_timeout: 11000
+    socket_timeout: 12000
     timeout_delay: 1500
     total_timeout: 3500
     max_retries: 3
@@ -53,7 +53,7 @@ dynamic:
     socket_timeout: 11000
     timeout_delay: 1500
     total_timeout: 3500
-    max_retries: 3
+    max_retries: 7
     include_bin_data: true
     info_timeout: 4000
     record_queue_size: 5
@@ -88,7 +88,7 @@ dynamic:
     connect_timeout: 20000
     fail_on_filtered_out: false
     replica: PREFER_RACK
-    send_key: false
+    send_key: true
     sleep_between_retries: 2500
     socket_timeout: 15000
     timeout_delay: 1300
@@ -133,4 +133,11 @@ dynamic:
     allow_inline: true
     allow_inline_ssd: true
     respond_all_keys: false
-
+  metrics:
+    enable: true
+    latency_shift: 2
+    latency_columns: 7
+    labels:
+      region: us-west
+      zone: usw1-az3
+      rack-id: kjsdfj2k3k
