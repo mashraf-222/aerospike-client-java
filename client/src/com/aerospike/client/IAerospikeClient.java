@@ -1988,13 +1988,13 @@ public interface IAerospikeClient extends Closeable {
 	 * @throws AerospikeException
 	 */
 	public IndexTask createIndex(
-			Policy policy,
-			String namespace,
-			String setName,
-			String indexName,
-			IndexType indexType,
-			IndexCollectionType indexCollectionType,
-			Expression exp
+		Policy policy,
+		String namespace,
+		String setName,
+		String indexName,
+		IndexType indexType,
+		IndexCollectionType indexCollectionType,
+		Expression exp
 	) throws AerospikeException;
 
 	/**
@@ -2013,15 +2013,15 @@ public interface IAerospikeClient extends Closeable {
 	 * @throws AerospikeException
 	 */
 	public void createIndex(
-			EventLoop eventLoop,
-			IndexListener listener,
-			Policy policy,
-			String namespace,
-			String setName,
-			String indexName,
-			IndexType indexType,
-			IndexCollectionType indexCollectionType,
-			Expression exp
+		EventLoop eventLoop,
+		IndexListener listener,
+		Policy policy,
+		String namespace,
+		String setName,
+		String indexName,
+		IndexType indexType,
+		IndexCollectionType indexCollectionType,
+		Expression exp
 	) throws AerospikeException;
 
 	/**

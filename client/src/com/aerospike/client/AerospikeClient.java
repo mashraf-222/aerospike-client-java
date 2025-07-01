@@ -4777,13 +4777,13 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	 * @throws AerospikeException
 	 */
 	public final IndexTask createIndex(
-			Policy policy,
-			String namespace,
-			String setName,
-			String indexName,
-			IndexType indexType,
-			IndexCollectionType indexCollectionType,
-			Expression exp
+		Policy policy,
+		String namespace,
+		String setName,
+		String indexName,
+		IndexType indexType,
+		IndexCollectionType indexCollectionType,
+		Expression exp
 	) throws AerospikeException {
 		if (policy == null) {
 			policy = mergedWritePolicyDefault;
