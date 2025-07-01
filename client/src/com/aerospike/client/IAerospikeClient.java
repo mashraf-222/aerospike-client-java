@@ -1973,6 +1973,58 @@ public interface IAerospikeClient extends Closeable {
 	) throws AerospikeException;
 
 	/**
+	 * Create an expression-based secondary index with the provided index collection type
+	 * This asynchronous server call will return before command is complete.
+	 * The user can optionally wait for command completion by using the returned
+	 * IndexTask instance.
+	 *
+	 * @param policy				generic configuration parameters, pass in null for defaults
+	 * @param namespace				namespace - equivalent to database name
+	 * @param setName				optional set name - equivalent to database table
+	 * @param indexName				name of secondary index
+	 * @param indexType				underlying data type of secondary index
+	 * @param indexCollectionType	index collection type
+	 * @param exp					expression on which to build the index
+	 * @throws AerospikeException
+	 */
+	public IndexTask createIndex(
+		Policy policy,
+		String namespace,
+		String setName,
+		String indexName,
+		IndexType indexType,
+		IndexCollectionType indexCollectionType,
+		Expression exp
+	) throws AerospikeException;
+
+	/**
+	 * Asynchronously create an expression-based secondary index with the provided index collection type
+	 * This asynchronous server call will return before command is complete.
+	 * The user can optionally wait for command completion by using the returned
+	 * IndexTask instance.
+	 *
+	 * @param policy				generic configuration parameters, pass in null for defaults
+	 * @param namespace				namespace - equivalent to database name
+	 * @param setName				optional set name - equivalent to database table
+	 * @param indexName				name of secondary index
+	 * @param indexType				underlying data type of secondary index
+	 * @param indexCollectionType	index collection type
+	 * @param exp					expression on which to build the index
+	 * @throws AerospikeException
+	 */
+	public void createIndex(
+		EventLoop eventLoop,
+		IndexListener listener,
+		Policy policy,
+		String namespace,
+		String setName,
+		String indexName,
+		IndexType indexType,
+		IndexCollectionType indexCollectionType,
+		Expression exp
+	) throws AerospikeException;
+
+	/**
 	 * Delete secondary index.
 	 * This asynchronous server call will return before command is complete.
 	 * The user can optionally wait for command completion by using the returned
