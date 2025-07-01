@@ -19,7 +19,6 @@ package com.aerospike.client.configuration.serializers;
 
 import java.util.List;
 
-import com.aerospike.client.AerospikeException;
 import com.aerospike.client.Log;
 import com.aerospike.client.configuration.YamlConfigProvider;
 import com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops.StringProperty;
