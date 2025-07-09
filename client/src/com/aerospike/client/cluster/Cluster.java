@@ -251,6 +251,9 @@ public class Cluster implements Runnable, Closeable {
 		this.seeds = hosts;
 
 		if (policy.authMode == AuthMode.PKI) {
+			if (policy.password != null) {
+				throw new AerospikeException("Password authentication is disabled for PKI-only users");
+			}
 			this.authEnabled = true;
 			this.user = null;
 		}

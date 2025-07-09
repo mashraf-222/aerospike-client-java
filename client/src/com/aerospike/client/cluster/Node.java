@@ -46,6 +46,7 @@ import com.aerospike.client.metrics.LatencyType;
 import com.aerospike.client.metrics.MetricsPolicy;
 import com.aerospike.client.metrics.NodeMetrics;
 import com.aerospike.client.util.Util;
+import com.aerospike.client.util.Version;
 
 /**
  * Server node representation.  This class manages server node connections and health status.
@@ -94,6 +95,7 @@ public class Node implements Closeable {
 	protected boolean rebalanceChanged;
 	protected volatile boolean performLogin;
 	protected volatile boolean active;
+	private final Version version;
 
 	/**
 	 * Initialize server node with connection parameters.
@@ -110,6 +112,7 @@ public class Node implements Closeable {
 		this.sessionToken = nv.sessionToken;
 		this.sessionExpiration = nv.sessionExpiration;
 		this.features = nv.features;
+		this.version = nv.version;
 		this.connsOpened = new AtomicInteger(1);
 		this.connsClosed = new AtomicInteger(0);
 		this.errorRateCount = new AtomicInteger(0);
@@ -1274,6 +1277,12 @@ public class Node implements Closeable {
 	 */
 	public final int getRebalanceGeneration() {
 		return rebalanceGeneration;
+	}
+	/**
+	 * Return this node's build version
+	 */
+	public Version getVersion() {
+		return version;
 	}
 
 	/**

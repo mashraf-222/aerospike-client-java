@@ -35,7 +35,8 @@ public final class Version {
 
 	private final int major;
 	private final int minor;
-	private final int revision;
+	private final int patch;
+	private final int build;
 	private final String extension;
 
 	public Version(String version) {
@@ -43,49 +44,61 @@ public final class Version {
 		int i = begin;
 		int max = version.length();
 
-		while (i < max) {
-			if (! Character.isDigit(version.charAt(i))) {
-				break;
-			}
-			i++;
-		}
-
+		i = getNextVersionDigitEndOffset(i, max, version);
 		major = (i > begin)? Integer.parseInt(version.substring(begin, i)) : 0;
 		begin = ++i;
 
-		while (i < max) {
-			if (! Character.isDigit(version.charAt(i))) {
-				break;
-			}
-			i++;
-		}
-
+		i = getNextVersionDigitEndOffset(i, max, version);
 		minor = (i > begin)? Integer.parseInt(version.substring(begin, i)) : 0;
 		begin = ++i;
 
-		while (i < max) {
-			if (! Character.isDigit(version.charAt(i))) {
-				break;
-			}
-			i++;
-		}
+		i = getNextVersionDigitEndOffset(i, max, version);
+		patch = (i > begin)? Integer.parseInt(version.substring(begin, i)) : 0;
+		begin = ++i;
 
-		revision = (i > begin)? Integer.parseInt(version.substring(begin, i)) : 0;
+		i = getNextVersionDigitEndOffset(i, max, version);
+		build = (i > begin)? Integer.parseInt(version.substring(begin, i)) : 0;
 		begin = i;
 		extension = (begin < max)? version.substring(begin) : "";
 	}
 
+	private int getNextVersionDigitEndOffset(int i, int max, String version) {
+		while (i < max) {
+			if (! Character.isDigit(version.charAt(i))) {
+				break;
+			}
+			i++;
+		}
+		return i;
+	}
+
 	public boolean isGreaterEqual(int v1, int v2, int v3) {
-		return major > v1 || (major == v1 && (minor > v2 || (minor == v2 && revision >= v3)));
+		return major > v1 || (major == v1 && (minor > v2 || (minor == v2 && patch >= v3)));
 	}
 
 	public boolean isLess(int v1, int v2, int v3) {
-		return major < v1 || (major == v1 && (minor < v2 || (minor == v2 && revision < v3)));
+		return major < v1 || (major == v1 && (minor < v2 || (minor == v2 && patch < v3)));
+	}
+
+	public int compare(Version other) {
+		if (this.major != other.major) {
+			return this.major - other.major;
+		}
+		if (this.minor != other.minor) {
+			return this.minor - other.minor;
+		}
+		if (this.patch != other.patch) {
+			return this.patch - other.patch;
+		}
+		if (this.build != other.build) {
+			return this.build - other.build;
+		}
+		return 0;
 	}
 
 	@Override
 	public String toString() {
-		return Integer.toString(major) + "." + minor + "." + revision + extension;
+		return major + "." + minor + "." + patch + "." + build + extension;
 	}
 
 	@Override
@@ -97,7 +110,7 @@ public final class Version {
 		if (getClass() != obj.getClass())
 			return false;
 		Version other = (Version) obj;
-		return major == other.major && minor == other.minor && revision == other.revision;
+		return major == other.major && minor == other.minor && patch == other.patch;
 	}
 
 	@Override
@@ -106,7 +119,7 @@ public final class Version {
 		int result = 1;
 		result = prime * result + major;
 		result = prime * result + minor;
-		result = prime * result + revision;
+		result = prime * result + patch;
 		return result;
 	}
 }
