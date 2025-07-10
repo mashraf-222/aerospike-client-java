@@ -30,6 +30,7 @@ import com.aerospike.client.Log;
 import com.aerospike.client.admin.AdminCommand;
 import com.aerospike.client.admin.AdminCommand.LoginCommand;
 import com.aerospike.client.util.Util;
+import com.aerospike.client.util.Version;
 
 public final class NodeValidator {
 	Node fallback;
@@ -40,6 +41,7 @@ public final class NodeValidator {
 	byte[] sessionToken;
 	long sessionExpiration;
 	int features;
+	Version version;
 
 	/**
 	 * Return first valid node referenced by seed host aliases. In most cases, aliases
@@ -203,6 +205,7 @@ public final class NodeValidator {
 			List<String> commands = new ArrayList<String>(5);
 			commands.add("node");
 			commands.add("partition-generation");
+			commands.add("build");
 			commands.add("features");
 
 			boolean validateCluster = cluster.validateClusterName();
@@ -238,6 +241,7 @@ public final class NodeValidator {
 
 			validateNode(map);
 			validatePartitionGeneration(map);
+			validateServerBuildVersion(map);
 			setFeatures(map);
 
 			if (validateCluster) {
@@ -275,6 +279,14 @@ public final class NodeValidator {
 
 		if (gen == -1) {
 			throw new AerospikeException.InvalidNode("Node " + this.name + ' ' + this.primaryHost + " is not yet fully initialized");
+		}
+	}
+
+	private void validateServerBuildVersion(HashMap<String,String> map) {
+		String build = map.get("build");
+		version = new Version(build);
+		if (!version.toString().equals(build)) {
+			throw new AerospikeException("Node " + name + " " + primaryAddress.toString() + " version is invalid: " + build);
 		}
 	}
 

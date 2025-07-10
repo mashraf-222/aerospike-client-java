@@ -2136,6 +2136,18 @@ public interface IAerospikeClient extends Closeable {
 		throws AerospikeException;
 
 	/**
+	 * Create PKI user with roles.  PKI users are authenticated via TLS and a certificate instead of a password.
+	 * WARNING: This function should only be called for server versions 8.1+
+	 *
+	 * @param policy				admin configuration parameters, pass in null for defaults
+	 * @param user					user name
+	 * @param roles					variable arguments array of role names.  Predefined roles are listed in {@link com.aerospike.client.admin.Role}
+	 * @throws AerospikeException	if command fails
+	 */
+	public void createPkiUser(AdminPolicy policy, String user, List<String> roles)
+		throws AerospikeException;
+
+	/**
 	 * Remove user from cluster.
 	 *
 	 * @param policy				admin configuration parameters, pass in null for defaults
