@@ -1278,6 +1278,7 @@ public class Node implements Closeable {
 	public final int getRebalanceGeneration() {
 		return rebalanceGeneration;
 	}
+
 	/**
 	 * Return this node's build version
 	 */
