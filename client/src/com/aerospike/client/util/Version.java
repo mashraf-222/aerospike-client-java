@@ -62,6 +62,14 @@ public final class Version {
 		extension = (begin < max)? version.substring(begin) : "";
 	}
 
+	public Version(int major, int minor, int patch, int build) {
+		this.major = major;
+		this.minor = minor;
+		this.patch = patch;
+		this.build = build;
+		this.extension = null;
+	}
+
 	private int getNextVersionDigitEndOffset(int i, int max, String version) {
 		while (i < max) {
 			if (! Character.isDigit(version.charAt(i))) {
@@ -98,6 +106,9 @@ public final class Version {
 
 	@Override
 	public String toString() {
+		if (extension == null) {
+			return major + "." + minor + "." + patch + "." + build;
+		}
 		return major + "." + minor + "." + patch + "." + build + extension;
 	}
 
