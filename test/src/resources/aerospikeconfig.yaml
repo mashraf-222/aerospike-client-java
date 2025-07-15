@@ -13,7 +13,6 @@ dynamic:
   client:
     app_id: unit_tester
     timeout: 2002
-    timeout2: 2003
     error_rate_window: 5
     max_error_rate: 13
     fail_if_not_connected: false
