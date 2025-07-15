@@ -16,8 +16,10 @@
  */
 package com.aerospike.client.policy;
 
+import com.aerospike.client.Log;
 import com.aerospike.client.configuration.ConfigurationProvider;
 import com.aerospike.client.configuration.serializers.Configuration;
+import com.aerospike.client.configuration.serializers.DynamicConfiguration;
 import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicBatchReadConfig;
 import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicBatchWriteConfig;
 
@@ -106,49 +108,92 @@ public class BatchPolicy extends Policy {
 		if (config == null) {
 			return;
 		}
-		DynamicBatchReadConfig dynBRC = config.dynamicConfiguration.dynamicBatchReadConfig;
+		DynamicConfiguration dConfig = config.getDynamicConfiguration();
+		if (dConfig == null) {
+			return;
+		}
+		DynamicBatchReadConfig dynBRC = dConfig.getDynamicBatchReadConfig();
 		if (dynBRC == null) {
 			return;
 		}
 
-		if (dynBRC.readModeAP != null) {
+		if (dynBRC.readModeAP != null && this.readModeAP != dynBRC.readModeAP) {
 			this.readModeAP = dynBRC.readModeAP;
+			if (Log.infoEnabled()) {
+				Log.info("Set BatchPolicy.readModeAP = " + this.readModeAP);
+			}
 		}
-		if (dynBRC.readModeSC != null) {
+		if (dynBRC.readModeSC != null && this.readModeSC != dynBRC.readModeSC) {
 			this.readModeSC = dynBRC.readModeSC;
+			if (Log.infoEnabled()) {
+				Log.info("Set BatchPolicy.readModeSC = " + this.readModeSC);
+			}
 		}
-		if (dynBRC.connectTimeout != null) {
+		if (dynBRC.connectTimeout != null && this.connectTimeout != dynBRC.connectTimeout.value) {
 			this.connectTimeout = dynBRC.connectTimeout.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set BatchPolicy.connectTimeout = " + this.connectTimeout);
+			}
 		}
-		if (dynBRC.replica != null) {
+		if (dynBRC.replica != null && this.replica != dynBRC.replica) {
 			this.replica = dynBRC.replica;
+			if (Log.infoEnabled()) {
+				Log.info("Set BatchPolicy.replica = " + this.replica);
+			}
 		}
-		if (dynBRC.sleepBetweenRetries != null) {
+		if (dynBRC.sleepBetweenRetries != null && this.sleepBetweenRetries != dynBRC.sleepBetweenRetries.value) {
 			this.sleepBetweenRetries = dynBRC.sleepBetweenRetries.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set BatchPolicy.sleepBetweenRetries = " + this.sleepBetweenRetries);
+			}
 		}
-		if (dynBRC.socketTimeout != null) {
+		if (dynBRC.socketTimeout != null && this.socketTimeout != dynBRC.socketTimeout.value) {
 			this.socketTimeout = dynBRC.socketTimeout.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set BatchPolicy.socketTimeout = " + this.socketTimeout);
+			}
 		}
-		if (dynBRC.timeoutDelay != null) {
+		if (dynBRC.timeoutDelay != null && this.timeoutDelay != dynBRC.timeoutDelay.value) {
 			this.timeoutDelay = dynBRC.timeoutDelay.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set BatchPolicy.timeoutDelay = " + this.timeoutDelay);
+			}
 		}
-		if (dynBRC.totalTimeout != null) {
+		if (dynBRC.totalTimeout != null && this.totalTimeout != dynBRC.totalTimeout.value) {
 			this.totalTimeout = dynBRC.totalTimeout.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set BatchPolicy.totalTimeout = " + this.totalTimeout);
+			}
 		}
-		if (dynBRC.maxRetries != null) {
+		if (dynBRC.maxRetries != null && this.maxRetries != dynBRC.maxRetries.value) {
 			this.maxRetries = dynBRC.maxRetries.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set BatchPolicy.maxRetries = " + this.maxRetries);
+			}
 		}
-		if (dynBRC.maxConcurrentThreads != null) {
+		if (dynBRC.maxConcurrentThreads != null && this.maxConcurrentThreads != dynBRC.maxConcurrentThreads.value) {
 			this.maxConcurrentThreads = dynBRC.maxConcurrentThreads.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set BatchPolicy.maxConcurrentThreads = " + this.maxConcurrentThreads);
+			}
 		}
-		if (dynBRC.allowInline != null) {
+		if (dynBRC.allowInline != null && this.allowInline != dynBRC.allowInline.value) {
 			this.allowInline = dynBRC.allowInline.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set BatchPolicy.allowInline = " + this.allowInline);
+			}
 		}
-		if (dynBRC.allowInlineSSD != null) {
+		if (dynBRC.allowInlineSSD != null && this.allowInlineSSD != dynBRC.allowInlineSSD.value) {
 			this.allowInlineSSD = dynBRC.allowInlineSSD.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set BatchPolicy.allowInlineSSD = " + this.allowInlineSSD);
+			}
 		}
-		if (dynBRC.respondAllKeys != null) {
+		if (dynBRC.respondAllKeys != null && this.respondAllKeys != dynBRC.respondAllKeys.value) {
 			this.respondAllKeys = dynBRC.respondAllKeys.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set BatchPolicy.respondAllKeys = " + this.respondAllKeys);
+			}
 		}
 	}
 	/**
@@ -223,41 +268,77 @@ public class BatchPolicy extends Policy {
 			return;
 		}
 
-		if (dynBWC.connectTimeout != null) {
+		if (dynBWC.connectTimeout != null && this.connectTimeout != dynBWC.connectTimeout.value) {
 			this.connectTimeout = dynBWC.connectTimeout.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set BatchPolicy.connectTimeout = " + this.connectTimeout);
+			}
 		}
-		if (dynBWC.failOnFilteredOut != null) {
+		if (dynBWC.failOnFilteredOut != null && this.failOnFilteredOut != dynBWC.failOnFilteredOut.value) {
 			this.failOnFilteredOut = dynBWC.failOnFilteredOut.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set BatchPolicy.failOnFilteredOut = " + this.failOnFilteredOut);
+			}
 		}
-		if (dynBWC.replica != null) {
+		if (dynBWC.replica != null && this.replica != dynBWC.replica) {
 			this.replica = dynBWC.replica;
+			if (Log.infoEnabled()) {
+				Log.info("Set BatchPolicy.replica = " + this.replica);
+			}
 		}
-		if (dynBWC.sendKey != null) {
+		if (dynBWC.sendKey != null && 	this.sendKey != dynBWC.sendKey.value) {
 			this.sendKey = dynBWC.sendKey.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set BatchPolicy.sendKey = " + this.sendKey);
+			}
 		}
-		if (dynBWC.sleepBetweenRetries != null) {
+		if (dynBWC.sleepBetweenRetries != null && this.sleepBetweenRetries != dynBWC.sleepBetweenRetries.value) {
 			this.sleepBetweenRetries = dynBWC.sleepBetweenRetries.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set BatchPolicy.sleepBetweenRetries = " + this.sleepBetweenRetries);
+			}
 		}
-		if (dynBWC.socketTimeout != null) {
+		if (dynBWC.socketTimeout != null && this.socketTimeout != dynBWC.socketTimeout.value) {
 			this.socketTimeout = dynBWC.socketTimeout.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set BatchPolicy.socketTimeout = " + this.socketTimeout);
+			}
 		}
-		if (dynBWC.timeoutDelay != null) {
+		if (dynBWC.timeoutDelay != null && this.timeoutDelay != dynBWC.timeoutDelay.value) {
 			this.timeoutDelay = dynBWC.timeoutDelay.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set BatchPolicy.timeoutDelay = " + this.timeoutDelay);
+			}
 		}
-		if (dynBWC.totalTimeout != null) {
+		if (dynBWC.totalTimeout != null && this.totalTimeout != dynBWC.totalTimeout.value) {
 			this.totalTimeout = dynBWC.totalTimeout.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set BatchPolicy.totalTimeout = " + this.totalTimeout);
+			}
 		}
-		if (dynBWC.maxRetries != null) {
+		if (dynBWC.maxRetries != null && this.maxRetries != dynBWC.maxRetries.value) {
 			this.maxRetries = dynBWC.maxRetries.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set BatchPolicy.maxRetries = " + this.maxRetries);
+			}
 		}
-		if (dynBWC.maxConcurrentThreads != null) {
+		if (dynBWC.maxConcurrentThreads != null && this.maxConcurrentThreads != dynBWC.maxConcurrentThreads.value) {
 			this.maxConcurrentThreads = dynBWC.maxConcurrentThreads.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set BatchPolicy.maxConcurrentThreads = " + this.maxConcurrentThreads);
+			}
 		}
-		if (dynBWC.allowInlineSSD != null) {
+		if (dynBWC.allowInlineSSD != null && this.allowInlineSSD != dynBWC.allowInlineSSD.value) {
 			this.allowInlineSSD = dynBWC.allowInlineSSD.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set BatchPolicy.allowInlineSSD = " + this.allowInlineSSD);
+			}
 		}
-		if (dynBWC.respondAllKeys != null) {
+		if (dynBWC.respondAllKeys != null && this.respondAllKeys != dynBWC.respondAllKeys.value) {
 			this.respondAllKeys = dynBWC.respondAllKeys.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set BatchPolicy.respondAllKeys = " + this.respondAllKeys);
+			}
 		}
 	}
 }

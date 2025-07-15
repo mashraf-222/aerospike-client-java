@@ -18,9 +18,11 @@ package com.aerospike.client.policy;
 
 import java.util.Objects;
 
+import com.aerospike.client.Log;
 import com.aerospike.client.Txn;
 import com.aerospike.client.configuration.ConfigurationProvider;
 import com.aerospike.client.configuration.serializers.Configuration;
+import com.aerospike.client.configuration.serializers.DynamicConfiguration;
 import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicReadConfig;
 import com.aerospike.client.exp.Expression;
 
@@ -292,40 +294,74 @@ public class Policy {
 		if (config == null) {
 			return;
 		}
-		DynamicReadConfig dynRC = config.dynamicConfiguration.dynamicReadConfig;
+		DynamicConfiguration dConfig = config.getDynamicConfiguration();
+		if (dConfig == null) {
+			return;
+		}
+		DynamicReadConfig dynRC = dConfig.getDynamicReadConfig();
 		if (dynRC == null) {
 			return;
 		}
 
-		if (dynRC.readModeAP != null) {
+		if (dynRC.readModeAP != null && this.readModeAP != dynRC.readModeAP) {
 			this.readModeAP = dynRC.readModeAP;
+			if (Log.infoEnabled()) {
+				Log.info("Set Policy.readModeAP = " + this.readModeAP);
+			}
 		}
-		if (dynRC.readModeSC != null) {
+		if (dynRC.readModeSC != null && this.readModeSC != dynRC.readModeSC) {
 			this.readModeSC = dynRC.readModeSC;
+			if (Log.infoEnabled()) {
+				Log.info("Set Policy.readModeSC = " + this.readModeSC);
+			}
 		}
-		if (dynRC.connectTimeout != null) {
+		if (dynRC.connectTimeout != null && this.connectTimeout != dynRC.connectTimeout.value) {
 			this.connectTimeout = dynRC.connectTimeout.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set Policy.connectTimeout = " + this.connectTimeout);
+			}
 		}
-		if (dynRC.failOnFilteredOut != null) {
+		if (dynRC.failOnFilteredOut != null && this.failOnFilteredOut != dynRC.failOnFilteredOut.value) {
 			this.failOnFilteredOut = dynRC.failOnFilteredOut.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set Policy.failOnFilteredOut = " + this.failOnFilteredOut);
+			}
 		}
-		if (dynRC.replica != null) {
+		if (dynRC.replica != null && this.replica != dynRC.replica) {
 			this.replica = dynRC.replica;
+			if (Log.infoEnabled()) {
+				Log.info("Set Policy.replica = " + this.replica);
+			}
 		}
-		if (dynRC.sleepBetweenRetries != null) {
+		if (dynRC.sleepBetweenRetries != null && this.sleepBetweenRetries != dynRC.sleepBetweenRetries.value) {
 			this.sleepBetweenRetries = dynRC.sleepBetweenRetries.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set Policy.sleepBetweenRetries = " + this.sleepBetweenRetries);
+			}
 		}
-		if (dynRC.socketTimeout != null) {
+		if (dynRC.socketTimeout != null && this.socketTimeout != dynRC.socketTimeout.value) {
 			this.socketTimeout = dynRC.socketTimeout.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set Policy.socketTimeout = " + this.socketTimeout);
+			}
 		}
-		if (dynRC.timeoutDelay != null) {
+		if (dynRC.timeoutDelay != null && this.timeoutDelay != dynRC.timeoutDelay.value) {
 			this.timeoutDelay = dynRC.timeoutDelay.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set Policy.timeoutDelay = " + this.timeoutDelay);
+			}
 		}
-		if (dynRC.totalTimeout != null) {
+		if (dynRC.totalTimeout != null && this.totalTimeout != dynRC.totalTimeout.value) {
 			this.totalTimeout = dynRC.totalTimeout.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set Policy.totalTimeout = " + this.totalTimeout);
+			}
 		}
-		if (dynRC.maxRetries != null) {
+		if (dynRC.maxRetries != null && this.maxRetries != dynRC.maxRetries.value) {
 			this.maxRetries = dynRC.maxRetries.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set Policy.maxRetries = " + this.maxRetries);
+			}
 		}
 	}
 

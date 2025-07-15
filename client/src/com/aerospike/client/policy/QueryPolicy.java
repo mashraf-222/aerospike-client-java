@@ -16,8 +16,10 @@
  */
 package com.aerospike.client.policy;
 
+import com.aerospike.client.Log;
 import com.aerospike.client.configuration.ConfigurationProvider;
 import com.aerospike.client.configuration.serializers.Configuration;
+import com.aerospike.client.configuration.serializers.DynamicConfiguration;
 import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicQueryConfig;
 
 /**
@@ -123,46 +125,92 @@ public class QueryPolicy extends Policy {
 		if (config == null) {
 			return;
 		}
-		DynamicQueryConfig dynQC = config.dynamicConfiguration.dynamicQueryConfig;
+		DynamicConfiguration dConfig = config.getDynamicConfiguration();
+		if (dConfig == null) {
+			return;
+		}
+		DynamicQueryConfig dynQC = dConfig.getDynamicQueryConfig();
 		if (dynQC == null) {
 			return;
 		}
 
-		if (dynQC.readModeAP != null) {
+		if (dynQC.readModeAP != null && this.readModeAP != dynQC.readModeAP) {
+			this.readModeAP = dynQC.readModeAP;
+			if (Log.infoEnabled()) {
+				Log.info("Set QueryPolicy.readModeAP = " + this.readModeAP);
+			}
+		}
+		if (dynQC.readModeSC != null && this.readModeSC != dynQC.readModeSC) {
 			this.readModeSC = dynQC.readModeSC;
+			if (Log.infoEnabled()) {
+				Log.info("Set QueryPolicy.readModeSC = " + this.readModeSC);
+			}
 		}
-		if (dynQC.connectTimeout != null) {
+		if (dynQC.connectTimeout != null && this.connectTimeout != dynQC.connectTimeout.value) {
 			this.connectTimeout = dynQC.connectTimeout.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set QueryPolicy.connectTimeout = " + this.connectTimeout);
+			}
 		}
-		if (dynQC.replica != null) {
+		if (dynQC.replica != null && this.replica != dynQC.replica) {
 			this.replica = dynQC.replica;
+			if (Log.infoEnabled()) {
+				Log.info("Set QueryPolicy.replica = " + this.replica);
+			}
 		}
-		if (dynQC.sleepBetweenRetries != null) {
+		if (dynQC.sleepBetweenRetries != null && this.sleepBetweenRetries != dynQC.sleepBetweenRetries.value) {
 			this.sleepBetweenRetries = dynQC.sleepBetweenRetries.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set QueryPolicy.sleepBetweenRetries = " + this.sleepBetweenRetries);
+			}
 		}
-		if (dynQC.socketTimeout != null) {
+		if (dynQC.socketTimeout != null && this.socketTimeout != dynQC.socketTimeout.value) {
 			this.socketTimeout = dynQC.socketTimeout.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set QueryPolicy.socketTimeout = " + this.socketTimeout);
+			}
 		}
-		if (dynQC.timeoutDelay != null) {
+		if (dynQC.timeoutDelay != null && this.timeoutDelay != dynQC.timeoutDelay.value) {
 			this.timeoutDelay = dynQC.timeoutDelay.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set QueryPolicy.timeoutDelay = " + this.timeoutDelay);
+			}
 		}
-		if (dynQC.totalTimeout != null) {
+		if (dynQC.totalTimeout != null && this.totalTimeout != dynQC.totalTimeout.value) {
 			this.totalTimeout = dynQC.totalTimeout.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set QueryPolicy.totalTimeout = " + this.totalTimeout);
+			}
 		}
-		if (dynQC.maxRetries != null) {
+		if (dynQC.maxRetries != null && this.maxRetries != dynQC.maxRetries.value) {
 			this.maxRetries = dynQC.maxRetries.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set QueryPolicy.maxRetries = " + this.maxRetries);
+			}
 		}
-		if (dynQC.includeBinData != null) {
+		if (dynQC.includeBinData != null && this.includeBinData != dynQC.includeBinData.value) {
 			this.includeBinData = dynQC.includeBinData.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set QueryPolicy.includeBinData = " + this.includeBinData);
+			}
 		}
-		if (dynQC.infoTimeout != null) {
+		if (dynQC.infoTimeout != null && this.infoTimeout != dynQC.infoTimeout.value) {
 			this.infoTimeout = dynQC.infoTimeout.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set QueryPolicy.infoTimeout = " + this.infoTimeout);
+			}
 		}
-		if (dynQC.recordQueueSize != null) {
+		if (dynQC.recordQueueSize != null && this.recordQueueSize != dynQC.recordQueueSize.value) {
 			this.recordQueueSize = dynQC.recordQueueSize.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set QueryPolicy.recordQueueSize = " + this.recordQueueSize);
+			}
 		}
-		if (dynQC.expectedDuration != null) {
+		if (dynQC.expectedDuration != null && this.expectedDuration != dynQC.expectedDuration) {
 			this.expectedDuration = dynQC.expectedDuration;
+			if (Log.infoEnabled()) {
+				Log.info("Set QueryPolicy.expectedDuration = " + this.expectedDuration);
+			}
 		}
 	}
 

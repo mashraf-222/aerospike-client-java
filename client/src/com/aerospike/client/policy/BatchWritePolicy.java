@@ -16,8 +16,10 @@
  */
 package com.aerospike.client.policy;
 
+import com.aerospike.client.Log;
 import com.aerospike.client.configuration.ConfigurationProvider;
 import com.aerospike.client.configuration.serializers.Configuration;
+import com.aerospike.client.configuration.serializers.DynamicConfiguration;
 import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicBatchWriteConfig;
 import com.aerospike.client.exp.Expression;
 
@@ -136,16 +138,26 @@ public final class BatchWritePolicy {
 		if (config == null) {
 			return;
 		}
-		DynamicBatchWriteConfig dynBWC = config.dynamicConfiguration.dynamicBatchWriteConfig;
+		DynamicConfiguration dConfig = config.getDynamicConfiguration();
+		if (dConfig == null) {
+			return;
+		}
+		DynamicBatchWriteConfig dynBWC = dConfig.getDynamicBatchWriteConfig();
 		if (dynBWC == null) {
 			return;
 		}
 
-		if (dynBWC.sendKey != null) {
+		if (dynBWC.sendKey != null && this.sendKey != dynBWC.sendKey.value) {
 			this.sendKey = dynBWC.sendKey.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set BatchWritePolicy.sendKey = " + this.sendKey);
+			}
 		}
-		if (dynBWC.durableDelete != null) {
+		if (dynBWC.durableDelete != null && this.durableDelete != dynBWC.durableDelete.value) {
 			this.durableDelete = dynBWC.durableDelete.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set BatchWritePolicy.durableDelete = " + this.durableDelete);
+			}
 		}
 	}
 

@@ -16,8 +16,10 @@
  */
 package com.aerospike.client.policy;
 
+import com.aerospike.client.Log;
 import com.aerospike.client.configuration.ConfigurationProvider;
 import com.aerospike.client.configuration.serializers.Configuration;
+import com.aerospike.client.configuration.serializers.DynamicConfiguration;
 import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicTxnVerifyConfig;
 
 /**
@@ -45,49 +47,92 @@ public class TxnVerifyPolicy extends BatchPolicy {
 		if (config == null) {
 			return;
 		}
-		DynamicTxnVerifyConfig dynTVC = config.dynamicConfiguration.dynamicTxnVerifyConfig;
+		DynamicConfiguration dConfig = config.getDynamicConfiguration();
+		if (dConfig == null) {
+			return;
+		}
+		DynamicTxnVerifyConfig dynTVC = dConfig.getDynamicTxnVerifyConfig();
 		if (dynTVC == null) {
 			return;
 		}
 
-		if (dynTVC.readModeAP != null) {
+		if (dynTVC.readModeAP != null & this.readModeAP != dynTVC.readModeAP) {
 			this.readModeAP = dynTVC.readModeAP;
+			if (Log.infoEnabled()) {
+				Log.info("Set TxnVerifyPolicy.readModeAP = " + this.readModeAP);
+			}
 		}
-		if (dynTVC.readModeSC != null) {
+		if (dynTVC.readModeSC != null && this.readModeSC != dynTVC.readModeSC) {
 			this.readModeSC = dynTVC.readModeSC;
+			if (Log.infoEnabled()) {
+				Log.info("Set TxnVerifyPolicy.readModeSC = " + this.readModeSC);
+			}
 		}
-		if (dynTVC.connectTimeout != null) {
+		if (dynTVC.connectTimeout != null && this.connectTimeout != dynTVC.connectTimeout.value) {
 			this.connectTimeout = dynTVC.connectTimeout.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set TxnVerifyPolicy.connectTimeout = " + this.connectTimeout);
+			}
 		}
-		if (dynTVC.replica != null) {
+		if (dynTVC.replica != null && this.replica != dynTVC.replica) {
 			this.replica = dynTVC.replica;
+			if (Log.infoEnabled()) {
+				Log.info("Set TxnVerifyPolicy.replica = " + this.replica);
+			}
 		}
-		if (dynTVC.sleepBetweenRetries != null) {
+		if (dynTVC.sleepBetweenRetries != null && this.sleepBetweenRetries != dynTVC.sleepBetweenRetries.value) {
 			this.sleepBetweenRetries = dynTVC.sleepBetweenRetries.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set TxnVerifyPolicy.sleepBetweenRetries = " + this.sleepBetweenRetries);
+			}
 		}
-		if (dynTVC.socketTimeout != null) {
+		if (dynTVC.socketTimeout != null && this.socketTimeout != dynTVC.socketTimeout.value) {
 			this.socketTimeout = dynTVC.socketTimeout.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set TxnVerifyPolicy.socketTimeout = " + this.socketTimeout);
+			}
 		}
-		if (dynTVC.timeoutDelay != null) {
+		if (dynTVC.timeoutDelay != null && this.timeoutDelay != dynTVC.timeoutDelay.value) {
 			this.timeoutDelay = dynTVC.timeoutDelay.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set TxnVerifyPolicy.timeoutDelay = " + this.timeoutDelay);
+			}
 		}
-		if (dynTVC.totalTimeout != null) {
+		if (dynTVC.totalTimeout != null && this.totalTimeout != dynTVC.totalTimeout.value) {
 			this.totalTimeout = dynTVC.totalTimeout.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set TxnVerifyPolicy.totalTimeout = " + this.totalTimeout);
+			}
 		}
-		if (dynTVC.maxRetries != null) {
+		if (dynTVC.maxRetries != null && this.maxRetries != dynTVC.maxRetries.value) {
 			this.maxRetries = dynTVC.maxRetries.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set TxnVerifyPolicy.maxRetries = " + this.maxRetries);
+			}
 		}
-		if (dynTVC.maxConcurrentThreads != null) {
+		if (dynTVC.maxConcurrentThreads != null && this.maxConcurrentThreads != dynTVC.maxConcurrentThreads.value) {
 			this.maxConcurrentThreads = dynTVC.maxConcurrentThreads.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set TxnVerifyPolicy.maxConcurrentThreads = " + this.maxConcurrentThreads);
+			}
 		}
-		if (dynTVC.allowInline != null) {
+		if (dynTVC.allowInline != null && this.allowInline != dynTVC.allowInline.value) {
 			this.allowInline = dynTVC.allowInline.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set TxnVerifyPolicy.allowInline = " + this.allowInline);
+			}
 		}
-		if (dynTVC.allowInlineSSD != null) {
+		if (dynTVC.allowInlineSSD != null && this.allowInlineSSD != dynTVC.allowInlineSSD.value) {
 			this.allowInlineSSD = dynTVC.allowInlineSSD.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set TxnVerifyPolicy.allowInlineSSD = " + this.allowInlineSSD);
+			}
 		}
-		if (dynTVC.respondAllKeys != null) {
+		if (dynTVC.respondAllKeys != null && this.respondAllKeys != dynTVC.respondAllKeys.value) {
 			this.respondAllKeys = dynTVC.respondAllKeys.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set TxnVerifyPolicy.respondAllKeys = " + this.respondAllKeys);
+			}
 		}
 	}
 

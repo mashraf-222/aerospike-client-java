@@ -16,8 +16,10 @@
  */
 package com.aerospike.client.policy;
 
+import com.aerospike.client.Log;
 import com.aerospike.client.configuration.ConfigurationProvider;
 import com.aerospike.client.configuration.serializers.Configuration;
+import com.aerospike.client.configuration.serializers.DynamicConfiguration;
 import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicBatchDeleteConfig;
 import com.aerospike.client.exp.Expression;
 
@@ -93,16 +95,26 @@ public final class BatchDeletePolicy {
 		if (config == null) {
 			return;
 		}
-		DynamicBatchDeleteConfig dynBDC = config.dynamicConfiguration.dynamicBatchDeleteConfig;
+		DynamicConfiguration dConfig = config.getDynamicConfiguration();
+		if (dConfig == null) {
+			return;
+		}
+		DynamicBatchDeleteConfig dynBDC = dConfig.getDynamicBatchDeleteConfig();
 		if (dynBDC == null) {
 			return;
 		}
 
-		if (dynBDC.sendKey != null) {
+		if (dynBDC.sendKey != null && this.sendKey != dynBDC.sendKey.value) {
 			this.sendKey = dynBDC.sendKey.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set BatchDeletePolicy.sendKey = " + this.sendKey);
+			}
 		}
-		if (dynBDC.durableDelete != null) {
+		if (dynBDC.durableDelete != null && this.durableDelete != dynBDC.durableDelete.value) {
 			this.durableDelete = dynBDC.durableDelete.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set BatchDeletePolicy.durableDelete = " + this.durableDelete);
+			}
 		}
 	}
 

@@ -16,8 +16,10 @@
  */
 package com.aerospike.client.policy;
 
+import com.aerospike.client.Log;
 import com.aerospike.client.configuration.ConfigurationProvider;
 import com.aerospike.client.configuration.serializers.Configuration;
+import com.aerospike.client.configuration.serializers.DynamicConfiguration;
 import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicBatchUDFconfig;
 import com.aerospike.client.exp.Expression;
 
@@ -105,16 +107,26 @@ public final class BatchUDFPolicy {
 		if (config == null) {
 			return;
 		}
-		DynamicBatchUDFconfig dynUDF = config.dynamicConfiguration.dynamicBatchUDFconfig;
+		DynamicConfiguration dConfig = config.getDynamicConfiguration();
+		if (dConfig == null) {
+			return;
+		}
+		DynamicBatchUDFconfig dynUDF = dConfig.getDynamicBatchUDFconfig();
 		if (dynUDF == null) {
 			return;
 		}
 
-		if (dynUDF.sendKey != null) {
+		if (dynUDF.sendKey != null && this.sendKey != dynUDF.sendKey.value) {
 			this.sendKey = dynUDF.sendKey.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set BatchUDFPolicy.sendKey = " + this.sendKey);
+			}
 		}
-		if (dynUDF.durableDelete != null) {
+		if (dynUDF.durableDelete != null && this.durableDelete != dynUDF.durableDelete.value) {
 			this.durableDelete = dynUDF.durableDelete.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set BatchUDFPolicy.sendKey = " + this.sendKey);
+			}
 		}
 	}
 

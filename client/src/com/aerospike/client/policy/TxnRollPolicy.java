@@ -16,8 +16,10 @@
  */
 package com.aerospike.client.policy;
 
+import com.aerospike.client.Log;
 import com.aerospike.client.configuration.ConfigurationProvider;
 import com.aerospike.client.configuration.serializers.Configuration;
+import com.aerospike.client.configuration.serializers.DynamicConfiguration;
 import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicTxnRollConfig;
 
 /**
@@ -45,49 +47,92 @@ public class TxnRollPolicy extends BatchPolicy {
 		if (config == null) {
 			return;
 		}
-		DynamicTxnRollConfig dynTRC = config.dynamicConfiguration.dynamicTxnRollConfig;
+		DynamicConfiguration dConfig = config.getDynamicConfiguration();
+		if (dConfig == null) {
+			return;
+		}
+		DynamicTxnRollConfig dynTRC = dConfig.getDynamicTxnRollConfig();
 		if (dynTRC == null) {
 			return;
 		}
 
-		if (dynTRC.readModeAP != null) {
+		if (dynTRC.readModeAP != null & this.readModeAP != dynTRC.readModeAP) {
 			this.readModeAP = dynTRC.readModeAP;
+			if (Log.infoEnabled()) {
+				Log.info("Set TxnRollPolicy.readModeAP = " + this.readModeAP);
+			}
 		}
-		if (dynTRC.readModeSC != null) {
+		if (dynTRC.readModeSC != null && this.readModeSC != dynTRC.readModeSC) {
 			this.readModeSC = dynTRC.readModeSC;
+			if (Log.infoEnabled()) {
+				Log.info("Set TxnRollPolicy.readModeSC = " + this.readModeSC);
+			}
 		}
-		if (dynTRC.connectTimeout != null) {
+		if (dynTRC.connectTimeout != null && this.connectTimeout != dynTRC.connectTimeout.value) {
 			this.connectTimeout = dynTRC.connectTimeout.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set TxnRollPolicy.connectTimeout = " + this.connectTimeout);
+			}
 		}
-		if (dynTRC.replica != null) {
+		if (dynTRC.replica != null && this.replica != dynTRC.replica) {
 			this.replica = dynTRC.replica;
+			if (Log.infoEnabled()) {
+				Log.info("Set TxnRollPolicy.replica = " + this.replica);
+			}
 		}
-		if (dynTRC.sleepBetweenRetries != null) {
+		if (dynTRC.sleepBetweenRetries != null && this.sleepBetweenRetries != dynTRC.sleepBetweenRetries.value) {
 			this.sleepBetweenRetries = dynTRC.sleepBetweenRetries.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set TxnRollPolicy.sleepBetweenRetries = " + this.sleepBetweenRetries);
+			}
 		}
-		if (dynTRC.socketTimeout != null) {
+		if (dynTRC.socketTimeout != null && this.socketTimeout != dynTRC.socketTimeout.value) {
 			this.socketTimeout = dynTRC.socketTimeout.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set TxnRollPolicy.socketTimeout = " + this.socketTimeout);
+			}
 		}
-		if (dynTRC.timeoutDelay != null) {
+		if (dynTRC.timeoutDelay != null && this.timeoutDelay != dynTRC.timeoutDelay.value) {
 			this.timeoutDelay = dynTRC.timeoutDelay.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set TxnRollPolicy.timeoutDelay = " + this.timeoutDelay);
+			}
 		}
-		if (dynTRC.totalTimeout != null) {
+		if (dynTRC.totalTimeout != null && this.totalTimeout != dynTRC.totalTimeout.value) {
 			this.totalTimeout = dynTRC.totalTimeout.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set TxnRollPolicy.totalTimeout = " + this.totalTimeout);
+			}
 		}
-		if (dynTRC.maxRetries != null) {
+		if (dynTRC.maxRetries != null && this.maxRetries != dynTRC.maxRetries.value) {
 			this.maxRetries = dynTRC.maxRetries.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set TxnRollPolicy.maxRetries = " + this.maxRetries);
+			}
 		}
-		if (dynTRC.maxConcurrentThreads != null) {
+		if (dynTRC.maxConcurrentThreads != null && this.maxConcurrentThreads != dynTRC.maxConcurrentThreads.value) {
 			this.maxConcurrentThreads = dynTRC.maxConcurrentThreads.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set TxnRollPolicy.maxConcurrentThreads = " + this.maxConcurrentThreads);
+			}
 		}
-		if (dynTRC.allowInline != null) {
+		if (dynTRC.allowInline != null && this.allowInline != dynTRC.allowInline.value) {
 			this.allowInline = dynTRC.allowInline.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set TxnRollPolicy.allowInline = " + this.allowInline);
+			}
 		}
-		if (dynTRC.allowInlineSSD != null) {
+		if (dynTRC.allowInlineSSD != null && this.allowInlineSSD != dynTRC.allowInlineSSD.value) {
 			this.allowInlineSSD = dynTRC.allowInlineSSD.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set TxnRollPolicy.allowInlineSSD = " + this.allowInlineSSD);
+			}
 		}
-		if (dynTRC.respondAllKeys != null) {
+		if (dynTRC.respondAllKeys != null && this.respondAllKeys != dynTRC.respondAllKeys.value) {
 			this.respondAllKeys = dynTRC.respondAllKeys.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set TxnRollPolicy.respondAllKeys = " + this.respondAllKeys);
+			}
 		}
 	}
 

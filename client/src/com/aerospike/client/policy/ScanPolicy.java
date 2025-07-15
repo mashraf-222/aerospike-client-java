@@ -16,8 +16,10 @@
  */
 package com.aerospike.client.policy;
 
+import com.aerospike.client.Log;
 import com.aerospike.client.configuration.ConfigurationProvider;
 import com.aerospike.client.configuration.serializers.Configuration;
+import com.aerospike.client.configuration.serializers.DynamicConfiguration;
 import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicScanConfig;
 
 /**
@@ -84,43 +86,80 @@ public final class ScanPolicy extends Policy {
 		if (config == null) {
 			return;
 		}
-		DynamicScanConfig dynSC = config.dynamicConfiguration.dynamicScanConfig;
+		DynamicConfiguration dConfig = config.getDynamicConfiguration();
+		if (dConfig == null) {
+			return;
+		}
+		DynamicScanConfig dynSC = dConfig.getDynamicScanConfig();
 		if (dynSC == null) {
 			return;
 		}
 
-		if (dynSC.readModeAP != null) {
+		if (dynSC.readModeAP != null && this.readModeAP != dynSC.readModeAP) {
 			this.readModeAP = dynSC.readModeAP;
+			if (Log.infoEnabled()) {
+				Log.info("Set ScanPolicy.readModeAP = " + this.readModeAP);
+			}
 		}
-		if (dynSC.readModeSC != null) {
+		if (dynSC.readModeSC != null && this.readModeSC != dynSC.readModeSC) {
 			this.readModeSC = dynSC.readModeSC;
+			if (Log.infoEnabled()) {
+				Log.info("Set ScanPolicy.readModeSC = " + this.readModeSC);
+			}
 		}
-		if (dynSC.connectTimeout != null) {
+		if (dynSC.connectTimeout != null && this.connectTimeout != dynSC.connectTimeout.value) {
 			this.connectTimeout = dynSC.connectTimeout.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set ScanPolicy.connectTimeout = " + this.connectTimeout);
+			}
 		}
-		if (dynSC.replica != null) {
+		if (dynSC.replica != null && this.replica != dynSC.replica) {
 			this.replica = dynSC.replica;
+			if (Log.infoEnabled()) {
+				Log.info("Set ScanPolicy.replica = " + this.replica);
+			}
 		}
-		if (dynSC.sleepBetweenRetries != null) {
+		if (dynSC.sleepBetweenRetries != null && this.sleepBetweenRetries != dynSC.sleepBetweenRetries.value) {
 			this.sleepBetweenRetries = dynSC.sleepBetweenRetries.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set ScanPolicy.sleepBetweenRetries = " + this.sleepBetweenRetries);
+			}
 		}
-		if (dynSC.socketTimeout != null) {
+		if (dynSC.socketTimeout != null && this.timeoutDelay != dynSC.timeoutDelay.value) {
 			this.socketTimeout = dynSC.socketTimeout.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set ScanPolicy.socketTimeout = " + this.socketTimeout);
+			}
 		}
-		if (dynSC.timeoutDelay != null) {
+		if (dynSC.timeoutDelay != null && this.timeoutDelay != dynSC.timeoutDelay.value) {
 			this.timeoutDelay = dynSC.timeoutDelay.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set ScanPolicy.timeoutDelay = " + this.timeoutDelay);
+			}
 		}
-		if (dynSC.totalTimeout != null) {
+		if (dynSC.totalTimeout != null && this.totalTimeout != dynSC.totalTimeout.value) {
 			this.totalTimeout = dynSC.totalTimeout.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set ScanPolicy.totalTimeout = " + this.totalTimeout);
+			}
 		}
-		if (dynSC.maxRetries != null) {
+		if (dynSC.maxRetries != null && this.maxRetries != dynSC.maxRetries.value) {
 			this.maxRetries = dynSC.maxRetries.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set ScanPolicy.maxRetries = " + this.maxRetries);
+			}
 		}
-		if (dynSC.concurrentNodes != null) {
+		if (dynSC.concurrentNodes != null && this.concurrentNodes != dynSC.concurrentNodes.value) {
 			this.concurrentNodes = dynSC.concurrentNodes.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set ScanPolicy.concurrentNodes = " + this.concurrentNodes);
+			}
 		}
-		if (dynSC.maxConcurrentNodes != null) {
+		if (dynSC.maxConcurrentNodes != null && this.maxConcurrentNodes != dynSC.maxConcurrentNodes.value) {
 			this.maxConcurrentNodes = dynSC.maxConcurrentNodes.value;
+			if (Log.infoEnabled()) {
+				Log.info("Set ScanPolicy.maxConcurrentNodes = " + this.maxConcurrentNodes);
+			}
 		}
 	}
 
