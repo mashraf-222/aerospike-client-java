@@ -19,8 +19,8 @@ package com.aerospike.client.configuration.serializers.dynamicconfig;
 
 import java.util.Map;
 
-import com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops.BooleanProperty;
-import com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops.IntProperty;
+import com.aerospike.client.configuration.primitiveprops.BooleanProperty;
+import com.aerospike.client.configuration.primitiveprops.IntProperty;
 import com.aerospike.client.Log;
 
 public class DynamicMetricsConfig {

@@ -17,15 +17,14 @@
 
 package com.aerospike.client.configuration.serializers.dynamicconfig;
 
-import com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops.BooleanProperty;
-import com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops.IntProperty;
+import com.aerospike.client.configuration.primitiveprops.BooleanProperty;
+import com.aerospike.client.configuration.primitiveprops.IntProperty;
 import com.aerospike.client.Log;
 import com.aerospike.client.policy.Replica;
 
 
 public class DynamicBatchWriteConfig {
     public IntProperty connectTimeout;
-    public BooleanProperty failOnFilteredOut;
     public Replica replica;
     public IntProperty sleepBetweenRetries;
     public IntProperty socketTimeout;
@@ -42,8 +41,6 @@ public class DynamicBatchWriteConfig {
     public DynamicBatchWriteConfig() {}
 
     public void setConnectTimeout(IntProperty connectTimeout) { this.connectTimeout = connectTimeout; }
-
-    public void setFailOnFilteredOut(BooleanProperty failOnFilteredOut) { this.failOnFilteredOut = failOnFilteredOut; }
 
     public void setReplica(Replica replica) { this.replica = replica; }
 
@@ -70,8 +67,6 @@ public class DynamicBatchWriteConfig {
     public void setRespondAllKeys(BooleanProperty respondAllKeys) { this.respondAllKeys = respondAllKeys; }
 
     public IntProperty getConnectTimeout() { return connectTimeout; }
-
-    public BooleanProperty getFailOnFilteredOut() { return failOnFilteredOut; }
 
     public Replica getReplica() { return replica; }
 
@@ -102,7 +97,6 @@ public class DynamicBatchWriteConfig {
         StringBuffer propsString = new StringBuffer("{");
         try {
             propsString.append(" connect_timeout=").append(connectTimeout.value).append(", ");
-            propsString.append(" fail_on_filtered_out=").append(failOnFilteredOut.value).append(", ");
             propsString.append(" replica=").append(replica).append(", ");
             propsString.append(" send_key=").append(sendKey.value).append(", ");
             propsString.append(" sleep_between_retries=").append(sleepBetweenRetries.value).append(", ");

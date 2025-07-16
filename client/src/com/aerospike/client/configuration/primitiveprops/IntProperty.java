@@ -15,7 +15,7 @@
  * the License.
  */
 
-package com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops;
+package com.aerospike.client.configuration.primitiveprops;
 
 public class IntProperty {
     public int value;
