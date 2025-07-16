@@ -22,7 +22,6 @@ import com.aerospike.client.configuration.serializers.Configuration;
 import com.aerospike.client.configuration.serializers.DynamicConfiguration;
 import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicBatchReadConfig;
 import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicBatchWriteConfig;
-import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicReadConfig;
 
 import java.util.Objects;
 

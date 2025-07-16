@@ -21,7 +21,6 @@ import com.aerospike.client.configuration.ConfigurationProvider;
 import com.aerospike.client.configuration.serializers.Configuration;
 import com.aerospike.client.configuration.serializers.DynamicConfiguration;
 import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicQueryConfig;
-import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicReadConfig;
 
 /**
  * Container object for policy attributes used in query operations.
