@@ -16,8 +16,10 @@
  */
 package com.aerospike.client.policy;
 
+import com.aerospike.client.Log;
 import com.aerospike.client.configuration.ConfigurationProvider;
 import com.aerospike.client.configuration.serializers.Configuration;
+import com.aerospike.client.configuration.serializers.DynamicConfiguration;
 import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicScanConfig;
 
 /**
@@ -74,54 +76,20 @@ public final class ScanPolicy extends Policy {
 
 	/**
 	 * Copy scan policy from another scan policy AND override certain policy attributes if they exist in the configProvider.
+	 * Any policy overrides will not get logged.
 	 */
 	public ScanPolicy(ScanPolicy other, ConfigurationProvider configProvider) {
 		this(other);
-		if (configProvider == null) {
-			return;
-		}
-		Configuration config = configProvider.fetchConfiguration();
-		if (config == null) {
-			return;
-		}
-		DynamicScanConfig dynSC = config.dynamicConfiguration.dynamicScanConfig;
-		if (dynSC == null) {
-			return;
-		}
+		updateFromConfig(configProvider, false);
+	}
 
-		if (dynSC.readModeAP != null) {
-			this.readModeAP = dynSC.readModeAP;
-		}
-		if (dynSC.readModeSC != null) {
-			this.readModeSC = dynSC.readModeSC;
-		}
-		if (dynSC.connectTimeout != null) {
-			this.connectTimeout = dynSC.connectTimeout.value;
-		}
-		if (dynSC.replica != null) {
-			this.replica = dynSC.replica;
-		}
-		if (dynSC.sleepBetweenRetries != null) {
-			this.sleepBetweenRetries = dynSC.sleepBetweenRetries.value;
-		}
-		if (dynSC.socketTimeout != null) {
-			this.socketTimeout = dynSC.socketTimeout.value;
-		}
-		if (dynSC.timeoutDelay != null) {
-			this.timeoutDelay = dynSC.timeoutDelay.value;
-		}
-		if (dynSC.totalTimeout != null) {
-			this.totalTimeout = dynSC.totalTimeout.value;
-		}
-		if (dynSC.maxRetries != null) {
-			this.maxRetries = dynSC.maxRetries.value;
-		}
-		if (dynSC.concurrentNodes != null) {
-			this.concurrentNodes = dynSC.concurrentNodes.value;
-		}
-		if (dynSC.maxConcurrentNodes != null) {
-			this.maxConcurrentNodes = dynSC.maxConcurrentNodes.value;
-		}
+	/**
+	 * Copy scan policy from another scan policy AND override certain policy attributes if they exist in the configProvider.
+	 * Any default policy overrides will get logged.
+	 */
+	public ScanPolicy(ScanPolicy other, ConfigurationProvider configProvider, boolean isDefaultPolicy) {
+		this(other);
+		updateFromConfig(configProvider, isDefaultPolicy);
 	}
 
 	/**
@@ -159,6 +127,84 @@ public final class ScanPolicy extends Policy {
 	public ScanPolicy() {
 		super.totalTimeout = 0;
 		super.maxRetries = 5;
+	}
+
+	private void updateFromConfig(ConfigurationProvider configProvider, boolean log) {
+		boolean logUpdate = false;
+		if (configProvider == null) {
+			return;
+		}
+		Configuration config = configProvider.fetchConfiguration();
+		if (config == null) {
+			return;
+		}
+		DynamicConfiguration dConfig = config.getDynamicConfiguration();
+		if (dConfig == null) {
+			return;
+		}
+		DynamicScanConfig dynSC = dConfig.getDynamicScanConfig();
+		if (dynSC == null) {
+			return;
+		}
+
+		if (log && Log.infoEnabled()) {
+			logUpdate = true;
+		}
+
+		if (dynSC.connectTimeout != null && this.connectTimeout != dynSC.connectTimeout.value) {
+			this.connectTimeout = dynSC.connectTimeout.value;
+			if (logUpdate) {
+				Log.info("Set ScanPolicy.connectTimeout = " + this.connectTimeout);
+			}
+		}
+		if (dynSC.replica != null && this.replica != dynSC.replica) {
+			this.replica = dynSC.replica;
+			if (logUpdate) {
+				Log.info("Set ScanPolicy.replica = " + this.replica);
+			}
+		}
+		if (dynSC.sleepBetweenRetries != null && this.sleepBetweenRetries != dynSC.sleepBetweenRetries.value) {
+			this.sleepBetweenRetries = dynSC.sleepBetweenRetries.value;
+			if (logUpdate) {
+				Log.info("Set ScanPolicy.sleepBetweenRetries = " + this.sleepBetweenRetries);
+			}
+		}
+		if (dynSC.socketTimeout != null && this.timeoutDelay != dynSC.timeoutDelay.value) {
+			this.socketTimeout = dynSC.socketTimeout.value;
+			if (logUpdate) {
+				Log.info("Set ScanPolicy.socketTimeout = " + this.socketTimeout);
+			}
+		}
+		if (dynSC.timeoutDelay != null && this.timeoutDelay != dynSC.timeoutDelay.value) {
+			this.timeoutDelay = dynSC.timeoutDelay.value;
+			if (logUpdate) {
+				Log.info("Set ScanPolicy.timeoutDelay = " + this.timeoutDelay);
+			}
+		}
+		if (dynSC.totalTimeout != null && this.totalTimeout != dynSC.totalTimeout.value) {
+			this.totalTimeout = dynSC.totalTimeout.value;
+			if (logUpdate) {
+				Log.info("Set ScanPolicy.totalTimeout = " + this.totalTimeout);
+			}
+		}
+		if (dynSC.maxRetries != null && this.maxRetries != dynSC.maxRetries.value) {
+			this.maxRetries = dynSC.maxRetries.value;
+			if (logUpdate) {
+				Log.info("Set ScanPolicy.maxRetries = " + this.maxRetries);
+			}
+		}
+		if (dynSC.concurrentNodes != null && this.concurrentNodes != dynSC.concurrentNodes.value) {
+			this.concurrentNodes = dynSC.concurrentNodes.value;
+			if (logUpdate) {
+				Log.info("Set ScanPolicy.concurrentNodes = " + this.concurrentNodes);
+			}
+		}
+		if (dynSC.maxConcurrentNodes != null && this.maxConcurrentNodes != dynSC.maxConcurrentNodes.value) {
+			this.maxConcurrentNodes = dynSC.maxConcurrentNodes.value;
+			if (logUpdate) {
+				Log.info("Set ScanPolicy.maxConcurrentNodes = " + this.maxConcurrentNodes);
+			}
+		}
 	}
 
 	// Include setters to facilitate Spring's ConfigurationProperties.

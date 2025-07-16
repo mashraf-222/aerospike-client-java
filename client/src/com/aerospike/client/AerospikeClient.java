@@ -624,19 +624,19 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	 * be done at init and every time the config is updated
 	 */
 	public void mergePoliciesWithConfig() {
-		mergedReadPolicyDefault = new Policy(readPolicyDefault, configProvider);
-		mergedWritePolicyDefault = new WritePolicy(writePolicyDefault, configProvider);
-		mergedScanPolicyDefault = new ScanPolicy(scanPolicyDefault, configProvider);
-		mergedQueryPolicyDefault = new QueryPolicy(queryPolicyDefault, configProvider);
-		mergedBatchPolicyDefault = new BatchPolicy(batchPolicyDefault, configProvider);
-		mergedBatchParentPolicyWriteDefault = new BatchPolicy(batchParentPolicyWriteDefault, configProvider);
-		mergedBatchWritePolicyDefault = new BatchWritePolicy(batchWritePolicyDefault, configProvider);
-		mergedBatchDeletePolicyDefault = new BatchDeletePolicy(batchDeletePolicyDefault, configProvider);
-		mergedBatchUDFPolicyDefault = new BatchUDFPolicy(batchUDFPolicyDefault, configProvider);
-		mergedTxnVerifyPolicyDefault = new TxnVerifyPolicy(txnVerifyPolicyDefault, configProvider);
-		mergedTxnRollPolicyDefault = new TxnRollPolicy(txnRollPolicyDefault, configProvider);
-		mergedOperatePolicyReadDefault = new WritePolicy(operatePolicyReadDefault, configProvider);
-		mergedClientPolicy = new ClientPolicy(mergedClientPolicy, configProvider);
+		mergedReadPolicyDefault = new Policy(readPolicyDefault, configProvider,true);
+		mergedWritePolicyDefault = new WritePolicy(writePolicyDefault, configProvider, true, "");
+		mergedScanPolicyDefault = new ScanPolicy(scanPolicyDefault, configProvider, true);
+		mergedQueryPolicyDefault = new QueryPolicy(queryPolicyDefault, configProvider, true);
+		mergedBatchPolicyDefault = new BatchPolicy(batchPolicyDefault, configProvider, true, "");
+		mergedBatchParentPolicyWriteDefault = new BatchPolicy(batchParentPolicyWriteDefault, configProvider, true, "(Parent)");
+		mergedBatchWritePolicyDefault = new BatchWritePolicy(batchWritePolicyDefault, configProvider, true);
+		mergedBatchDeletePolicyDefault = new BatchDeletePolicy(batchDeletePolicyDefault, configProvider, true);
+		mergedBatchUDFPolicyDefault = new BatchUDFPolicy(batchUDFPolicyDefault, configProvider, true);
+		mergedTxnVerifyPolicyDefault = new TxnVerifyPolicy(txnVerifyPolicyDefault, configProvider, true);
+		mergedTxnRollPolicyDefault = new TxnRollPolicy(txnRollPolicyDefault, configProvider, true);
+		mergedOperatePolicyReadDefault = new WritePolicy(operatePolicyReadDefault, configProvider, true, "(Operate)");
+		mergedClientPolicy = new ClientPolicy(mergedClientPolicy, configProvider, true);
 	}
 
 	//-------------------------------------------------------
