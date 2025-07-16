@@ -22,6 +22,7 @@ import com.aerospike.client.Log;
 import com.aerospike.client.configuration.ConfigurationProvider;
 import com.aerospike.client.configuration.serializers.Configuration;
 import com.aerospike.client.configuration.serializers.DynamicConfiguration;
+import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicReadConfig;
 import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicWriteConfig;
 
 /**
@@ -132,86 +133,21 @@ public final class WritePolicy extends Policy {
 
 	/**
 	 * Copy write policy from another write policy AND override certain policy attributes if they exist in the
-	 * configProvider.
+	 * configProvider. Any policy overrides will not get logged.
 	 */
 	public WritePolicy(WritePolicy other, ConfigurationProvider configProvider) {
 		this(other);
-		if (configProvider == null) {
-			return;
-		}
-		Configuration config = configProvider.fetchConfiguration();
-		if (config == null) {
-			return;
-		}
-		DynamicConfiguration dConfig = config.getDynamicConfiguration();
-		if (dConfig == null) {
-			return;
-		}
-		DynamicWriteConfig dynWC = dConfig.getDynamicWriteConfig();
-		if (dynWC == null) {
-			return;
-		}
+		updateFromConfig(configProvider, false, "");
+	}
 
-		if (dynWC.connectTimeout != null && this.connectTimeout != dynWC.connectTimeout.value) {
-			this.connectTimeout = dynWC.connectTimeout.value;
-			if (Log.infoEnabled()) {
-				Log.info("Set WritePolicy.connectTimeout = " + this.connectTimeout);
-			}
-		}
-		if (dynWC.failOnFilteredOut != null && this.failOnFilteredOut != dynWC.failOnFilteredOut.value) {
-			this.failOnFilteredOut = dynWC.failOnFilteredOut.value;
-			if (Log.infoEnabled()) {
-				Log.info("Set WritePolicy.failOnFilteredOut = " + this.failOnFilteredOut);
-			}
-		}
-		if (dynWC.replica != null && this.replica != dynWC.replica) {
-			this.replica = dynWC.replica;
-			if (Log.infoEnabled()) {
-				Log.info("Set WritePolicy.replica = " + this.replica);
-			}
-		}
-		if (dynWC.sendKey != null && this.sendKey != dynWC.sendKey.value) {
-			this.sendKey = dynWC.sendKey.value;
-			if (Log.infoEnabled()) {
-				Log.info("Set WritePolicy.sendKey = " + this.sendKey);
-			}
-		}
-		if (dynWC.sleepBetweenRetries != null && this.sleepBetweenRetries != dynWC.sleepBetweenRetries.value) {
-			this.sleepBetweenRetries = dynWC.sleepBetweenRetries.value;
-			if (Log.infoEnabled()) {
-				Log.info("Set WritePolicy.sleepBetweenRetries = " + this.sleepBetweenRetries);
-			}
-		}
-		if (dynWC.socketTimeout != null && this.socketTimeout != dynWC.socketTimeout.value) {
-			this.socketTimeout = dynWC.socketTimeout.value;
-			if (Log.infoEnabled()) {
-				Log.info("Set WritePolicy.socketTimeout = " + this.socketTimeout);
-			}
-		}
-		if (dynWC.timeoutDelay != null && this.timeoutDelay != dynWC.timeoutDelay.value) {
-			this.timeoutDelay = dynWC.timeoutDelay.value;
-			if (Log.infoEnabled()) {
-				Log.info("Set WritePolicy.timeoutDelay = " + this.timeoutDelay);
-			}
-		}
-		if (dynWC.totalTimeout != null && this.totalTimeout != dynWC.totalTimeout.value) {
-			this.totalTimeout = dynWC.totalTimeout.value;
-			if (Log.infoEnabled()) {
-				Log.info("Set WritePolicy.totalTimeout = " + this.totalTimeout);
-			}
-		}
-		if (dynWC.maxRetries != null && this.maxRetries != dynWC.maxRetries.value) {
-			this.maxRetries = dynWC.maxRetries.value;
-			if (Log.infoEnabled()) {
-				Log.info("Set WritePolicy.maxRetries = " + this.maxRetries);
-			}
-		}
-		if (dynWC.durableDelete != null && this.durableDelete != dynWC.durableDelete.value) {
-			this.durableDelete = dynWC.durableDelete.value;
-			if (Log.infoEnabled()) {
-				Log.info("Set WritePolicy.durableDelete = " + this.durableDelete);
-			}
-		}
+	/**
+	 * Copy write policy from another write policy AND override certain policy attributes if they exist in the
+	 * configProvider. Any default policy overrides will get logged.
+	 */
+	public WritePolicy(WritePolicy other, ConfigurationProvider configProvider, boolean isDefaultPolicy,
+					   String preText) {
+		this(other);
+		updateFromConfig(configProvider, isDefaultPolicy, preText);
 	}
 
 	/**
@@ -271,6 +207,91 @@ public final class WritePolicy extends Policy {
 				&& generation == other.generation && generationPolicy == other.generationPolicy
 				&& recordExistsAction == other.recordExistsAction && respondAllOps == other.respondAllOps
 				&& xdr == other.xdr;
+	}
+
+	private void updateFromConfig(ConfigurationProvider configProvider, boolean log, String preText) {
+		boolean logUpdate = false;
+		if (configProvider == null) {
+			return;
+		}
+		Configuration config = configProvider.fetchConfiguration();
+		if (config == null) {
+			return;
+		}
+		DynamicConfiguration dConfig = config.getDynamicConfiguration();
+		if (dConfig == null) {
+			return;
+		}
+		DynamicWriteConfig dynWC = dConfig.getDynamicWriteConfig();
+		if (dynWC == null) {
+			return;
+		}
+		if (!Objects.equals(preText, "")) {
+			preText = " " + preText;
+		}
+		if (log && Log.infoEnabled()) {
+			logUpdate = true;
+		}
+		if (dynWC.connectTimeout != null && this.connectTimeout != dynWC.connectTimeout.value) {
+			this.connectTimeout = dynWC.connectTimeout.value;
+			if (logUpdate) {
+				Log.info("Set" + preText + " WritePolicy.connectTimeout = " + this.connectTimeout);
+			}
+		}
+		if (dynWC.failOnFilteredOut != null && this.failOnFilteredOut != dynWC.failOnFilteredOut.value) {
+			this.failOnFilteredOut = dynWC.failOnFilteredOut.value;
+			if (logUpdate) {
+				Log.info("Set" + preText + " WritePolicy.failOnFilteredOut = " + this.failOnFilteredOut);
+			}
+		}
+		if (dynWC.replica != null && this.replica != dynWC.replica) {
+			this.replica = dynWC.replica;
+			if (logUpdate) {
+				Log.info("Set" + preText + " WritePolicy.replica = " + this.replica);
+			}
+		}
+		if (dynWC.sendKey != null && this.sendKey != dynWC.sendKey.value) {
+			this.sendKey = dynWC.sendKey.value;
+			if (logUpdate) {
+				Log.info("Set" + preText + " WritePolicy.sendKey = " + this.sendKey);
+			}
+		}
+		if (dynWC.sleepBetweenRetries != null && this.sleepBetweenRetries != dynWC.sleepBetweenRetries.value) {
+			this.sleepBetweenRetries = dynWC.sleepBetweenRetries.value;
+			if (logUpdate) {
+				Log.info("Set" + preText + " WritePolicy.sleepBetweenRetries = " + this.sleepBetweenRetries);
+			}
+		}
+		if (dynWC.socketTimeout != null && this.socketTimeout != dynWC.socketTimeout.value) {
+			this.socketTimeout = dynWC.socketTimeout.value;
+			if (logUpdate) {
+				Log.info("Set" + preText + " WritePolicy.socketTimeout = " + this.socketTimeout);
+			}
+		}
+		if (dynWC.timeoutDelay != null && this.timeoutDelay != dynWC.timeoutDelay.value) {
+			this.timeoutDelay = dynWC.timeoutDelay.value;
+			if (logUpdate) {
+				Log.info("Set" + preText + " WritePolicy.timeoutDelay = " + this.timeoutDelay);
+			}
+		}
+		if (dynWC.totalTimeout != null && this.totalTimeout != dynWC.totalTimeout.value) {
+			this.totalTimeout = dynWC.totalTimeout.value;
+			if (logUpdate) {
+				Log.info("Set" + preText + " WritePolicy.totalTimeout = " + this.totalTimeout);
+			}
+		}
+		if (dynWC.maxRetries != null && this.maxRetries != dynWC.maxRetries.value) {
+			this.maxRetries = dynWC.maxRetries.value;
+			if (logUpdate) {
+				Log.info("Set" + preText + " WritePolicy.maxRetries = " + this.maxRetries);
+			}
+		}
+		if (dynWC.durableDelete != null && this.durableDelete != dynWC.durableDelete.value) {
+			this.durableDelete = dynWC.durableDelete.value;
+			if (logUpdate) {
+				Log.info("Set" + preText + " WritePolicy.durableDelete = " + this.durableDelete);
+			}
+		}
 	}
 
 	// Include setters to facilitate Spring's ConfigurationProperties.

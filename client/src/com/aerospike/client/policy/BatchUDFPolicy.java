@@ -21,6 +21,7 @@ import com.aerospike.client.configuration.ConfigurationProvider;
 import com.aerospike.client.configuration.serializers.Configuration;
 import com.aerospike.client.configuration.serializers.DynamicConfiguration;
 import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicBatchUDFconfig;
+import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicReadConfig;
 import com.aerospike.client.exp.Expression;
 
 /**
@@ -97,37 +98,20 @@ public final class BatchUDFPolicy {
 
 	/**
 	 * Copy policy from another policy AND override certain policy attributes if they exist in the configProvider.
+	 * Any policy overrides will not get logged.
 	 */
 	public BatchUDFPolicy(BatchUDFPolicy other, ConfigurationProvider configProvider) {
 		this(other);
-		if (configProvider == null) {
-			return;
-		}
-		Configuration config = configProvider.fetchConfiguration();
-		if (config == null) {
-			return;
-		}
-		DynamicConfiguration dConfig = config.getDynamicConfiguration();
-		if (dConfig == null) {
-			return;
-		}
-		DynamicBatchUDFconfig dynUDF = dConfig.getDynamicBatchUDFconfig();
-		if (dynUDF == null) {
-			return;
-		}
+		updateFromConfig(configProvider, false);
+	}
 
-		if (dynUDF.sendKey != null && this.sendKey != dynUDF.sendKey.value) {
-			this.sendKey = dynUDF.sendKey.value;
-			if (Log.infoEnabled()) {
-				Log.info("Set BatchUDFPolicy.sendKey = " + this.sendKey);
-			}
-		}
-		if (dynUDF.durableDelete != null && this.durableDelete != dynUDF.durableDelete.value) {
-			this.durableDelete = dynUDF.durableDelete.value;
-			if (Log.infoEnabled()) {
-				Log.info("Set BatchUDFPolicy.sendKey = " + this.sendKey);
-			}
-		}
+	/**
+	 * Copy policy from another policy AND override certain policy attributes if they exist in the configProvider.
+	 * Any default policy overrides will get logged.
+	 */
+	public BatchUDFPolicy(BatchUDFPolicy other, ConfigurationProvider configProvider, boolean isDefaultPolicy) {
+		this(other);
+		updateFromConfig(configProvider, isDefaultPolicy);
 	}
 
 	/**
@@ -146,6 +130,41 @@ public final class BatchUDFPolicy {
 	 * Default constructor.
 	 */
 	public BatchUDFPolicy() {
+	}
+
+	private void updateFromConfig(ConfigurationProvider configProvider, boolean log) {
+		boolean logUpdate = false;
+		if (configProvider == null) {
+			return;
+		}
+		Configuration config = configProvider.fetchConfiguration();
+		if (config == null) {
+			return;
+		}
+		DynamicConfiguration dConfig = config.getDynamicConfiguration();
+		if (dConfig == null) {
+			return;
+		}
+		DynamicBatchUDFconfig dynUDF = dConfig.getDynamicBatchUDFconfig();
+		if (dynUDF == null) {
+			return;
+		}
+
+		if (log && Log.infoEnabled()) {
+			logUpdate = true;
+		}
+		if (dynUDF.sendKey != null && this.sendKey != dynUDF.sendKey.value) {
+			this.sendKey = dynUDF.sendKey.value;
+			if (logUpdate) {
+				Log.info("Set BatchUDFPolicy.sendKey = " + this.sendKey);
+			}
+		}
+		if (dynUDF.durableDelete != null && this.durableDelete != dynUDF.durableDelete.value) {
+			this.durableDelete = dynUDF.durableDelete.value;
+			if (logUpdate) {
+				Log.info("Set BatchUDFPolicy.sendKey = " + this.sendKey);
+			}
+		}
 	}
 
 	// Include setters to facilitate Spring's ConfigurationProperties.

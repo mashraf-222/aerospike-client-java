@@ -20,6 +20,7 @@ import com.aerospike.client.Log;
 import com.aerospike.client.configuration.ConfigurationProvider;
 import com.aerospike.client.configuration.serializers.Configuration;
 import com.aerospike.client.configuration.serializers.DynamicConfiguration;
+import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicReadConfig;
 import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicTxnVerifyConfig;
 
 /**
@@ -35,12 +36,39 @@ public class TxnVerifyPolicy extends BatchPolicy {
 	}
 
 	/**
-	 * Copy policy from another policy AND apply config overrides
+	 * Copy policy from another policy AND apply config overrides.
+	 * Any policy overrides will not get logged.
 	 */
-	@SuppressWarnings("deprecation")
 	public TxnVerifyPolicy(TxnVerifyPolicy other, ConfigurationProvider configProvider) {
 		super(other);
-		if (configProvider == null){
+		updateFromConfig(configProvider, false);
+	}
+
+	/**
+	 * Copy policy from another policy AND apply config overrides.
+	 * Any default policy overrides will get logged.
+	 */
+	public TxnVerifyPolicy(TxnVerifyPolicy other, ConfigurationProvider configProvider, boolean isDefaultPolicy) {
+		super(other);
+		updateFromConfig(configProvider, isDefaultPolicy);
+	}
+
+	/**
+	 * Default constructor.
+	 */
+	public TxnVerifyPolicy() {
+		readModeSC = ReadModeSC.LINEARIZE;
+		replica = Replica.MASTER;
+		maxRetries = 5;
+		socketTimeout = 3000;
+		totalTimeout = 10000;
+		sleepBetweenRetries = 1000;
+	}
+
+	@SuppressWarnings("deprecation")
+	private void updateFromConfig(ConfigurationProvider configProvider, boolean log) {
+		boolean logUpdate = false;
+		if (configProvider == null) {
 			return;
 		}
 		Configuration config = configProvider.fetchConfiguration();
@@ -56,95 +84,86 @@ public class TxnVerifyPolicy extends BatchPolicy {
 			return;
 		}
 
+		if (log && Log.infoEnabled()) {
+			logUpdate = true;
+		}
 		if (dynTVC.readModeAP != null & this.readModeAP != dynTVC.readModeAP) {
 			this.readModeAP = dynTVC.readModeAP;
-			if (Log.infoEnabled()) {
+			if (logUpdate) {
 				Log.info("Set TxnVerifyPolicy.readModeAP = " + this.readModeAP);
 			}
 		}
 		if (dynTVC.readModeSC != null && this.readModeSC != dynTVC.readModeSC) {
 			this.readModeSC = dynTVC.readModeSC;
-			if (Log.infoEnabled()) {
+			if (logUpdate) {
 				Log.info("Set TxnVerifyPolicy.readModeSC = " + this.readModeSC);
 			}
 		}
 		if (dynTVC.connectTimeout != null && this.connectTimeout != dynTVC.connectTimeout.value) {
 			this.connectTimeout = dynTVC.connectTimeout.value;
-			if (Log.infoEnabled()) {
+			if (logUpdate) {
 				Log.info("Set TxnVerifyPolicy.connectTimeout = " + this.connectTimeout);
 			}
 		}
 		if (dynTVC.replica != null && this.replica != dynTVC.replica) {
 			this.replica = dynTVC.replica;
-			if (Log.infoEnabled()) {
+			if (logUpdate) {
 				Log.info("Set TxnVerifyPolicy.replica = " + this.replica);
 			}
 		}
 		if (dynTVC.sleepBetweenRetries != null && this.sleepBetweenRetries != dynTVC.sleepBetweenRetries.value) {
 			this.sleepBetweenRetries = dynTVC.sleepBetweenRetries.value;
-			if (Log.infoEnabled()) {
+			if (logUpdate) {
 				Log.info("Set TxnVerifyPolicy.sleepBetweenRetries = " + this.sleepBetweenRetries);
 			}
 		}
 		if (dynTVC.socketTimeout != null && this.socketTimeout != dynTVC.socketTimeout.value) {
 			this.socketTimeout = dynTVC.socketTimeout.value;
-			if (Log.infoEnabled()) {
+			if (logUpdate) {
 				Log.info("Set TxnVerifyPolicy.socketTimeout = " + this.socketTimeout);
 			}
 		}
 		if (dynTVC.timeoutDelay != null && this.timeoutDelay != dynTVC.timeoutDelay.value) {
 			this.timeoutDelay = dynTVC.timeoutDelay.value;
-			if (Log.infoEnabled()) {
+			if (logUpdate) {
 				Log.info("Set TxnVerifyPolicy.timeoutDelay = " + this.timeoutDelay);
 			}
 		}
 		if (dynTVC.totalTimeout != null && this.totalTimeout != dynTVC.totalTimeout.value) {
 			this.totalTimeout = dynTVC.totalTimeout.value;
-			if (Log.infoEnabled()) {
+			if (logUpdate) {
 				Log.info("Set TxnVerifyPolicy.totalTimeout = " + this.totalTimeout);
 			}
 		}
 		if (dynTVC.maxRetries != null && this.maxRetries != dynTVC.maxRetries.value) {
 			this.maxRetries = dynTVC.maxRetries.value;
-			if (Log.infoEnabled()) {
+			if (logUpdate) {
 				Log.info("Set TxnVerifyPolicy.maxRetries = " + this.maxRetries);
 			}
 		}
 		if (dynTVC.maxConcurrentThreads != null && this.maxConcurrentThreads != dynTVC.maxConcurrentThreads.value) {
 			this.maxConcurrentThreads = dynTVC.maxConcurrentThreads.value;
-			if (Log.infoEnabled()) {
+			if (logUpdate) {
 				Log.info("Set TxnVerifyPolicy.maxConcurrentThreads = " + this.maxConcurrentThreads);
 			}
 		}
 		if (dynTVC.allowInline != null && this.allowInline != dynTVC.allowInline.value) {
 			this.allowInline = dynTVC.allowInline.value;
-			if (Log.infoEnabled()) {
+			if (logUpdate) {
 				Log.info("Set TxnVerifyPolicy.allowInline = " + this.allowInline);
 			}
 		}
 		if (dynTVC.allowInlineSSD != null && this.allowInlineSSD != dynTVC.allowInlineSSD.value) {
 			this.allowInlineSSD = dynTVC.allowInlineSSD.value;
-			if (Log.infoEnabled()) {
+			if (logUpdate) {
 				Log.info("Set TxnVerifyPolicy.allowInlineSSD = " + this.allowInlineSSD);
 			}
 		}
 		if (dynTVC.respondAllKeys != null && this.respondAllKeys != dynTVC.respondAllKeys.value) {
 			this.respondAllKeys = dynTVC.respondAllKeys.value;
-			if (Log.infoEnabled()) {
+			if (logUpdate) {
 				Log.info("Set TxnVerifyPolicy.respondAllKeys = " + this.respondAllKeys);
 			}
 		}
-	}
-
-	/**
-	 * Default constructor.
-	 */
-	public TxnVerifyPolicy() {
-		readModeSC = ReadModeSC.LINEARIZE;
-		replica = Replica.MASTER;
-		maxRetries = 5;
-		socketTimeout = 3000;
-		totalTimeout = 10000;
-		sleepBetweenRetries = 1000;
 	}
 }
