@@ -15,17 +15,17 @@
  * the License.
  */
 
-package com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops;
+package com.aerospike.client.configuration.primitiveprops;
 
-public class BooleanProperty {
-    public boolean value; // =  PolicyDefaultValues.FAIL_IF_NOT_CONNECTED;
+public class StringProperty {
+    public String value;
 
-    public BooleanProperty() {}
-    public BooleanProperty(boolean value) {
+    public StringProperty() {}
+    public StringProperty(String value) {
         this.value = value;
     }
 
-    public void setValue(boolean value) {
+    public void setValue(String value) {
         this.value = value;
     }
 }

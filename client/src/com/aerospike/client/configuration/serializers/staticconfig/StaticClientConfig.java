@@ -17,7 +17,7 @@
 
 package com.aerospike.client.configuration.serializers.staticconfig;
 
-import com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops.IntProperty;
+import com.aerospike.client.configuration.primitiveprops.IntProperty;
 import com.aerospike.client.Log;
 
 public class StaticClientConfig {

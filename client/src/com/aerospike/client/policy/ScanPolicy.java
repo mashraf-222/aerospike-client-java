@@ -95,18 +95,6 @@ public final class ScanPolicy extends Policy {
 			return;
 		}
 
-		if (dynSC.readModeAP != null && this.readModeAP != dynSC.readModeAP) {
-			this.readModeAP = dynSC.readModeAP;
-			if (Log.infoEnabled()) {
-				Log.info("Set ScanPolicy.readModeAP = " + this.readModeAP);
-			}
-		}
-		if (dynSC.readModeSC != null && this.readModeSC != dynSC.readModeSC) {
-			this.readModeSC = dynSC.readModeSC;
-			if (Log.infoEnabled()) {
-				Log.info("Set ScanPolicy.readModeSC = " + this.readModeSC);
-			}
-		}
 		if (dynSC.connectTimeout != null && this.connectTimeout != dynSC.connectTimeout.value) {
 			this.connectTimeout = dynSC.connectTimeout.value;
 			if (Log.infoEnabled()) {

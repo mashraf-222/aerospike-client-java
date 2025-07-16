@@ -19,9 +19,9 @@ package com.aerospike.client.configuration.serializers.dynamicconfig;
 
 import java.util.List;
 
-import com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops.BooleanProperty;
-import com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops.IntProperty;
-import com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops.StringProperty;
+import com.aerospike.client.configuration.primitiveprops.BooleanProperty;
+import com.aerospike.client.configuration.primitiveprops.IntProperty;
+import com.aerospike.client.configuration.primitiveprops.StringProperty;
 import com.aerospike.client.Log;
 
 public class DynamicClientConfig {

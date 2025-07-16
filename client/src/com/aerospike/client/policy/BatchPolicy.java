@@ -274,12 +274,6 @@ public class BatchPolicy extends Policy {
 				Log.info("Set BatchPolicy.connectTimeout = " + this.connectTimeout);
 			}
 		}
-		if (dynBWC.failOnFilteredOut != null && this.failOnFilteredOut != dynBWC.failOnFilteredOut.value) {
-			this.failOnFilteredOut = dynBWC.failOnFilteredOut.value;
-			if (Log.infoEnabled()) {
-				Log.info("Set BatchPolicy.failOnFilteredOut = " + this.failOnFilteredOut);
-			}
-		}
 		if (dynBWC.replica != null && this.replica != dynBWC.replica) {
 			this.replica = dynBWC.replica;
 			if (Log.infoEnabled()) {

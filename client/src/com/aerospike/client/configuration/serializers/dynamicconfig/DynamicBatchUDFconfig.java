@@ -17,7 +17,7 @@
 
 package com.aerospike.client.configuration.serializers.dynamicconfig;
 
-import com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops.BooleanProperty;
+import com.aerospike.client.configuration.primitiveprops.BooleanProperty;
 import com.aerospike.client.Log;
 
 public class DynamicBatchUDFconfig {

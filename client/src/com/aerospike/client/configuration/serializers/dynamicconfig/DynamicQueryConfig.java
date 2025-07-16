@@ -17,8 +17,8 @@
 
 package com.aerospike.client.configuration.serializers.dynamicconfig;
 
-import com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops.BooleanProperty;
-import com.aerospike.client.configuration.serializers.dynamicconfig.primitiveprops.IntProperty;
+import com.aerospike.client.configuration.primitiveprops.BooleanProperty;
+import com.aerospike.client.configuration.primitiveprops.IntProperty;
 import com.aerospike.client.Log;
 import com.aerospike.client.policy.QueryDuration;
 import com.aerospike.client.policy.ReadModeAP;
@@ -27,8 +27,6 @@ import com.aerospike.client.policy.Replica;
 
 
 public class DynamicQueryConfig {
-    public ReadModeAP readModeAP;
-    public ReadModeSC readModeSC;
     public IntProperty connectTimeout;
     public Replica replica;
     public IntProperty sleepBetweenRetries;
@@ -42,14 +40,6 @@ public class DynamicQueryConfig {
     public QueryDuration expectedDuration;
 
     public DynamicQueryConfig() {}
-
-    public void setReadModeSC(ReadModeSC readModeSC) {
-        this.readModeSC = readModeSC;
-    }
-
-    public void setReadModeAP(ReadModeAP readModeAP) {
-        this.readModeAP = readModeAP;
-    }
 
     public void setConnectTimeout(IntProperty connectTimeout) { this.connectTimeout = connectTimeout; }
 
@@ -72,10 +62,6 @@ public class DynamicQueryConfig {
     public void setRecordQueueSize(IntProperty recordQueueSize) { this.recordQueueSize = recordQueueSize; }
 
     public void setExpectedDuration(QueryDuration expectedDuration) { this.expectedDuration = expectedDuration; }
-
-    public ReadModeAP getReadModeAP() { return readModeAP; }
-
-    public ReadModeSC getReadModeSC() { return readModeSC; }
 
     public IntProperty getConnectTimeout() { return connectTimeout; }
 
@@ -103,8 +89,6 @@ public class DynamicQueryConfig {
     public String toString() {
         StringBuffer propsString = new StringBuffer("{");
         try {
-            propsString.append(" read_mode_ap=").append(readModeAP).append(", ");
-            propsString.append(" read_mode_sc=").append(readModeSC).append(", ");
             propsString.append(" connect_timeout=").append(connectTimeout.value).append(", ");
             propsString.append(" replica=").append(replica).append(", ");
             propsString.append(" sleep_between_retries=").append(sleepBetweenRetries.value).append(", ");

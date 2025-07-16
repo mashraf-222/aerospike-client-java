@@ -134,18 +134,6 @@ public class QueryPolicy extends Policy {
 			return;
 		}
 
-		if (dynQC.readModeAP != null && this.readModeAP != dynQC.readModeAP) {
-			this.readModeAP = dynQC.readModeAP;
-			if (Log.infoEnabled()) {
-				Log.info("Set QueryPolicy.readModeAP = " + this.readModeAP);
-			}
-		}
-		if (dynQC.readModeSC != null && this.readModeSC != dynQC.readModeSC) {
-			this.readModeSC = dynQC.readModeSC;
-			if (Log.infoEnabled()) {
-				Log.info("Set QueryPolicy.readModeSC = " + this.readModeSC);
-			}
-		}
 		if (dynQC.connectTimeout != null && this.connectTimeout != dynQC.connectTimeout.value) {
 			this.connectTimeout = dynQC.connectTimeout.value;
 			if (Log.infoEnabled()) {
