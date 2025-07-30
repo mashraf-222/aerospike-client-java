@@ -138,8 +138,13 @@ public class AdminCommand {
 					// Server does not require login.
 					return;
 				}
+				String msg = "Login failed";
+				if (result == ResultCode.INVALID_CREDENTIAL) {
+					msg = "Authentication failed: Password authentication is disabled for PKI-only users. " +
+							"Please authenticate using your certificate.";
+				}
 
-				throw new AerospikeException(result, "Login failed");
+				throw new AerospikeException(result, msg);
 			}
 
 			// Read session token.
@@ -255,7 +260,7 @@ public class AdminCommand {
 		writeField(PASSWORD, password);
 		int result = executeCommandNode(node, policy);
 		if (result == ResultCode.FORBIDDEN_PASSWORD) {
-			throw new AerospikeException("PKI user password not settable");
+			throw new AerospikeException("FORBIDDEN_PASSWORD (64): PKI user password not changeable");
 		}
 	}
 
@@ -267,7 +272,7 @@ public class AdminCommand {
 		writeField(PASSWORD, password);
 		int result = executeCommandNode(node, policy);
 		if (result == ResultCode.FORBIDDEN_PASSWORD) {
-			throw new AerospikeException("PKI user password not changeable");
+			throw new AerospikeException("FORBIDDEN_PASSWORD (64): PKI user password not changeable");
 		}
 	}
 
