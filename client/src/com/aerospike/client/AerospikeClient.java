@@ -135,6 +135,7 @@ import com.aerospike.client.util.Crypto;
 import com.aerospike.client.util.Pack;
 import com.aerospike.client.util.Packer;
 import com.aerospike.client.util.Util;
+import com.aerospike.client.util.Version;
 
 /**
  * Instantiate an <code>AerospikeClient</code> object to access an Aerospike
@@ -5293,7 +5294,7 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	// Internal Methods
 	//-------------------------------------------------------
 
-	private static String buildCreateIndexInfoCommand(
+	private String buildCreateIndexInfoCommand(
 		String namespace,
 		String setName,
 		String indexName,
@@ -5304,7 +5305,11 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		Expression exp
 	) {
 		StringBuilder sb = new StringBuilder(1024);
-		sb.append("sindex-create:ns=");
+		Version currentServerVersion = this.cluster.getRandomNode().getVersion();
+		Version serverVersion = new Version("8.1.0");
+		String createIndexCommand = currentServerVersion.isGreaterOrEqual(serverVersion) ? "sindex-create:namespace=": "sindex-create:ns=";
+
+		sb.append(createIndexCommand);
 		sb.append(namespace);
 
 		if (setName != null && setName.length() > 0) {
@@ -5346,9 +5351,13 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		return sb.toString();
 	}
 
-	private static String buildDropIndexInfoCommand(String namespace, String setName, String indexName) {
+	private String buildDropIndexInfoCommand(String namespace, String setName, String indexName) {
 		StringBuilder sb = new StringBuilder(500);
-		sb.append("sindex-delete:ns=");
+		Version currentServerVersion = this.cluster.getRandomNode().getVersion();
+		Version serverVersion = new Version("8.1.0");
+		String deleteIndexCommand = currentServerVersion.isGreaterOrEqual(serverVersion) ? "sindex-delete:namespace=": "sindex-delete:ns=";
+
+		sb.append(deleteIndexCommand);
 		sb.append(namespace);
 
 		if (setName != null && setName.length() > 0) {

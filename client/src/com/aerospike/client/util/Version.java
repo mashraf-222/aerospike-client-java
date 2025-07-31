@@ -21,7 +21,7 @@ import com.aerospike.client.Info;
 import com.aerospike.client.cluster.Node;
 import com.aerospike.client.policy.InfoPolicy;
 
-public final class Version {
+public final class Version implements Comparable<Version> {
 
 	public static Version getServerVersion(IAerospikeClient client, InfoPolicy policy) {
 		Node node = client.getCluster().getRandomNode();
@@ -80,29 +80,30 @@ public final class Version {
 		return i;
 	}
 
-	public boolean isGreaterEqual(int v1, int v2, int v3) {
-		return major > v1 || (major == v1 && (minor > v2 || (minor == v2 && patch >= v3)));
-	}
+	@Override
+    public int compareTo(Version other) {
+        if (this.major != other.major) return Integer.compare(this.major, other.major);
+        if (this.minor != other.minor) return Integer.compare(this.minor, other.minor);
+        if (this.patch != other.patch) return Integer.compare(this.patch, other.patch);
 
-	public boolean isLess(int v1, int v2, int v3) {
-		return major < v1 || (major == v1 && (minor < v2 || (minor == v2 && patch < v3)));
-	}
+        return Integer.compare(this.build, other.build);
+    }
 
-	public int compare(Version other) {
-		if (this.major != other.major) {
-			return this.major - other.major;
-		}
-		if (this.minor != other.minor) {
-			return this.minor - other.minor;
-		}
-		if (this.patch != other.patch) {
-			return this.patch - other.patch;
-		}
-		if (this.build != other.build) {
-			return this.build - other.build;
-		}
-		return 0;
-	}
+    public boolean isGreaterOrEqual(Version otherVersion) {
+        return this.compareTo(otherVersion) >= 0;
+    }
+
+    public boolean isLessThan(Version otherVersion) {
+        return this.compareTo(otherVersion) < 0;
+    }
+
+    public boolean isGreaterOrEqual(int major, int minor, int patch, int build) {
+        return this.compareTo(new Version(major, minor, patch, build)) >= 0;
+    }
+
+    public boolean isLessThan(int major, int minor, int patch, int build) {
+        return this.compareTo(new Version(major, minor, patch, build)) < 0;
+    }
 
 	@Override
 	public String toString() {
