@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2025 Aerospike, Inc.
+ * Copyright 2012-2024 Aerospike, Inc.
  *
  * Portions may be licensed to Aerospike, Inc. under one or more contributor
  * license agreements WHICH ARE COMPATIBLE WITH THE APACHE LICENSE, VERSION 2.0.
@@ -639,7 +639,9 @@ public class TestQueryFilterExp extends TestSync {
 		}
 	}
 
+	// TODO: remove when deviceSize() is removed
 	@Test
+	@Deprecated
 	public void queryDeviceSize() {
 		int begin = 1;
 		int end = 10;
@@ -670,7 +672,9 @@ public class TestQueryFilterExp extends TestSync {
 		}
 	}
 
+	// TODO: remove when deviceSize() is removed
 	@Test
+	@Deprecated
 	public void queryMemorySize() {
 		int begin = 1;
 		int end = 10;

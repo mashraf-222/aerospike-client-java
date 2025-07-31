@@ -22,6 +22,7 @@ import com.aerospike.client.ResultCode;
 import com.aerospike.client.cluster.Cluster;
 import com.aerospike.client.cluster.Node;
 import com.aerospike.client.policy.Policy;
+import com.aerospike.client.util.Version;
 
 /**
  * Task used to poll for long running create index completion.
@@ -50,12 +51,13 @@ public final class IndexTask extends Task {
 	public int queryStatus() {
 		// All nodes must respond with load_pct of 100 to be considered done.
 		Node[] nodes = cluster.validateNodes();
+		Version currentServerVersion = this.cluster.getRandomNode().getVersion();
 
 		for (Node node : nodes) {
 			if (isCreate) {
 				// Check index status.
 				if (statusCommand == null) {
-					statusCommand = buildStatusCommand(namespace, indexName);
+					statusCommand = IndexTask.buildStatusCommand(namespace, indexName);
 				}
 
 				String response = Info.request(policy, node, statusCommand);
@@ -68,7 +70,7 @@ public final class IndexTask extends Task {
 			else {
 				// Check if index exists.
 				if (existsCommand == null) {
-					existsCommand = buildExistsCommand(namespace, indexName);
+					existsCommand = buildExistsCommand(namespace, indexName, currentServerVersion);
 				}
 
 				String response = Info.request(policy, node, existsCommand);
@@ -86,8 +88,15 @@ public final class IndexTask extends Task {
 		return "sindex/" + namespace + '/' + indexName;
 	}
 
-	public static int parseStatusResponse(String command, String response, boolean isCreate) {
-		if (isCreate) {
+	public static String buildExistsCommand(String namespace, String indexName, Version currentServerVersion) {
+		Version serverVersion = new Version("8.1.0");
+
+		return currentServerVersion.isGreaterOrEqual(serverVersion) ? 
+			"sindex-exists:namespace=" + namespace + ";indexname=" + indexName : 
+			"sindex-exists:ns=" + namespace + ";indexname=" + indexName;
+	}
+
+	public static int parseStatusResponse(String command, String response, boolean isCreate) { if (isCreate) {
 			// Check if index has been created.
 			String find = "load_pct=";
 			int index = response.indexOf(find);
@@ -123,10 +132,6 @@ public final class IndexTask extends Task {
 			}
 		}
 		return Task.COMPLETE;
-	}
-
-	public static String buildExistsCommand(String namespace, String indexName) {
-		return "sindex-exists:ns=" + namespace + ";indexname=" + indexName;
 	}
 
 	public static int parseExistsResponse(String command, String response) {

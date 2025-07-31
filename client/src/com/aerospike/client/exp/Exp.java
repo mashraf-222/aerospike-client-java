@@ -288,6 +288,7 @@ public abstract class Exp {
 	 * Exp.ge(Exp.deviceSize(), Exp.val(100 * 1024))
 	 * }</pre>
 	 */
+	@Deprecated
 	public static Exp deviceSize() {
 		return new Cmd(DEVICE_SIZE);
 	}
@@ -305,6 +306,7 @@ public abstract class Exp {
 	 * Exp.ge(Exp.memorySize(), Exp.val(100 * 1024))
 	 * }</pre>
 	 */
+	@Deprecated
 	public static Exp memorySize() {
 		return new Cmd(MEMORY_SIZE);
 	}
