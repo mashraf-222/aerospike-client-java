@@ -22,7 +22,7 @@ import com.aerospike.client.cluster.Node;
 import com.aerospike.client.policy.InfoPolicy;
 
 public final class Version implements Comparable<Version> {
-	public static final Version REQUIRED_SERVER_VERSION = new Version(8, 1, 0, 0);
+	public static final Version SERVER_VERSION_8_1 = new Version(8, 1, 0, 0);
 
 	public static Version getServerVersion(IAerospikeClient client, InfoPolicy policy) {
 		Node node = client.getCluster().getRandomNode();
