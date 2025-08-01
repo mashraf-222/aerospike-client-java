@@ -89,7 +89,7 @@ public final class IndexTask extends Task {
 	}
 
 	public static String buildExistsCommand(String namespace, String indexName, Version currentServerVersion) {
-		return currentServerVersion.isGreaterOrEqual(Version.REQUIRED_SERVER_VERSION) ? 
+		return currentServerVersion.isGreaterOrEqual(Version.SERVER_VERSION_8_1) ? 
 			"sindex-exists:namespace=" + namespace + ";indexname=" + indexName : 
 			"sindex-exists:ns=" + namespace + ";indexname=" + indexName;
 	}

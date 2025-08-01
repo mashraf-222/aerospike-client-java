@@ -4704,10 +4704,10 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 			policy = new Policy(policy, configProvider);
 		}
 
-		String command = buildCreateIndexInfoCommand(namespace, setName, indexName, binName, indexType, indexCollectionType, ctx, null);
-
+		Node node = this.cluster.getRandomNode();
+		String command = buildCreateIndexInfoCommand(node, namespace, setName, indexName, binName, indexType, indexCollectionType, ctx, null);
 		// Send index command to one node. That node will distribute the command to other nodes.
-		String response = sendInfoCommand(policy, command);
+		String response = sendInfoCommand(policy, node,  command);
 
 		if (response.equalsIgnoreCase("OK")) {
 			// Return task that could optionally be polled for completion.
@@ -4757,9 +4757,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		} else if (configProvider != null) {
 			policy = new Policy(policy, configProvider);
 		}
-
-		String command = buildCreateIndexInfoCommand(namespace, setName, indexName, binName, indexType, indexCollectionType, ctx, null);
-		sendIndexInfoCommand(eventLoop, listener, policy, namespace, indexName, command, true);
+		Node node = this.cluster.getRandomNode();
+		String command = buildCreateIndexInfoCommand(node, namespace, setName, indexName, binName, indexType, indexCollectionType, ctx, null);
+		sendIndexInfoCommand(eventLoop, listener, policy, node, namespace, indexName, command, true);
 	}
 
 	/**
@@ -4791,11 +4791,11 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		} else if (configProvider != null) {
 			policy = new Policy(policy, configProvider);
 		}
-
-		String command = buildCreateIndexInfoCommand(namespace, setName, indexName, null, indexType, indexCollectionType, null, exp);
+		Node node = this.cluster.getRandomNode();
+		String command = buildCreateIndexInfoCommand(node, namespace, setName, indexName, null, indexType, indexCollectionType, null, exp);
 
 		// Send index command to one node. That node will distribute the command to other nodes.
-		String response = sendInfoCommand(policy, command);
+		String response = sendInfoCommand(policy, node, command);
 
 		if (response.equalsIgnoreCase("OK")) {
 			// Return task that could optionally be polled for completion.
@@ -4841,9 +4841,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		} else if (configProvider != null) {
 			policy = new Policy(policy, configProvider);
 		}
-
-		String command = buildCreateIndexInfoCommand(namespace, setName, indexName, null, indexType, indexCollectionType, null, exp);
-		sendIndexInfoCommand(eventLoop, listener, policy, namespace, indexName, command, true);
+		Node node = this.cluster.getRandomNode();
+		String command = buildCreateIndexInfoCommand(node, namespace, setName, indexName, null, indexType, indexCollectionType, null, exp);
+		sendIndexInfoCommand(eventLoop, listener, policy, node, namespace, indexName, command, true);
 	}
 
 	/**
@@ -4869,10 +4869,11 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		} else if (configProvider != null) {
 			policy = new Policy(policy, configProvider);
 		}
-		String command = buildDropIndexInfoCommand(namespace, setName, indexName);
+ 		Node node = this.cluster.getRandomNode();
+		String command = buildDropIndexInfoCommand(node, namespace, setName, indexName);
 
 		// Send index command to one node. That node will distribute the command to other nodes.
-		String response = sendInfoCommand(policy, command);
+		String response = sendInfoCommand(policy, node, command);
 
 		if (response.equalsIgnoreCase("OK")) {
 			return new IndexTask(cluster, policy, namespace, indexName, false);
@@ -4913,9 +4914,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		} else if (configProvider != null) {
 			policy = new Policy(policy, configProvider);
 		}
-
-		String command = buildDropIndexInfoCommand(namespace, setName, indexName);
-		sendIndexInfoCommand(eventLoop, listener, policy, namespace, indexName, command, false);
+		Node node = this.cluster.getRandomNode();
+		String command = buildDropIndexInfoCommand(node, namespace, setName, indexName);
+		sendIndexInfoCommand(eventLoop, listener, policy, node, namespace, indexName, command, false);
 	}
 
 	//-----------------------------------------------------------------
@@ -5294,6 +5295,7 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	//-------------------------------------------------------
 
 	private String buildCreateIndexInfoCommand(
+		Node node,
 		String namespace,
 		String setName,
 		String indexName,
@@ -5304,8 +5306,8 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		Expression exp
 	) {
 		StringBuilder sb = new StringBuilder(1024);
-		Version currentServerVersion = this.cluster.getRandomNode().getVersion();
-		String createIndexCommand = currentServerVersion.isGreaterOrEqual(Version.REQUIRED_SERVER_VERSION) ? "sindex-create:namespace=": "sindex-create:ns=";
+		Version currentServerVersion = node.getVersion();
+		String createIndexCommand = currentServerVersion.isGreaterOrEqual(Version.SERVER_VERSION_8_1) ? "sindex-create:namespace=": "sindex-create:ns=";
 
 		sb.append(createIndexCommand);
 		sb.append(namespace);
@@ -5349,10 +5351,10 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		return sb.toString();
 	}
 
-	private String buildDropIndexInfoCommand(String namespace, String setName, String indexName) {
+	private String buildDropIndexInfoCommand(Node node, String namespace, String setName, String indexName) {
 		StringBuilder sb = new StringBuilder(500);
-		Version currentServerVersion = this.cluster.getRandomNode().getVersion();
-		String deleteIndexCommand = currentServerVersion.isGreaterOrEqual(Version.REQUIRED_SERVER_VERSION) ? "sindex-delete:namespace=": "sindex-delete:ns=";
+		Version currentServerVersion = node.getVersion();
+		String deleteIndexCommand = currentServerVersion.isGreaterOrEqual(Version.SERVER_VERSION_8_1) ? "sindex-delete:namespace=": "sindex-delete:ns=";
 
 		sb.append(deleteIndexCommand);
 		sb.append(namespace);
@@ -5366,8 +5368,7 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		return sb.toString();
 	}
 
-	private String sendInfoCommand(Policy policy, String command) {
-		Node node = cluster.getRandomNode();
+	private String sendInfoCommand(Policy policy, Node node, String command) {
 		Connection conn = node.getConnection(policy.connectTimeout, policy.socketTimeout);
 		Info info;
 
@@ -5386,6 +5387,7 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		EventLoop eventLoop,
 		IndexListener listener,
 		Policy policy,
+		Node node,
 		String namespace,
 		String indexName,
 		String command,
@@ -5411,7 +5413,7 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 			public void onFailure(AerospikeException ae) {
 				listener.onFailure(ae);
 			}
-		}, new InfoPolicy(policy), cluster.getRandomNode(), command);
+		}, new InfoPolicy(policy), node, command);
 	}
 
 	private static int parseIndexErrorCode(String response) {

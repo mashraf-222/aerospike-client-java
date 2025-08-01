@@ -98,9 +98,9 @@ public class TestQueryRPS extends TestSync {
 		String command;
 		Version serverVersion = n.getVersion();
 
-		String cmd1 = serverVersion.isGreaterOrEqual(Version.REQUIRED_SERVER_VERSION) ? "query-show:id=" + taskId : "query-show:trid=" + taskId;
-		String cmd2 = serverVersion.isGreaterOrEqual(Version.REQUIRED_SERVER_VERSION) ? module + "-show:id=" + taskId : module + "-show:trid=" + taskId;
-		String cmd3 = serverVersion.isGreaterOrEqual(Version.REQUIRED_SERVER_VERSION) ? "jobs:module=" + module + ";cmd=get-job;id=" + taskId : "jobs:module=" + module + ";cmd=get-job;trid=" + taskId;
+		String cmd1 = serverVersion.isGreaterOrEqual(Version.SERVER_VERSION_8_1) ? "query-show:id=" + taskId : "query-show:trid=" + taskId;
+		String cmd2 = serverVersion.isGreaterOrEqual(Version.SERVER_VERSION_8_1) ? module + "-show:id=" + taskId : module + "-show:trid=" + taskId;
+		String cmd3 = serverVersion.isGreaterOrEqual(Version.SERVER_VERSION_8_1) ? "jobs:module=" + module + ";cmd=get-job;id=" + taskId : "jobs:module=" + module + ";cmd=get-job;trid=" + taskId;
 
 		if (n.hasPartitionQuery()) {
 			// query-show works for both scan and query.

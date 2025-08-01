@@ -232,8 +232,8 @@ public class AdminCommand {
 	public void createPkiUser(Cluster cluster, AdminPolicy policy, String user, List<String> roles) {
 		Node node = cluster.getRandomNode();
 		Version nodeVer = node.getVersion();
-		if (nodeVer.compareTo(Version.REQUIRED_SERVER_VERSION) < 0 ) {
-			throw new AerospikeException("Node version " + nodeVer + "is less than required minimum version " + Version.REQUIRED_SERVER_VERSION);
+		if (nodeVer.compareTo(Version.SERVER_VERSION_8_1) < 0 ) {
+			throw new AerospikeException("Node version " + nodeVer + "is less than required minimum version " + Version.SERVER_VERSION_8_1);
 		}
 		String hash = hashPassword("nopassword");
 		writeHeader(CREATE_USER, 3);
