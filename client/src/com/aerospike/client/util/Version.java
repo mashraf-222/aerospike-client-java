@@ -22,6 +22,7 @@ import com.aerospike.client.cluster.Node;
 import com.aerospike.client.policy.InfoPolicy;
 
 public final class Version implements Comparable<Version> {
+	public static final Version REQUIRED_SERVER_VERSION = new Version(8, 1, 0, 0);
 
 	public static Version getServerVersion(IAerospikeClient client, InfoPolicy policy) {
 		Node node = client.getCluster().getRandomNode();
@@ -82,9 +83,15 @@ public final class Version implements Comparable<Version> {
 
 	@Override
     public int compareTo(Version other) {
-        if (this.major != other.major) return Integer.compare(this.major, other.major);
-        if (this.minor != other.minor) return Integer.compare(this.minor, other.minor);
-        if (this.patch != other.patch) return Integer.compare(this.patch, other.patch);
+        if (this.major != other.major) {
+			return Integer.compare(this.major, other.major);
+		}
+        if (this.minor != other.minor) {
+			return Integer.compare(this.minor, other.minor);
+		} 
+        if (this.patch != other.patch) {
+			return Integer.compare(this.patch, other.patch);
+		}
 
         return Integer.compare(this.build, other.build);
     }
