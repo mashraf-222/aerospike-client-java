@@ -51,7 +51,6 @@ public final class IndexTask extends Task {
 	public int queryStatus() {
 		// All nodes must respond with load_pct of 100 to be considered done.
 		Node[] nodes = cluster.validateNodes();
-		Version currentServerVersion = this.cluster.getRandomNode().getVersion();
 
 		for (Node node : nodes) {
 			if (isCreate) {
@@ -68,6 +67,7 @@ public final class IndexTask extends Task {
 				}
 			}
 			else {
+				Version currentServerVersion = node.getVersion();
 				// Check if index exists.
 				if (existsCommand == null) {
 					existsCommand = buildExistsCommand(namespace, indexName, currentServerVersion);
@@ -89,9 +89,7 @@ public final class IndexTask extends Task {
 	}
 
 	public static String buildExistsCommand(String namespace, String indexName, Version currentServerVersion) {
-		Version serverVersion = new Version("8.1.0");
-
-		return currentServerVersion.isGreaterOrEqual(serverVersion) ? 
+		return currentServerVersion.isGreaterOrEqual(Version.REQUIRED_SERVER_VERSION) ? 
 			"sindex-exists:namespace=" + namespace + ";indexname=" + indexName : 
 			"sindex-exists:ns=" + namespace + ";indexname=" + indexName;
 	}

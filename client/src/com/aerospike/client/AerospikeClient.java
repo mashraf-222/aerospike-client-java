@@ -4869,7 +4869,6 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		} else if (configProvider != null) {
 			policy = new Policy(policy, configProvider);
 		}
-
 		String command = buildDropIndexInfoCommand(namespace, setName, indexName);
 
 		// Send index command to one node. That node will distribute the command to other nodes.
@@ -5306,8 +5305,7 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	) {
 		StringBuilder sb = new StringBuilder(1024);
 		Version currentServerVersion = this.cluster.getRandomNode().getVersion();
-		Version serverVersion = new Version("8.1.0");
-		String createIndexCommand = currentServerVersion.isGreaterOrEqual(serverVersion) ? "sindex-create:namespace=": "sindex-create:ns=";
+		String createIndexCommand = currentServerVersion.isGreaterOrEqual(Version.REQUIRED_SERVER_VERSION) ? "sindex-create:namespace=": "sindex-create:ns=";
 
 		sb.append(createIndexCommand);
 		sb.append(namespace);
@@ -5354,8 +5352,7 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	private String buildDropIndexInfoCommand(String namespace, String setName, String indexName) {
 		StringBuilder sb = new StringBuilder(500);
 		Version currentServerVersion = this.cluster.getRandomNode().getVersion();
-		Version serverVersion = new Version("8.1.0");
-		String deleteIndexCommand = currentServerVersion.isGreaterOrEqual(serverVersion) ? "sindex-delete:namespace=": "sindex-delete:ns=";
+		String deleteIndexCommand = currentServerVersion.isGreaterOrEqual(Version.REQUIRED_SERVER_VERSION) ? "sindex-delete:namespace=": "sindex-delete:ns=";
 
 		sb.append(deleteIndexCommand);
 		sb.append(namespace);

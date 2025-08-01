@@ -71,13 +71,12 @@ public class ExecuteTask extends Task {
 		// All nodes must respond with complete to be considered done.
 		Node[] nodes = cluster.validateNodes();
 		Version serverVersion = cluster.getRandomNode().getVersion();
-		Version requiredVersion = new Version("8.1.0.0");
 
 		String tid = Long.toUnsignedString(taskId);
 		String module = (scan) ? "scan" : "query";
-		String cmd1 = serverVersion.isGreaterOrEqual(requiredVersion) ? "query-show:id=" + tid : "query-show:trid=" + tid;
-		String cmd2 = serverVersion.isGreaterOrEqual(requiredVersion) ? module + "-show:id=" + tid : module + "-show:trid=" + tid;
-		String cmd3 = serverVersion.isGreaterOrEqual(requiredVersion) ? "jobs:module=" + module + ";cmd=get-job;id=" + tid : "jobs:module=" + module + ";cmd=get-job;trid=" + tid;
+		String cmd1 = serverVersion.isGreaterOrEqual(Version.REQUIRED_SERVER_VERSION) ? "query-show:id=" + tid : "query-show:trid=" + tid;
+		String cmd2 = serverVersion.isGreaterOrEqual(Version.REQUIRED_SERVER_VERSION) ? module + "-show:id=" + tid : module + "-show:trid=" + tid;
+		String cmd3 = serverVersion.isGreaterOrEqual(Version.REQUIRED_SERVER_VERSION) ? "jobs:module=" + module + ";cmd=get-job;id=" + tid : "jobs:module=" + module + ";cmd=get-job;trid=" + tid;
 
 		for (Node node : nodes) {
 			String command;
