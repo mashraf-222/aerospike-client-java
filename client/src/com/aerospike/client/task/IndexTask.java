@@ -53,6 +53,7 @@ public final class IndexTask extends Task {
 		Node[] nodes = cluster.validateNodes();
 
 		for (Node node : nodes) {
+			Version currentServerVersion = node.getVersion();
 			if (isCreate) {
 				// Check index status.
 				if (statusCommand == null) {
@@ -67,7 +68,6 @@ public final class IndexTask extends Task {
 				}
 			}
 			else {
-				Version currentServerVersion = node.getVersion();
 				// Check if index exists.
 				if (existsCommand == null) {
 					existsCommand = buildExistsCommand(namespace, indexName, currentServerVersion);
