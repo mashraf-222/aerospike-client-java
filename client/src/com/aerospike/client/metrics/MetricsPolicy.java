@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 Aerospike, Inc.
+ * Copyright 2012-2025 Aerospike, Inc.
  *
  * Portions may be licensed to Aerospike, Inc. under one or more contributor
  * license agreements WHICH ARE COMPATIBLE WITH THE APACHE LICENSE, VERSION 2.0.
@@ -16,6 +16,11 @@
  */
 package com.aerospike.client.metrics;
 
+import java.util.Map;
+
+import com.aerospike.client.Log;
+import com.aerospike.client.configuration.serializers.Configuration;
+import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicMetricsConfig;
 import com.aerospike.client.policy.ClientPolicy;
 
 /**
@@ -82,6 +87,47 @@ public final class MetricsPolicy {
 	public int latencyShift = 1;
 
 	/**
+	 * Labels that can be sent to the metrics output
+	 */
+	public Map<String,String> labels;
+
+	private boolean metricsRestartRequired = false;
+
+	/**
+	 * Copy metrics policy from another metrics policy AND override certain policy attributes if they exist in the
+	 * configProvider.
+	 */
+	public MetricsPolicy(MetricsPolicy other, Configuration config) {
+		this(other);
+		if ( config == null) {
+			return;
+		}
+		DynamicMetricsConfig dynMC = config.dynamicConfiguration.dynamicMetricsConfig;
+		if (dynMC == null) {
+			return;
+		}
+		if (dynMC.labels != null) {
+			this.labels = dynMC.labels;
+		}
+		if (dynMC.latencyShift != null)  {
+			if (dynMC.latencyShift.value != this.latencyShift) {
+				metricsRestartRequired = true;
+			}
+			this.latencyShift = dynMC.latencyShift.value;
+		}
+		if (dynMC.latencyColumns != null) {
+			if (dynMC.latencyColumns.value != this.latencyColumns) {
+				metricsRestartRequired = true;
+			}
+			this.latencyColumns = dynMC.latencyColumns.value;
+		}
+		if (latencyColumns < 1) {
+			Log.error("An invalid # of latency columns was provided. Setting latency columns to default (7).");
+			latencyColumns = 7;
+		}
+	}
+
+	/**
 	 * Copy constructor.
 	 */
 	public MetricsPolicy(MetricsPolicy other) {
@@ -91,6 +137,8 @@ public final class MetricsPolicy {
 		this.interval = other.interval;
 		this.latencyColumns = other.latencyColumns;
 		this.latencyShift = other.latencyShift;
+		this.labels = other.labels;
+		this.metricsRestartRequired = other.metricsRestartRequired;
 	}
 
 	/**
@@ -121,7 +169,15 @@ public final class MetricsPolicy {
 		this.latencyColumns = latencyColumns;
 	}
 
-	public void setLatencyShift(int latencyShift) {
-		this.latencyShift = latencyShift;
+	public void setLatencyShift(int latencyShift) { this.latencyShift = latencyShift; }
+
+	public void setLabels(Map<String, String> labels) { this.labels = labels; }
+
+	public boolean isMetricsRestartRequired() {
+		return metricsRestartRequired;
+	}
+
+	public void setMetricsRestartRequired(boolean metricsRestartRequired) {
+		this.metricsRestartRequired = metricsRestartRequired;
 	}
 }

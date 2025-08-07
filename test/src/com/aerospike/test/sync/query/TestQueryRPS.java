@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 Aerospike, Inc.
+ * Copyright 2012-2025 Aerospike, Inc.
  *
  * Portions may be licensed to Aerospike, Inc. under one or more contributor
  * license agreements WHICH ARE COMPATIBLE WITH THE APACHE LICENSE, VERSION 2.0.
@@ -30,7 +30,6 @@ import com.aerospike.client.Operation;
 import com.aerospike.client.ResultCode;
 import com.aerospike.client.Value;
 import com.aerospike.client.cluster.Node;
-import com.aerospike.client.policy.Policy;
 import com.aerospike.client.query.Filter;
 import com.aerospike.client.query.IndexType;
 import com.aerospike.client.query.RecordSet;
@@ -40,6 +39,7 @@ import com.aerospike.client.task.ExecuteTask;
 import com.aerospike.client.task.IndexTask;
 import com.aerospike.client.task.RegisterTask;
 import com.aerospike.client.util.RandomShift;
+import com.aerospike.client.util.Version;
 import com.aerospike.test.sync.TestSync;
 
 public class TestQueryRPS extends TestSync {
@@ -96,18 +96,24 @@ public class TestQueryRPS extends TestSync {
 		String taskId = Long.toUnsignedString(id);
 		String module = (stmt.getFilter() == null) ? "scan" : "query";
 		String command;
+		Version serverVersion = n.getVersion();                                                                                                                                         
+		Version requiredVersion = new Version("8.1.0.0");                                                                                                                               
+			
+		String cmd1 = serverVersion.isGreaterOrEqual(requiredVersion) ? "query-show:id=" + taskId : "query-show:trid=" + taskId;                                                        
+		String cmd2 = serverVersion.isGreaterOrEqual(requiredVersion) ? module + "-show:id=" + taskId : module + "-show:trid=" + taskId;                                                
+		String cmd3 = serverVersion.isGreaterOrEqual(requiredVersion) ? "jobs:module=" + module + ";cmd=get-job;id=" + taskId : "jobs:module=" + module + ";cmd=get-job;trid=" + taskId;
 
 		if (n.hasPartitionQuery()) {
 			// query-show works for both scan and query.
-			command = "query-show:trid=" + taskId;
+			command = cmd1;
 		}
 		else if (n.hasQueryShow()) {
 			// scan-show and query-show are separate.
-			command = module + "-show:trid=" + taskId;
+			command = cmd2;
 		}
 		else {
 			// old job monitor syntax.
-			command = "jobs:module=" + module + ";cmd=get-job;trid=" + taskId;
+			command = cmd3;
 		}
 
 		String job_info = Info.request(n, command);

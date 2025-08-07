@@ -21,7 +21,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
+import com.aerospike.client.Log;
 import com.aerospike.client.async.EventLoops;
+import com.aerospike.client.configuration.ConfigurationProvider;
+import com.aerospike.client.configuration.serializers.Configuration;
+import com.aerospike.client.configuration.serializers.DynamicConfiguration;
+import com.aerospike.client.configuration.serializers.StaticConfiguration;
+import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicClientConfig;
+import com.aerospike.client.configuration.serializers.staticconfig.StaticClientConfig;
 
 /**
  * Container object for client policy Command.
@@ -417,6 +424,29 @@ public class ClientPolicy {
 	public List<Integer> rackIds;
 
 	/**
+	 * Application ID. Metrics are loosely tied to this. Changing the appId will not reset the metric counters.
+	 */
+	public String appId;
+
+	/**
+	 * Copy client policy from another client policy AND override certain policy attributes if they exist in the
+	 * configProvider. Any policy overrides will not get logged.
+	 */
+	public ClientPolicy(ClientPolicy other, ConfigurationProvider configProvider) {
+		this(other);
+		updateFromConfig(configProvider, false);
+	}
+
+	/**
+	 * Copy client policy from another client policy AND override certain policy attributes if they exist in the
+	 * configProvider. Any default policy overrides will get logged.
+	 */
+	public ClientPolicy(ClientPolicy other, ConfigurationProvider configProvider, boolean isDefaultPolicy) {
+		this(other);
+		updateFromConfig(configProvider, isDefaultPolicy);
+	}
+
+	/**
 	 * Copy client policy from another client policy.
 	 */
 	public ClientPolicy(ClientPolicy other) {
@@ -461,12 +491,139 @@ public class ClientPolicy {
 		this.rackAware = other.rackAware;
 		this.rackId = other.rackId;
 		this.rackIds = (other.rackIds != null)? new ArrayList<Integer>(other.rackIds) : null;
+		this.appId = other.appId;
 	}
 
 	/**
 	 * Default constructor.
 	 */
 	public ClientPolicy() {
+	}
+
+	private void updateFromConfig(ConfigurationProvider configProvider, boolean log) {
+		boolean logUpdate = false;
+		if (configProvider == null) {
+			return;
+		}
+		Configuration config = configProvider.fetchConfiguration();
+		if (config == null) {
+			return;
+		}
+		StaticConfiguration sConfig = config.getStaticConfiguration();
+		if (sConfig == null) {
+			return;
+		}
+		StaticClientConfig staCC = sConfig.getStaticClientConfig();
+		if (staCC == null) {
+			return;
+		}
+
+		if (log && Log.infoEnabled()) {
+			logUpdate = true;
+		}
+		if (staCC.maxConnectionsPerNode != null && this.maxConnsPerNode != staCC.maxConnectionsPerNode.value) {
+			this.maxConnsPerNode = staCC.maxConnectionsPerNode.value;
+			if (logUpdate) {
+				Log.info("Set ClientPolicy.maxConnsPerNode = " + this.maxConnsPerNode);
+			}
+		}
+		if (staCC.minConnectionsPerNode != null && this.minConnsPerNode != staCC.minConnectionsPerNode.value) {
+			this.minConnsPerNode = staCC.minConnectionsPerNode.value;
+			if (logUpdate) {
+				Log.info("Set ClientPolicy.minConnsPerNode = " + this.minConnsPerNode);
+			}
+		}
+		if (staCC.asyncMaxConnectionsPerNode != null && this.asyncMaxConnsPerNode != staCC.asyncMaxConnectionsPerNode.value) {
+			this.asyncMaxConnsPerNode = staCC.asyncMaxConnectionsPerNode.value;
+			if (logUpdate) {
+				Log.info("Set ClientPolicy.asyncMaxConnsPerNode = " + this.asyncMaxConnsPerNode);
+			}
+		}
+		if (staCC.asyncMinConnectionsPerNode != null && this.asyncMinConnsPerNode != staCC.asyncMinConnectionsPerNode.value) {
+			this.asyncMinConnsPerNode = staCC.asyncMinConnectionsPerNode.value;
+			if (logUpdate) {
+				Log.info("Set ClientPolicy.asyncMinConnsPerNode = " + this.asyncMinConnsPerNode);
+			}
+		}
+
+		DynamicConfiguration dConfig = config.getDynamicConfiguration();
+		if (dConfig == null) {
+			return;
+		}
+		DynamicClientConfig dynCC = dConfig.getDynamicClientConfig();
+		if (dynCC == null) {
+			return;
+		}
+		if (dynCC.appId != null && this.appId != dynCC.appId.value) {
+			this.appId = dynCC.appId.value;
+			if (logUpdate) {
+				Log.info("Set ClientPolicy.appId = " + this.appId);
+			}
+		}
+		if (dynCC.timeout != null && this.timeout != dynCC.timeout.value) {
+			this.timeout = dynCC.timeout.value;
+			if (logUpdate) {
+				Log.info("Set ClientPolicy.timeout = " + this.timeout);
+			}
+		}
+		if (dynCC.errorRateWindow != null && this.errorRateWindow != dynCC.errorRateWindow.value) {
+			this.errorRateWindow = dynCC.errorRateWindow.value;
+			if (logUpdate) {
+				Log.info("Set ClientPolicy.errorRateWindow = " + this.errorRateWindow);
+			}
+		}
+		if (dynCC.maxErrorRate != null && this.maxErrorRate != dynCC.maxErrorRate.value) {
+			this.maxErrorRate = dynCC.maxErrorRate.value;
+			if (logUpdate) {
+				Log.info("Set ClientPolicy.maxErrorRate = " + this.maxErrorRate);
+			}
+		}
+		if (dynCC.failIfNotConnected != null && this.failIfNotConnected != dynCC.failIfNotConnected.value) {
+			this.failIfNotConnected = dynCC.failIfNotConnected.value;
+			if (logUpdate) {
+				Log.info("Set ClientPolicy.failIfNotConnected = " + this.failIfNotConnected);
+			}
+		}
+		if (dynCC.loginTimeout != null && this.loginTimeout != dynCC.loginTimeout.value) {
+			this.loginTimeout = dynCC.loginTimeout.value;
+			if (logUpdate) {
+				Log.info("Set ClientPolicy.loginTimeout = " + this.loginTimeout);
+			}
+		}
+		if (dynCC.maxSocketIdle != null && this.maxSocketIdle != dynCC.maxSocketIdle.value) {
+			if (dynCC.maxSocketIdle.value < 0) {
+				Log.error("Invalid maxSocketIdle in config: " + dynCC.maxSocketIdle.value);
+			} else {
+				this.maxSocketIdle = dynCC.maxSocketIdle.value;
+				if (logUpdate) {
+					Log.info("Set ClientPolicy.maxSocketIdle = " + this.maxSocketIdle);
+				}
+			}
+		}
+		if (dynCC.rackAware != null && this.rackAware != dynCC.rackAware.value) {
+			this.rackAware = dynCC.rackAware.value;
+			if (logUpdate) {
+				Log.info("Set ClientPolicy.rackAware = " + this.rackAware);
+			}
+		}
+		if (dynCC.rackIds != null && this.rackIds != dynCC.rackIds) {
+			this.rackIds = dynCC.rackIds;
+			if (logUpdate) {
+				Log.info("Set ClientPolicy.rackIds = " + this.rackIds);
+			}
+		}
+		if (dynCC.tendInterval != null && this.tendInterval != dynCC.tendInterval.value) {
+			this.tendInterval = dynCC.tendInterval.value;
+			if (logUpdate) {
+				Log.info("Set ClientPolicy.tendInterval = " + this.tendInterval);
+			}
+		}
+		if (dynCC.useServiceAlternative != null && this.useServicesAlternate != dynCC.useServiceAlternative.value) {
+			this.useServicesAlternate = dynCC.useServiceAlternative.value;
+			if (logUpdate) {
+				Log.info("Set ClientPolicy.useServicesAlternate = " + this.useServicesAlternate);
+			}
+		}
 	}
 
 	// Include setters to facilitate Spring's ConfigurationProperties.
@@ -633,5 +790,9 @@ public class ClientPolicy {
 
 	public void setRackIds(List<Integer> rackIds) {
 		this.rackIds = rackIds;
+	}
+
+	public void setAppId(String appId) {
+		this.appId = appId;
 	}
 }

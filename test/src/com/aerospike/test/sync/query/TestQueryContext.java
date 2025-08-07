@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 Aerospike, Inc.
+ * Copyright 2012-2025 Aerospike, Inc.
  *
  * Portions may be licensed to Aerospike, Inc. under one or more contributor
  * license agreements WHICH ARE COMPATIBLE WITH THE APACHE LICENSE, VERSION 2.0.
@@ -32,7 +32,6 @@ import com.aerospike.client.Key;
 import com.aerospike.client.Record;
 import com.aerospike.client.ResultCode;
 import com.aerospike.client.cdt.CTX;
-import com.aerospike.client.policy.Policy;
 import com.aerospike.client.query.Filter;
 import com.aerospike.client.query.IndexCollectionType;
 import com.aerospike.client.query.IndexType;

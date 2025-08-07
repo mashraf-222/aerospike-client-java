@@ -37,7 +37,6 @@ import com.aerospike.client.command.ParticleType;
 import com.aerospike.client.exp.Exp;
 import com.aerospike.client.exp.ListExp;
 import com.aerospike.client.exp.MapExp;
-import com.aerospike.client.policy.Policy;
 import com.aerospike.client.policy.QueryPolicy;
 import com.aerospike.client.query.Filter;
 import com.aerospike.client.query.IndexType;
@@ -640,7 +639,9 @@ public class TestQueryFilterExp extends TestSync {
 		}
 	}
 
+	// TODO: remove when deviceSize() is removed
 	@Test
+	@Deprecated
 	public void queryDeviceSize() {
 		int begin = 1;
 		int end = 10;
@@ -671,7 +672,9 @@ public class TestQueryFilterExp extends TestSync {
 		}
 	}
 
+	// TODO: remove when deviceSize() is removed
 	@Test
+	@Deprecated
 	public void queryMemorySize() {
 		int begin = 1;
 		int end = 10;

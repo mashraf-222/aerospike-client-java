@@ -79,6 +79,8 @@ import com.aerospike.client.command.TouchCommand;
 import com.aerospike.client.command.TxnMonitor;
 import com.aerospike.client.command.TxnRoll;
 import com.aerospike.client.command.WriteCommand;
+import com.aerospike.client.configuration.ConfigurationProvider;
+import com.aerospike.client.configuration.YamlConfigProvider;
 import com.aerospike.client.exp.Expression;
 import com.aerospike.client.listener.BatchListListener;
 import com.aerospike.client.listener.BatchOperateListListener;
@@ -133,6 +135,7 @@ import com.aerospike.client.util.Crypto;
 import com.aerospike.client.util.Pack;
 import com.aerospike.client.util.Packer;
 import com.aerospike.client.util.Util;
+import com.aerospike.client.util.Version;
 
 /**
  * Instantiate an <code>AerospikeClient</code> object to access an Aerospike
@@ -151,55 +154,68 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	// Member variables.
 	//-------------------------------------------------------
 
+	private String version;
+
+	private ConfigurationProvider configProvider;
+
 	protected Cluster cluster;
 
 	/**
 	 * Default read policy that is used when read command policy is null.
 	 */
 	public final Policy readPolicyDefault;
+	private Policy mergedReadPolicyDefault;
 
 	/**
 	 * Default write policy that is used when write command policy is null.
 	 */
 	public final WritePolicy writePolicyDefault;
+	private WritePolicy mergedWritePolicyDefault;
 
 	/**
 	 * Default scan policy that is used when scan command policy is null.
 	 */
 	public final ScanPolicy scanPolicyDefault;
+	private ScanPolicy mergedScanPolicyDefault;
 
 	/**
 	 * Default query policy that is used when query command policy is null.
 	 */
 	public final QueryPolicy queryPolicyDefault;
+	private QueryPolicy mergedQueryPolicyDefault;
 
 	/**
 	 * Default parent policy used in batch read commands. Parent policy fields
 	 * include socketTimeout, totalTimeout, maxRetries, etc...
 	 */
 	public final BatchPolicy batchPolicyDefault;
+	private BatchPolicy mergedBatchPolicyDefault;
 
 	/**
 	 * Default parent policy used in batch write commands. Parent policy fields
 	 * include socketTimeout, totalTimeout, maxRetries, etc...
 	 */
 	public final BatchPolicy batchParentPolicyWriteDefault;
+	private BatchPolicy mergedBatchParentPolicyWriteDefault;
 
 	/**
 	 * Default write policy used in batch operate commands.
 	 * Write policy fields include generation, expiration, durableDelete, etc...
 	 */
 	public final BatchWritePolicy batchWritePolicyDefault;
+	private BatchWritePolicy mergedBatchWritePolicyDefault;
 
 	/**
 	 * Default delete policy used in batch delete commands.
 	 */
 	public final BatchDeletePolicy batchDeletePolicyDefault;
+	private BatchDeletePolicy mergedBatchDeletePolicyDefault;
 
 	/**
 	 * Default user defined function policy used in batch UDF execute commands.
 	 */
 	public final BatchUDFPolicy batchUDFPolicyDefault;
+	private BatchUDFPolicy mergedBatchUDFPolicyDefault;
 
 	/**
 	 * Default info policy that is used when info command policy is null.
@@ -210,14 +226,19 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	 * Default transaction policy when verifying record versions in a batch on a commit.
 	 */
 	public final TxnVerifyPolicy txnVerifyPolicyDefault;
+	private TxnVerifyPolicy mergedTxnVerifyPolicyDefault;
 
 	/**
 	 * Default transaction policy when rolling the transaction records forward (commit)
 	 * or back (abort) in a batch.
 	 */
 	public final TxnRollPolicy txnRollPolicyDefault;
+	private TxnRollPolicy mergedTxnRollPolicyDefault;
 
 	private final WritePolicy operatePolicyReadDefault;
+	private WritePolicy mergedOperatePolicyReadDefault;
+
+	private ClientPolicy mergedClientPolicy;
 
 	//-------------------------------------------------------
 	// Constructors
@@ -298,13 +319,14 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		if (! Log.isSet()) {
 			throw new AerospikeException(
 				"Log.setCallback() or Log.setCallbackStandard() must be called." + System.lineSeparator() +
-				"See https://developer.aerospike.com/client/java/usage/logging for details.");
+				"See https://aerospike.com/docs/develop/client/java/logging/ for details.");
 		}
 		*/
 
 		if (policy == null) {
 			policy = new ClientPolicy();
 		}
+
 		this.readPolicyDefault = policy.readPolicyDefault;
 		this.writePolicyDefault = policy.writePolicyDefault;
 		this.scanPolicyDefault = policy.scanPolicyDefault;
@@ -319,7 +341,42 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		this.txnRollPolicyDefault = policy.txnRollPolicyDefault;
 		this.operatePolicyReadDefault = new WritePolicy(this.readPolicyDefault);
 
-		cluster = new Cluster(this, policy, hosts);
+		String configPath = YamlConfigProvider.getConfigPath();
+
+		if (configPath != null) {
+			this.configProvider = YamlConfigProvider.getConfigProvider(configPath);
+		}
+		else {
+			this.configProvider = null;
+		}
+
+		if (configProvider != null) {
+			mergedClientPolicy = new ClientPolicy(policy, this.configProvider);
+			mergePoliciesWithConfig();
+		}
+		else {
+			mergedClientPolicy = policy;
+			mergedReadPolicyDefault = readPolicyDefault;
+			mergedWritePolicyDefault = writePolicyDefault;
+			mergedScanPolicyDefault = scanPolicyDefault;
+			mergedQueryPolicyDefault = queryPolicyDefault;
+			mergedBatchPolicyDefault = batchPolicyDefault;
+			mergedBatchParentPolicyWriteDefault = batchParentPolicyWriteDefault;
+			mergedBatchWritePolicyDefault = batchWritePolicyDefault;
+			mergedBatchDeletePolicyDefault = batchDeletePolicyDefault;
+			mergedBatchUDFPolicyDefault = batchUDFPolicyDefault;
+			mergedTxnVerifyPolicyDefault = txnVerifyPolicyDefault;
+			mergedTxnRollPolicyDefault = txnRollPolicyDefault;
+			mergedOperatePolicyReadDefault = operatePolicyReadDefault;
+		}
+
+		version = this.getClass().getPackage().getImplementationVersion();
+
+		if (version == null) {
+			version = "development";
+		}
+
+		cluster = new Cluster(this, mergedClientPolicy, configPath, hosts);
 	}
 
 	//-------------------------------------------------------
@@ -360,6 +417,27 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 			this.txnRollPolicyDefault = new TxnRollPolicy();
 			this.operatePolicyReadDefault = new WritePolicy(this.readPolicyDefault);
 		}
+	}
+
+	/**
+	 * Return the client's ConfigurationProvider.
+	 */
+	public ConfigurationProvider getConfigProvider() {
+		return configProvider;
+	}
+
+	/**
+	 * Set client's ConfigurationProvider. For internal use only.
+	 */
+	public void setConfigProvider(ConfigurationProvider provider) {
+		this.configProvider = provider;
+	}
+
+	/**
+	 * Return the mergedClientPolicy.
+	 */
+	public ClientPolicy getClientPolicy() {
+		return mergedClientPolicy;
 	}
 
 	//-------------------------------------------------------
@@ -542,6 +620,26 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		return new TxnRollPolicy(txnRollPolicyDefault);
 	}
 
+	/**
+	 * Merge the default policies and the current clientPolicy with any applicable config properties.  This should
+	 * be done at init and every time the config is updated
+	 */
+	public void mergePoliciesWithConfig() {
+		mergedReadPolicyDefault = new Policy(readPolicyDefault, configProvider,true);
+		mergedWritePolicyDefault = new WritePolicy(writePolicyDefault, configProvider, true, "");
+		mergedScanPolicyDefault = new ScanPolicy(scanPolicyDefault, configProvider, true);
+		mergedQueryPolicyDefault = new QueryPolicy(queryPolicyDefault, configProvider, true);
+		mergedBatchPolicyDefault = new BatchPolicy(batchPolicyDefault, configProvider, true, "");
+		mergedBatchParentPolicyWriteDefault = new BatchPolicy(batchParentPolicyWriteDefault, configProvider, true, "(Parent)");
+		mergedBatchWritePolicyDefault = new BatchWritePolicy(batchWritePolicyDefault, configProvider, true);
+		mergedBatchDeletePolicyDefault = new BatchDeletePolicy(batchDeletePolicyDefault, configProvider, true);
+		mergedBatchUDFPolicyDefault = new BatchUDFPolicy(batchUDFPolicyDefault, configProvider, true);
+		mergedTxnVerifyPolicyDefault = new TxnVerifyPolicy(txnVerifyPolicyDefault, configProvider, true);
+		mergedTxnRollPolicyDefault = new TxnRollPolicy(txnRollPolicyDefault, configProvider, true);
+		mergedOperatePolicyReadDefault = new WritePolicy(operatePolicyReadDefault, configProvider, true, "(Operate)");
+		mergedClientPolicy = new ClientPolicy(mergedClientPolicy, configProvider, true);
+	}
+
 	//-------------------------------------------------------
 	// Cluster Connection Management
 	//-------------------------------------------------------
@@ -637,6 +735,13 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		return cluster;
 	}
 
+	/**
+	 * Return the client version
+	 */
+	public String getVersion() {
+		return version;
+	}
+
 	//-------------------------------------------------------
 	// Transaction
 	//-------------------------------------------------------
@@ -660,11 +765,11 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		switch (txn.getState()) {
 			default:
 			case OPEN:
-				tr.verify(txnVerifyPolicyDefault, txnRollPolicyDefault);
-				return tr.commit(txnRollPolicyDefault);
+				tr.verify(mergedTxnVerifyPolicyDefault, mergedTxnRollPolicyDefault);
+				return tr.commit(mergedTxnRollPolicyDefault);
 
 			case VERIFIED:
-				return tr.commit(txnRollPolicyDefault);
+				return tr.commit(mergedTxnRollPolicyDefault);
 
 			case COMMITTED:
 				return CommitStatus.ALREADY_COMMITTED;
@@ -697,7 +802,7 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		AsyncTxnRoll atr = new AsyncTxnRoll(
-			cluster, eventLoop, txnVerifyPolicyDefault, txnRollPolicyDefault, txn
+			cluster, eventLoop, mergedTxnVerifyPolicyDefault, mergedTxnRollPolicyDefault, txn
 			);
 
 		switch (txn.getState()) {
@@ -734,7 +839,7 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 			default:
 			case OPEN:
 			case VERIFIED:
-				return tr.abort(txnRollPolicyDefault);
+				return tr.abort(mergedTxnRollPolicyDefault);
 
 			case COMMITTED:
 				throw new AerospikeException(ResultCode.TXN_ALREADY_COMMITTED, "Transaction already committed");
@@ -764,7 +869,7 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 			eventLoop = cluster.eventLoops.next();
 		}
 
-		AsyncTxnRoll atr = new AsyncTxnRoll(cluster, eventLoop, null, txnRollPolicyDefault, txn);
+		AsyncTxnRoll atr = new AsyncTxnRoll(cluster, eventLoop, null, mergedTxnRollPolicyDefault, txn);
 
 		switch (txn.getState()) {
 			default:
@@ -799,7 +904,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	public final void put(WritePolicy policy, Key key, Bin... bins)
 		throws AerospikeException {
 		if (policy == null) {
-			policy = writePolicyDefault;
+			policy = mergedWritePolicyDefault;
+		} else if (configProvider != null) {
+			policy = new WritePolicy(policy, configProvider);
 		}
 
 		if (policy.txn != null) {
@@ -833,7 +940,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (policy == null) {
-			policy = writePolicyDefault;
+			policy = mergedWritePolicyDefault;
+		} else if (configProvider != null) {
+			policy = new WritePolicy(policy, configProvider);
 		}
 
 		AsyncWrite command = new AsyncWrite(cluster, listener, policy, key, bins, Operation.Type.WRITE);
@@ -858,7 +967,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	public final void append(WritePolicy policy, Key key, Bin... bins)
 		throws AerospikeException {
 		if (policy == null) {
-			policy = writePolicyDefault;
+			policy = mergedWritePolicyDefault;
+		} else if (configProvider != null) {
+			policy = new WritePolicy(policy, configProvider);
 		}
 
 		if (policy.txn != null) {
@@ -893,7 +1004,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (policy == null) {
-			policy = writePolicyDefault;
+			policy = mergedWritePolicyDefault;
+		} else if (configProvider != null) {
+			policy = new WritePolicy(policy, configProvider);
 		}
 
 		AsyncWrite command = new AsyncWrite(cluster, listener, policy, key, bins, Operation.Type.APPEND);
@@ -914,7 +1027,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	public final void prepend(WritePolicy policy, Key key, Bin... bins)
 		throws AerospikeException {
 		if (policy == null) {
-			policy = writePolicyDefault;
+			policy = mergedWritePolicyDefault;
+		} else if (configProvider != null) {
+			policy = new WritePolicy(policy, configProvider);
 		}
 
 		if (policy.txn != null) {
@@ -949,7 +1064,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (policy == null) {
-			policy = writePolicyDefault;
+			policy = mergedWritePolicyDefault;
+		} else if (configProvider != null) {
+			policy = new WritePolicy(policy, configProvider);
 		}
 
 		AsyncWrite command = new AsyncWrite(cluster, listener, policy, key, bins, Operation.Type.PREPEND);
@@ -974,7 +1091,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	public final void add(WritePolicy policy, Key key, Bin... bins)
 		throws AerospikeException {
 		if (policy == null) {
-			policy = writePolicyDefault;
+			policy = mergedWritePolicyDefault;
+		} else if (configProvider != null) {
+			policy = new WritePolicy(policy, configProvider);
 		}
 
 		if (policy.txn != null) {
@@ -1009,7 +1128,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (policy == null) {
-			policy = writePolicyDefault;
+			policy = mergedWritePolicyDefault;
+		} else if (configProvider != null) {
+			policy = new WritePolicy(policy, configProvider);
 		}
 
 		AsyncWrite command = new AsyncWrite(cluster, listener, policy, key, bins, Operation.Type.ADD);
@@ -1032,7 +1153,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	public final boolean delete(WritePolicy policy, Key key)
 		throws AerospikeException {
 		if (policy == null) {
-			policy = writePolicyDefault;
+			policy = mergedWritePolicyDefault;
+		} else if (configProvider != null) {
+			policy = new WritePolicy(policy, configProvider);
 		}
 
 		if (policy.txn != null) {
@@ -1065,7 +1188,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (policy == null) {
-			policy = writePolicyDefault;
+			policy = mergedWritePolicyDefault;
+		} else if (configProvider != null) {
+			policy = new WritePolicy(policy, configProvider);
 		}
 
 		AsyncDelete command = new AsyncDelete(cluster, listener, policy, key);
@@ -1090,11 +1215,15 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (batchPolicy == null) {
-			batchPolicy = batchParentPolicyWriteDefault;
+			batchPolicy = mergedBatchParentPolicyWriteDefault;
+		} else if (configProvider != null) {
+			batchPolicy = new BatchPolicy(batchPolicy, configProvider);
 		}
 
 		if (deletePolicy == null) {
-			deletePolicy = batchDeletePolicyDefault;
+			deletePolicy = mergedBatchDeletePolicyDefault;
+		} else if (configProvider != null) {
+			deletePolicy = new BatchDeletePolicy(deletePolicy, configProvider);
 		}
 
 		if (batchPolicy.txn != null) {
@@ -1171,11 +1300,15 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (batchPolicy == null) {
-			batchPolicy = batchParentPolicyWriteDefault;
+			batchPolicy = mergedBatchParentPolicyWriteDefault;
+		} else if (configProvider != null) {
+			batchPolicy = new BatchPolicy(batchPolicy, configProvider);
 		}
 
 		if (deletePolicy == null) {
-			deletePolicy = batchDeletePolicyDefault;
+			deletePolicy = mergedBatchDeletePolicyDefault;
+		} else if (configProvider != null) {
+			deletePolicy = new BatchDeletePolicy(deletePolicy, configProvider);
 		}
 
 		BatchAttr attr = new BatchAttr();
@@ -1243,11 +1376,15 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (batchPolicy == null) {
-			batchPolicy = batchParentPolicyWriteDefault;
+			batchPolicy = mergedBatchParentPolicyWriteDefault;
+		} else if (configProvider != null) {
+			batchPolicy = new BatchPolicy(batchPolicy, configProvider);
 		}
 
 		if (deletePolicy == null) {
-			deletePolicy = batchDeletePolicyDefault;
+			deletePolicy = mergedBatchDeletePolicyDefault;
+		} else if (configProvider != null) {
+			deletePolicy = new BatchDeletePolicy(deletePolicy, configProvider);
 		}
 
 		BatchAttr attr = new BatchAttr();
@@ -1343,7 +1480,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	public final void touch(WritePolicy policy, Key key)
 		throws AerospikeException {
 		if (policy == null) {
-			policy = writePolicyDefault;
+			policy = mergedWritePolicyDefault;
+		} else if (configProvider != null) {
+			policy = new WritePolicy(policy, configProvider);
 		}
 
 		if (policy.txn != null) {
@@ -1377,7 +1516,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (policy == null) {
-			policy = writePolicyDefault;
+			policy = mergedWritePolicyDefault;
+		} else if (configProvider != null) {
+			policy = new WritePolicy(policy, configProvider);
 		}
 
 		AsyncTouch command = new AsyncTouch(cluster, listener, policy, key);
@@ -1396,7 +1537,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	public final boolean touched(WritePolicy policy, Key key)
 		throws AerospikeException {
 		if (policy == null) {
-			policy = writePolicyDefault;
+			policy = mergedWritePolicyDefault;
+		} else if (configProvider != null) {
+			policy = new WritePolicy(policy, configProvider);
 		}
 
 		if (policy.txn != null) {
@@ -1432,7 +1575,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (policy == null) {
-			policy = writePolicyDefault;
+			policy = mergedWritePolicyDefault;
+		} else if (configProvider != null) {
+			policy = new WritePolicy(policy, configProvider);
 		}
 
 		AsyncTouch command = new AsyncTouch(cluster, listener, policy, key);
@@ -1455,7 +1600,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	public final boolean exists(Policy policy, Key key)
 		throws AerospikeException {
 		if (policy == null) {
-			policy = readPolicyDefault;
+			policy = mergedReadPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new Policy(policy, configProvider);
 		}
 
 		if (policy.txn != null) {
@@ -1488,7 +1635,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (policy == null) {
-			policy = readPolicyDefault;
+			policy = mergedReadPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new Policy(policy, configProvider);
 		}
 
 		if (policy.txn != null) {
@@ -1515,7 +1664,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (policy == null) {
-			policy = batchPolicyDefault;
+			policy = mergedBatchPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new BatchPolicy(policy, configProvider);
 		}
 
 		if (policy.txn != null) {
@@ -1575,7 +1726,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (policy == null) {
-			policy = batchPolicyDefault;
+			policy = mergedBatchPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new BatchPolicy(policy, configProvider);
 		}
 
 		if (policy.txn != null) {
@@ -1629,7 +1782,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (policy == null) {
-			policy = batchPolicyDefault;
+			policy = mergedBatchPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new BatchPolicy(policy, configProvider);
 		}
 
 		if (policy.txn != null) {
@@ -1672,7 +1827,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	public final Record get(Policy policy, Key key)
 		throws AerospikeException {
 		if (policy == null) {
-			policy = readPolicyDefault;
+			policy = mergedReadPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new Policy(policy, configProvider);
 		}
 
 		if (policy.txn != null) {
@@ -1705,7 +1862,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (policy == null) {
-			policy = readPolicyDefault;
+			policy = mergedReadPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new Policy(policy, configProvider);
 		}
 
 		if (policy.txn != null) {
@@ -1729,7 +1888,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	public final Record get(Policy policy, Key key, String... binNames)
 		throws AerospikeException {
 		if (policy == null) {
-			policy = readPolicyDefault;
+			policy = mergedReadPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new Policy(policy, configProvider);
 		}
 
 		if (policy.txn != null) {
@@ -1763,7 +1924,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (policy == null) {
-			policy = readPolicyDefault;
+			policy = mergedReadPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new Policy(policy, configProvider);
 		}
 
 		if (policy.txn != null) {
@@ -1786,7 +1949,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	public final Record getHeader(Policy policy, Key key)
 		throws AerospikeException {
 		if (policy == null) {
-			policy = readPolicyDefault;
+			policy = mergedReadPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new Policy(policy, configProvider);
 		}
 
 		if (policy.txn != null) {
@@ -1819,7 +1984,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (policy == null) {
-			policy = readPolicyDefault;
+			policy = mergedReadPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new Policy(policy, configProvider);
 		}
 
 		if (policy.txn != null) {
@@ -1853,7 +2020,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (policy == null) {
-			policy = batchPolicyDefault;
+			policy = mergedBatchPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new BatchPolicy(policy, configProvider);
 		}
 
 		if (policy.txn != null) {
@@ -1907,7 +2076,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (policy == null) {
-			policy = batchPolicyDefault;
+			policy = mergedBatchPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new BatchPolicy(policy, configProvider);
 		}
 
 		if (policy.txn != null) {
@@ -1960,7 +2131,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (policy == null) {
-			policy = batchPolicyDefault;
+			policy = mergedBatchPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new BatchPolicy(policy, configProvider);
 		}
 
 		if (policy.txn != null) {
@@ -2003,7 +2176,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (policy == null) {
-			policy = batchPolicyDefault;
+			policy = mergedBatchPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new BatchPolicy(policy, configProvider);
 		}
 
 		if (policy.txn != null) {
@@ -2065,7 +2240,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (policy == null) {
-			policy = batchPolicyDefault;
+			policy = mergedBatchPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new BatchPolicy(policy, configProvider);
 		}
 
 		if (policy.txn != null) {
@@ -2120,7 +2297,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (policy == null) {
-			policy = batchPolicyDefault;
+			policy = mergedBatchPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new BatchPolicy(policy, configProvider);
 		}
 
 		if (policy.txn != null) {
@@ -2165,7 +2344,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (policy == null) {
-			policy = batchPolicyDefault;
+			policy = mergedBatchPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new BatchPolicy(policy, configProvider);
 		}
 
 		if (policy.txn != null) {
@@ -2230,7 +2411,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (policy == null) {
-			policy = batchPolicyDefault;
+			policy = mergedBatchPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new BatchPolicy(policy, configProvider);
 		}
 
 		if (policy.txn != null) {
@@ -2289,7 +2472,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (policy == null) {
-			policy = batchPolicyDefault;
+			policy = mergedBatchPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new BatchPolicy(policy, configProvider);
 		}
 
 		if (policy.txn != null) {
@@ -2336,7 +2521,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (policy == null) {
-			policy = batchPolicyDefault;
+			policy = mergedBatchPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new BatchPolicy(policy, configProvider);
 		}
 
 		if (policy.txn != null) {
@@ -2398,7 +2585,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (policy == null) {
-			policy = batchPolicyDefault;
+			policy = mergedBatchPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new BatchPolicy(policy, configProvider);
 		}
 
 		if (policy.txn != null) {
@@ -2454,7 +2643,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (policy == null) {
-			policy = batchPolicyDefault;
+			policy = mergedBatchPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new BatchPolicy(policy, configProvider);
 		}
 
 		if (policy.txn != null) {
@@ -2497,7 +2688,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (policy == null) {
-			policy = batchPolicyDefault;
+			policy = mergedBatchPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new BatchPolicy(policy, configProvider);
 		}
 
 		if (policy.txn != null) {
@@ -2559,7 +2752,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (policy == null) {
-			policy = batchPolicyDefault;
+			policy = mergedBatchPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new BatchPolicy(policy, configProvider);
 		}
 
 		if (policy.txn != null) {
@@ -2615,7 +2810,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (policy == null) {
-			policy = batchPolicyDefault;
+			policy = mergedBatchPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new BatchPolicy(policy, configProvider);
 		}
 
 		if (policy.txn != null) {
@@ -2666,8 +2863,12 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	 */
 	public final Record operate(WritePolicy policy, Key key, Operation... operations)
 		throws AerospikeException {
-		OperateArgs args = new OperateArgs(policy, writePolicyDefault, operatePolicyReadDefault, operations);
+		OperateArgs args = new OperateArgs(policy, mergedWritePolicyDefault, mergedOperatePolicyReadDefault, operations);
 		policy = args.writePolicy;
+
+		if (configProvider != null) {
+			policy = new WritePolicy(policy, configProvider);
+		}
 
 		if (args.hasWrite) {
 			if (policy.txn != null) {
@@ -2718,8 +2919,12 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 			eventLoop = cluster.eventLoops.next();
 		}
 
-		OperateArgs args = new OperateArgs(policy, writePolicyDefault, operatePolicyReadDefault, operations);
+		OperateArgs args = new OperateArgs(policy, mergedWritePolicyDefault, mergedOperatePolicyReadDefault, operations);
 		policy = args.writePolicy;
+
+		if (configProvider != null) {
+			policy = new WritePolicy(policy, configProvider);
+		}
 
 		if (args.hasWrite) {
 			AsyncOperateWrite command = new AsyncOperateWrite(cluster, listener, key, args);
@@ -2761,7 +2966,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (policy == null) {
-			policy = batchParentPolicyWriteDefault;
+			policy = mergedBatchPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new BatchPolicy(policy, configProvider);
 		}
 
 		if (policy.txn != null) {
@@ -2771,12 +2978,15 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		BatchStatus status = new BatchStatus(true);
 		List<BatchNode> bns = BatchNodeList.generate(cluster, policy, records, status);
 		IBatchCommand[] commands = new IBatchCommand[bns.size()];
+
+		BatchPolicy origBatchPolicy = new BatchPolicy(policy);
 		int count = 0;
 
 		for (BatchNode bn : bns) {
 			if (bn.offsetsSize == 1) {
 				int i = bn.offsets[0];
 				BatchRecord record = records.get(i);
+				policy = origBatchPolicy;
 
 				switch (record.getType()) {
 					case BATCH_READ: {
@@ -2788,8 +2998,15 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 					case BATCH_WRITE: {
 						BatchWrite bw = (BatchWrite)record;
 						BatchAttr attr = new BatchAttr();
-						BatchWritePolicy bwp = (bw.policy != null)? bw.policy : this.batchWritePolicyDefault;
-
+						BatchWritePolicy bwp;
+						if (bw.policy == null) {
+							bwp = mergedBatchWritePolicyDefault;
+						} else if (configProvider != null) {
+							bwp = new BatchWritePolicy(bw.policy, configProvider);
+							policy.graftBatchWriteConfig(configProvider);
+						} else {
+							bwp = bw.policy;
+						}
 						attr.setWrite(bwp);
 						attr.adjustWrite(bw.ops);
 						attr.setOpSize(bw.ops);
@@ -2801,8 +3018,14 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 					case BATCH_UDF: {
 						BatchUDF bu = (BatchUDF)record;
 						BatchAttr attr = new BatchAttr();
-						BatchUDFPolicy bup = (bu.policy != null)? bu.policy : this.batchUDFPolicyDefault;
-
+						BatchUDFPolicy bup;
+						if (bu.policy == null) {
+							bup = this.mergedBatchUDFPolicyDefault;
+						} else if (configProvider != null) {
+							bup = new BatchUDFPolicy(bu.policy, configProvider);
+						} else {
+							bup = bu.policy;
+						}
 						attr.setUDF(bup);
 						commands[count++] = new BatchSingle.UDF(
 							cluster, policy, bu.packageName, bu.functionName, bu.functionArgs, attr, record, status,
@@ -2813,8 +3036,14 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 					case BATCH_DELETE: {
 						BatchDelete bd = (BatchDelete)record;
 						BatchAttr attr = new BatchAttr();
-						BatchDeletePolicy bdp = (bd.policy != null)? bd.policy : this.batchDeletePolicyDefault;
-
+						BatchDeletePolicy bdp;
+						if (bd.policy == null) {
+							bdp = this.mergedBatchDeletePolicyDefault;
+						} else if (configProvider != null) {
+							bdp = new BatchDeletePolicy(bd.policy, configProvider);
+						} else {
+							bdp = bd.policy;
+						}
 						attr.setDelete(bdp);
 						commands[count++] = new BatchSingle.Delete(cluster, policy, attr, record, status, bn.node);
 						break;
@@ -2826,7 +3055,7 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 				}
 			}
 			else {
-				commands[count++] = new Batch.OperateListCommand(cluster, bn, policy, records, status);
+				commands[count++] = new Batch.OperateListCommand(cluster, bn, policy, records, status, configProvider);
 			}
 		}
 		BatchExecutor.execute(cluster, policy, commands, status);
@@ -2869,19 +3098,24 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (policy == null) {
-			policy = batchParentPolicyWriteDefault;
+			policy = mergedBatchPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new BatchPolicy(policy, configProvider);
 		}
 
 		AsyncBatchExecutor.OperateList executor = new AsyncBatchExecutor.OperateList(
 			eventLoop, cluster, listener, records);
 		List<BatchNode> bns = BatchNodeList.generate(cluster, policy, records, executor);
 		AsyncCommand[] commands = new AsyncCommand[bns.size()];
+
+		BatchPolicy origBatchPolicy = new BatchPolicy(policy);
 		int count = 0;
 
 		for (BatchNode bn : bns) {
 			if (bn.offsetsSize == 1) {
 				int i = bn.offsets[0];
 				BatchRecord record = records.get(i);
+				policy = origBatchPolicy;
 
 				switch (record.getType()) {
 					case BATCH_READ: {
@@ -2893,8 +3127,15 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 					case BATCH_WRITE: {
 						BatchWrite bw = (BatchWrite)record;
 						BatchAttr attr = new BatchAttr();
-						BatchWritePolicy bwp = (bw.policy != null)? bw.policy : this.batchWritePolicyDefault;
-
+						BatchWritePolicy bwp;
+						if (bw.policy == null) {
+							bwp = mergedBatchWritePolicyDefault;
+						} else if (configProvider != null) {
+							bwp = new BatchWritePolicy(bw.policy, configProvider);
+							policy.graftBatchWriteConfig(configProvider);
+						} else {
+							bwp = bw.policy;
+						}
 						attr.setWrite(bwp);
 						attr.adjustWrite(bw.ops);
 						attr.setOpSize(bw.ops);
@@ -2905,8 +3146,14 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 					case BATCH_UDF: {
 						BatchUDF bu = (BatchUDF)record;
 						BatchAttr attr = new BatchAttr();
-						BatchUDFPolicy bup = (bu.policy != null)? bu.policy : this.batchUDFPolicyDefault;
-
+						BatchUDFPolicy bup;
+						if (bu.policy == null) {
+							bup = this.mergedBatchUDFPolicyDefault;
+						} else if (configProvider != null) {
+							bup = new BatchUDFPolicy(bu.policy, configProvider);
+						} else {
+							bup = bu.policy;
+						}
 						attr.setUDF(bup);
 						commands[count++] = new AsyncBatchSingle.UDF(executor, cluster, policy, attr, bu, bn.node);
 						break;
@@ -2915,8 +3162,14 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 					case BATCH_DELETE: {
 						BatchDelete bd = (BatchDelete)record;
 						BatchAttr attr = new BatchAttr();
-						BatchDeletePolicy bdp = (bd.policy != null)? bd.policy : this.batchDeletePolicyDefault;
-
+						BatchDeletePolicy bdp;
+						if (bd.policy == null) {
+							bdp = this.mergedBatchDeletePolicyDefault;
+						} else if (configProvider != null) {
+							bdp = new BatchDeletePolicy(bd.policy, configProvider);
+						} else {
+							bdp = bd.policy;
+						}
 						attr.setDelete(bdp);
 						commands[count++] = new AsyncBatchSingle.Delete(executor, cluster, policy, attr, record,
 							bn.node);
@@ -2929,7 +3182,7 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 				}
 			}
 			else {
-				commands[count++] = new AsyncBatch.OperateListCommand(executor, bn, policy, records);
+				commands[count++] = new AsyncBatch.OperateListCommand(executor, bn, policy, records, configProvider);
 			}
 		}
 		AsyncTxnMonitor.executeBatch(policy, executor, commands, records);
@@ -2971,19 +3224,24 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (policy == null) {
-			policy = batchParentPolicyWriteDefault;
+			policy = mergedBatchPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new BatchPolicy(policy, configProvider);
 		}
 
 		AsyncBatchExecutor.OperateSequence executor = new AsyncBatchExecutor.OperateSequence(
 			eventLoop, cluster, listener);
 		List<BatchNode> bns = BatchNodeList.generate(cluster, policy, records, executor);
 		AsyncCommand[] commands = new AsyncCommand[bns.size()];
+
+		BatchPolicy origBatchPolicy = new BatchPolicy(policy);
 		int count = 0;
 
 		for (BatchNode bn : bns) {
 			if (bn.offsetsSize == 1) {
 				int i = bn.offsets[0];
 				BatchRecord record = records.get(i);
+				policy = origBatchPolicy;
 
 				switch (record.getType()) {
 					case BATCH_READ: {
@@ -2996,8 +3254,15 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 					case BATCH_WRITE: {
 						BatchWrite bw = (BatchWrite)record;
 						BatchAttr attr = new BatchAttr();
-						BatchWritePolicy bwp = (bw.policy != null)? bw.policy : this.batchWritePolicyDefault;
-
+						BatchWritePolicy bwp;
+						if (bw.policy == null) {
+							bwp = mergedBatchWritePolicyDefault;
+						} else if (configProvider != null) {
+							bwp = new BatchWritePolicy(bw.policy, configProvider);
+							policy.graftBatchWriteConfig(configProvider);
+						} else {
+							bwp = bw.policy;
+						}
 						attr.setWrite(bwp);
 						attr.adjustWrite(bw.ops);
 						attr.setOpSize(bw.ops);
@@ -3009,8 +3274,14 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 					case BATCH_UDF: {
 						BatchUDF bu = (BatchUDF)record;
 						BatchAttr attr = new BatchAttr();
-						BatchUDFPolicy bup = (bu.policy != null)? bu.policy : this.batchUDFPolicyDefault;
-
+						BatchUDFPolicy bup;
+						if (bu.policy == null) {
+							bup = this.mergedBatchUDFPolicyDefault;
+						} else if (configProvider != null) {
+							bup = new BatchUDFPolicy(bu.policy, configProvider);
+						} else {
+							bup = bu.policy;
+						}
 						attr.setUDF(bup);
 						commands[count++] = new AsyncBatchSingle.UDFSequence(
 							executor, cluster, policy, attr, bu, bn.node, listener, i);
@@ -3020,8 +3291,14 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 					case BATCH_DELETE: {
 						BatchDelete bd = (BatchDelete)record;
 						BatchAttr attr = new BatchAttr();
-						BatchDeletePolicy bdp = (bd.policy != null)? bd.policy : this.batchDeletePolicyDefault;
-
+						BatchDeletePolicy bdp;
+						if (bd.policy == null) {
+							bdp = this.mergedBatchDeletePolicyDefault;
+						} else if (configProvider != null) {
+							bdp = new BatchDeletePolicy(bd.policy, configProvider);
+						} else {
+							bdp = bd.policy;
+						}
 						attr.setDelete(bdp);
 						commands[count++] = new AsyncBatchSingle.DeleteSequence(
 							executor, cluster, policy, attr, bd, bn.node, listener, i);
@@ -3034,7 +3311,8 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 				}
 			}
 			else {
-				commands[count++] = new AsyncBatch.OperateSequenceCommand(executor, bn, policy, listener, records);
+				commands[count++] = new AsyncBatch.OperateSequenceCommand(executor, bn, policy, listener, records,
+						configProvider);
 			}
 		}
 		AsyncTxnMonitor.executeBatch(policy, executor, commands, records);
@@ -3066,18 +3344,26 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (batchPolicy == null) {
-			batchPolicy = batchParentPolicyWriteDefault;
+			batchPolicy = mergedBatchParentPolicyWriteDefault;
+		} else if (configProvider != null) {
+			batchPolicy = new BatchPolicy(batchPolicy, configProvider);
+		}
+		if (writePolicy == null) {
+			writePolicy = mergedBatchWritePolicyDefault;
+		} else if (configProvider != null) {
+			writePolicy = new BatchWritePolicy(writePolicy, configProvider);
 		}
 
-		if (writePolicy == null) {
-			writePolicy = batchWritePolicyDefault;
-		}
 
 		if (batchPolicy.txn != null) {
 			TxnMonitor.addKeys(cluster, batchPolicy, keys);
 		}
 
 		BatchAttr attr = new BatchAttr(batchPolicy, writePolicy, ops);
+		if (attr.hasWrite && configProvider != null) {
+			batchPolicy.graftBatchWriteConfig(configProvider);
+		}
+
 		BatchRecord[] records = new BatchRecord[keys.length];
 
 		for (int i = 0; i < keys.length; i++) {
@@ -3155,14 +3441,21 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (batchPolicy == null) {
-			batchPolicy = batchParentPolicyWriteDefault;
+			batchPolicy = mergedBatchParentPolicyWriteDefault;
+		} else if (configProvider != null) {
+			batchPolicy = new BatchPolicy(batchPolicy, configProvider);
 		}
-
 		if (writePolicy == null) {
-			writePolicy = batchWritePolicyDefault;
+			writePolicy = mergedBatchWritePolicyDefault;
+		} else if (configProvider != null) {
+			writePolicy = new BatchWritePolicy(writePolicy, configProvider);
 		}
 
 		BatchAttr attr = new BatchAttr(batchPolicy, writePolicy, ops);
+		if (attr.hasWrite && configProvider != null) {
+			batchPolicy.graftBatchWriteConfig(configProvider);
+		}
+
 		BatchRecord[] records = new BatchRecord[keys.length];
 
 		for (int i = 0; i < keys.length; i++) {
@@ -3230,14 +3523,21 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (batchPolicy == null) {
-			batchPolicy = batchParentPolicyWriteDefault;
+			batchPolicy = mergedBatchParentPolicyWriteDefault;
+		} else if (configProvider != null) {
+			batchPolicy = new BatchPolicy(batchPolicy, configProvider);
 		}
-
 		if (writePolicy == null) {
-			writePolicy = batchWritePolicyDefault;
+			writePolicy = mergedBatchWritePolicyDefault;
+		} else if (configProvider != null) {
+			writePolicy = new BatchWritePolicy(writePolicy, configProvider);
 		}
 
 		BatchAttr attr = new BatchAttr(batchPolicy, writePolicy, ops);
+		if (attr.hasWrite && configProvider != null) {
+			batchPolicy.graftBatchWriteConfig(configProvider);
+		}
+
 		boolean[] sent = new boolean[keys.length];
 		AsyncBatchExecutor.BatchRecordSequence executor = new AsyncBatchExecutor.BatchRecordSequence(
 			eventLoop, cluster, listener, sent);
@@ -3281,7 +3581,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	public final void scanAll(ScanPolicy policy, String namespace, String setName, ScanCallback callback, String... binNames)
 		throws AerospikeException {
 		if (policy == null) {
-			policy = scanPolicyDefault;
+			policy = mergedScanPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new ScanPolicy(policy, configProvider);
 		}
 
 		Node[] nodes = cluster.validateNodes();
@@ -3313,7 +3615,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (policy == null) {
-			policy = scanPolicyDefault;
+			policy = mergedScanPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new ScanPolicy(policy, configProvider);
 		}
 
 		Node[] nodes = cluster.validateNodes();
@@ -3359,7 +3663,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	public final void scanNode(ScanPolicy policy, Node node, String namespace, String setName, ScanCallback callback, String... binNames)
 		throws AerospikeException {
 		if (policy == null) {
-			policy = scanPolicyDefault;
+			policy = mergedScanPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new ScanPolicy(policy, configProvider);
 		}
 
 		PartitionTracker tracker = new PartitionTracker(policy, node);
@@ -3383,7 +3689,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	public final void scanPartitions(ScanPolicy policy, PartitionFilter partitionFilter, String namespace, String setName, ScanCallback callback, String... binNames)
 		throws AerospikeException {
 		if (policy == null) {
-			policy = scanPolicyDefault;
+			policy = mergedScanPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new ScanPolicy(policy, configProvider);
 		}
 
 		Node[] nodes = cluster.validateNodes();
@@ -3414,7 +3722,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (policy == null) {
-			policy = scanPolicyDefault;
+			policy = mergedScanPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new ScanPolicy(policy, configProvider);
 		}
 
 		Node[] nodes = cluster.validateNodes();
@@ -3441,7 +3751,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	public final RegisterTask register(Policy policy, String clientPath, String serverPath, Language language)
 		throws AerospikeException {
 		if (policy == null) {
-			policy = writePolicyDefault;
+			policy = mergedWritePolicyDefault;
+		} else if (configProvider != null) {
+			policy = new Policy(policy, configProvider);
 		}
 		File file = new File(clientPath);
 		byte[] bytes = Util.readFile(file);
@@ -3464,7 +3776,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	public final RegisterTask register(Policy policy, ClassLoader resourceLoader, String resourcePath, String serverPath, Language language)
 		throws AerospikeException {
 		if (policy == null) {
-			policy = writePolicyDefault;
+			policy = mergedWritePolicyDefault;
+		} else if (configProvider != null) {
+			policy = new Policy(policy, configProvider);
 		}
 		byte[] bytes = Util.readResource(resourceLoader, resourcePath);
 		return RegisterCommand.register(cluster, policy, bytes, serverPath, language);
@@ -3503,7 +3817,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	public final RegisterTask registerUdfString(Policy policy, String code, String serverPath, Language language)
 		throws AerospikeException {
 		if (policy == null) {
-			policy = writePolicyDefault;
+			policy = mergedWritePolicyDefault;
+		} else if (configProvider != null) {
+			policy = new Policy(policy, configProvider);
 		}
 		byte[] bytes = Buffer.stringToUtf8(code);
 		return RegisterCommand.register(cluster, policy, bytes, serverPath, language);
@@ -3555,7 +3871,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	public final Object execute(WritePolicy policy, Key key, String packageName, String functionName, Value... functionArgs)
 		throws AerospikeException {
 		if (policy == null) {
-			policy = writePolicyDefault;
+			policy = mergedWritePolicyDefault;
+		} else if (configProvider != null) {
+			policy = new WritePolicy(policy, configProvider);
 		}
 
 		if (policy.txn != null) {
@@ -3626,7 +3944,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (policy == null) {
-			policy = writePolicyDefault;
+			policy = mergedWritePolicyDefault;
+		} else if (configProvider != null) {
+			policy = new WritePolicy(policy, configProvider);
 		}
 
 		AsyncExecute command = new AsyncExecute(cluster, listener, policy, key, packageName, functionName, functionArgs);
@@ -3662,11 +3982,15 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (batchPolicy == null) {
-			batchPolicy = batchParentPolicyWriteDefault;
+			batchPolicy = mergedBatchParentPolicyWriteDefault;
+		} else if (configProvider != null) {
+			batchPolicy = new BatchPolicy(batchPolicy, configProvider);
 		}
 
 		if (udfPolicy == null) {
-			udfPolicy = batchUDFPolicyDefault;
+			udfPolicy = mergedBatchUDFPolicyDefault;
+		} else if (configProvider != null) {
+			udfPolicy = new BatchUDFPolicy(udfPolicy, configProvider);
 		}
 
 		if (batchPolicy.txn != null) {
@@ -3753,11 +4077,15 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (batchPolicy == null) {
-			batchPolicy = batchParentPolicyWriteDefault;
+			batchPolicy = mergedBatchParentPolicyWriteDefault;
+		} else if (configProvider != null) {
+			batchPolicy = new BatchPolicy(batchPolicy, configProvider);
 		}
 
 		if (udfPolicy == null) {
-			udfPolicy = batchUDFPolicyDefault;
+			udfPolicy = mergedBatchUDFPolicyDefault;
+		} else if (configProvider != null) {
+			udfPolicy = new BatchUDFPolicy(udfPolicy, configProvider);
 		}
 
 		byte[] argBytes = Packer.pack(functionArgs);
@@ -3834,11 +4162,15 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (batchPolicy == null) {
-			batchPolicy = batchParentPolicyWriteDefault;
+			batchPolicy = mergedBatchParentPolicyWriteDefault;
+		} else if (configProvider != null) {
+			batchPolicy = new BatchPolicy(batchPolicy, configProvider);
 		}
 
 		if (udfPolicy == null) {
-			udfPolicy = batchUDFPolicyDefault;
+			udfPolicy = mergedBatchUDFPolicyDefault;
+		} else if (configProvider != null) {
+			udfPolicy = new BatchUDFPolicy(udfPolicy, configProvider);
 		}
 
 		byte[] argBytes = Packer.pack(functionArgs);
@@ -3893,8 +4225,11 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		Value... functionArgs
 	) throws AerospikeException {
 		if (policy == null) {
-			policy = writePolicyDefault;
+			policy = mergedWritePolicyDefault;
+		} else if (configProvider != null) {
+			policy = new WritePolicy(policy, configProvider);
 		}
+
 		statement.setAggregateFunction(packageName, functionName, functionArgs);
 
 		cluster.addCommandCount();
@@ -3929,7 +4264,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		Operation... operations
 	) throws AerospikeException {
 		if (policy == null) {
-			policy = writePolicyDefault;
+			policy = mergedWritePolicyDefault;
+		} else if (configProvider != null) {
+			policy = new WritePolicy(policy, configProvider);
 		}
 
 		if (operations.length > 0) {
@@ -3973,7 +4310,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	public final RecordSet query(QueryPolicy policy, Statement statement)
 		throws AerospikeException {
 		if (policy == null) {
-			policy = queryPolicyDefault;
+			policy = mergedQueryPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new QueryPolicy(policy, configProvider);
 		}
 
 		Node[] nodes = cluster.validateNodes();
@@ -4011,7 +4350,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (policy == null) {
-			policy = queryPolicyDefault;
+			policy = mergedQueryPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new QueryPolicy(policy, configProvider);
 		}
 
 		Node[] nodes = cluster.validateNodes();
@@ -4046,7 +4387,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		QueryListener listener
 	) throws AerospikeException {
 		if (policy == null) {
-			policy = queryPolicyDefault;
+			policy = mergedQueryPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new QueryPolicy(policy, configProvider);
 		}
 
 		Node[] nodes = cluster.validateNodes();
@@ -4088,7 +4431,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		QueryListener listener
 	) throws AerospikeException {
 		if (policy == null) {
-			policy = queryPolicyDefault;
+			policy = mergedQueryPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new QueryPolicy(policy, configProvider);
 		}
 
 		Node[] nodes = cluster.validateNodes();
@@ -4116,7 +4461,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	public final RecordSet queryNode(QueryPolicy policy, Statement statement, Node node)
 		throws AerospikeException {
 		if (policy == null) {
-			policy = queryPolicyDefault;
+			policy = mergedQueryPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new QueryPolicy(policy, configProvider);
 		}
 
 		if (cluster.hasPartitionQuery || statement.getFilter() == null) {
@@ -4149,7 +4496,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		PartitionFilter partitionFilter
 	) throws AerospikeException {
 		if (policy == null) {
-			policy = queryPolicyDefault;
+			policy = mergedQueryPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new QueryPolicy(policy, configProvider);
 		}
 
 		Node[] nodes = cluster.validateNodes();
@@ -4193,7 +4542,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (policy == null) {
-			policy = queryPolicyDefault;
+			policy = mergedQueryPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new QueryPolicy(policy, configProvider);
 		}
 
 		Node[] nodes = cluster.validateNodes();
@@ -4254,7 +4605,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	public final ResultSet queryAggregate(QueryPolicy policy, Statement statement)
 		throws AerospikeException {
 		if (policy == null) {
-			policy = queryPolicyDefault;
+			policy = mergedQueryPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new QueryPolicy(policy, configProvider);
 		}
 
 		Node[] nodes = cluster.validateNodes();
@@ -4281,8 +4634,11 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	public final ResultSet queryAggregateNode(QueryPolicy policy, Statement statement, Node node)
 		throws AerospikeException {
 		if (policy == null) {
-			policy = queryPolicyDefault;
+			policy = mergedQueryPolicyDefault;
+		} else if (configProvider != null) {
+			policy = new QueryPolicy(policy, configProvider);
 		}
+
 		QueryAggregateExecutor executor = new QueryAggregateExecutor(cluster, policy, statement, new Node[] {node});
 		return executor.getResultSet();
 	}
@@ -4343,13 +4699,15 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		CTX... ctx
 	) throws AerospikeException {
 		if (policy == null) {
-			policy = writePolicyDefault;
+			policy = mergedWritePolicyDefault;
+		} else if (configProvider != null) {
+			policy = new Policy(policy, configProvider);
 		}
-
-		String command = buildCreateIndexInfoCommand(namespace, setName, indexName, binName, indexType, indexCollectionType, ctx);
+		Node node = this.cluster.getRandomNode();
+		String command = buildCreateIndexInfoCommand(node, namespace, setName, indexName, binName, indexType, indexCollectionType, ctx, null);
 
 		// Send index command to one node. That node will distribute the command to other nodes.
-		String response = sendInfoCommand(policy, command);
+		String response = sendInfoCommand(policy, node, command);
 
 		if (response.equalsIgnoreCase("OK")) {
 			// Return task that could optionally be polled for completion.
@@ -4395,11 +4753,98 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (policy == null) {
-			policy = writePolicyDefault;
+			policy = mergedWritePolicyDefault;
+		} else if (configProvider != null) {
+			policy = new Policy(policy, configProvider);
+		}
+		Node node = this.cluster.getRandomNode();
+		String command = buildCreateIndexInfoCommand(node, namespace, setName, indexName, binName, indexType, indexCollectionType, ctx, null);
+		sendIndexInfoCommand(eventLoop, listener, policy, node, namespace, indexName, command, true);
+	}
+
+	/**
+	 * Create an expression-based secondary index with the provided index collection type
+	 * This asynchronous server call will return before command is complete.
+	 * The user can optionally wait for command completion by using the returned
+	 * IndexTask instance.
+	 *
+	 * @param policy				generic configuration parameters, pass in null for defaults
+	 * @param namespace				namespace - equivalent to database name
+	 * @param setName				optional set name - equivalent to database table
+	 * @param indexName				name of secondary index
+	 * @param indexType				underlying data type of secondary index
+	 * @param indexCollectionType	index collection type
+	 * @param exp					expression on which to build the index
+	 * @throws AerospikeException
+	 */
+	public final IndexTask createIndex(
+		Policy policy,
+		String namespace,
+		String setName,
+		String indexName,
+		IndexType indexType,
+		IndexCollectionType indexCollectionType,
+		Expression exp
+	) throws AerospikeException {
+		if (policy == null) {
+			policy = mergedWritePolicyDefault;
+		} else if (configProvider != null) {
+			policy = new Policy(policy, configProvider);
+		}
+		Node node = this.cluster.getRandomNode();
+		String command = buildCreateIndexInfoCommand(node, namespace, setName, indexName, null, indexType, indexCollectionType, null, exp);
+
+		// Send index command to one node. That node will distribute the command to other nodes.
+		String response = sendInfoCommand(policy, node, command);
+
+		if (response.equalsIgnoreCase("OK")) {
+			// Return task that could optionally be polled for completion.
+			return new IndexTask(cluster, policy, namespace, indexName, true);
 		}
 
-		String command = buildCreateIndexInfoCommand(namespace, setName, indexName, binName, indexType, indexCollectionType, ctx);
-		sendIndexInfoCommand(eventLoop, listener, policy, namespace, indexName, command, true);
+		int code = parseIndexErrorCode(response);
+		throw new AerospikeException(code, "Create index failed: " + response);
+	}
+
+	/**
+	 * Asynchronously create an expression-based secondary index with the provided index collection type
+	 * This asynchronous server call will return before command is complete.
+	 * The user can optionally wait for command completion by using the returned
+	 * IndexTask instance.
+	 *
+	 * @param policy				generic configuration parameters, pass in null for defaults
+	 * @param namespace				namespace - equivalent to database name
+	 * @param setName				optional set name - equivalent to database table
+	 * @param indexName				name of secondary index
+	 * @param indexType				underlying data type of secondary index
+	 * @param indexCollectionType	index collection type
+	 * @param exp					expression on which to build the index
+	 * @throws AerospikeException
+	 */
+	public final void createIndex(
+		EventLoop eventLoop,
+		IndexListener listener,
+		Policy policy,
+		String namespace,
+		String setName,
+		String indexName,
+		IndexType indexType,
+		IndexCollectionType indexCollectionType,
+		Expression exp
+	) throws AerospikeException {
+		if (eventLoop == null) {
+			eventLoop = cluster.eventLoops.next();
+		}
+
+		if (policy == null) {
+			policy = mergedWritePolicyDefault;
+		} else if (configProvider != null) {
+			policy = new Policy(policy, configProvider);
+		}
+
+		Node node = this.cluster.getRandomNode();
+		String command = buildCreateIndexInfoCommand(node, namespace, setName, indexName, null, indexType, indexCollectionType, null, exp);
+		sendIndexInfoCommand(eventLoop, listener, policy, node, namespace, indexName, command, true);
 	}
 
 	/**
@@ -4421,13 +4866,15 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		String indexName
 	) throws AerospikeException {
 		if (policy == null) {
-			policy = writePolicyDefault;
+			policy = mergedWritePolicyDefault;
+		} else if (configProvider != null) {
+			policy = new Policy(policy, configProvider);
 		}
-
-		String command = buildDropIndexInfoCommand(namespace, setName, indexName);
+		Node node = this.cluster.getRandomNode();
+		String command = buildDropIndexInfoCommand(node, namespace, setName, indexName);
 
 		// Send index command to one node. That node will distribute the command to other nodes.
-		String response = sendInfoCommand(policy, command);
+		String response = sendInfoCommand(policy, node, command);
 
 		if (response.equalsIgnoreCase("OK")) {
 			return new IndexTask(cluster, policy, namespace, indexName, false);
@@ -4464,11 +4911,14 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		if (policy == null) {
-			policy = writePolicyDefault;
+			policy = mergedWritePolicyDefault;
+		} else if (configProvider != null) {
+			policy = new Policy(policy, configProvider);
 		}
 
-		String command = buildDropIndexInfoCommand(namespace, setName, indexName);
-		sendIndexInfoCommand(eventLoop, listener, policy, namespace, indexName, command, false);
+		Node node = this.cluster.getRandomNode();
+		String command = buildDropIndexInfoCommand(node, namespace, setName, indexName);
+		sendIndexInfoCommand(eventLoop, listener, policy, node, namespace, indexName, command, false);
 	}
 
 	//-----------------------------------------------------------------
@@ -4574,6 +5024,21 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		String hash = AdminCommand.hashPassword(password);
 		AdminCommand command = new AdminCommand();
 		command.createUser(cluster, policy, user, hash, roles);
+	}
+
+	/**
+	 * Create PKI user with roles.  PKI users are authenticated via TLS and a certificate instead of a password.
+	 * WARNING: This function should only be called for server versions 8.1+
+	 *
+	 * @param policy				admin configuration parameters, pass in null for defaults
+	 * @param user					user name
+	 * @param roles					variable arguments array of role names.  Predefined roles are listed in {@link com.aerospike.client.admin.Role}
+	 * @throws AerospikeException	if command fails
+	 */
+	public final void createPkiUser(AdminPolicy policy, String user, List<String> roles)
+		throws AerospikeException {
+		AdminCommand command = new AdminCommand();
+		command.createPkiUser(cluster, policy, user, roles);
 	}
 
 	/**
@@ -4831,17 +5296,22 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	// Internal Methods
 	//-------------------------------------------------------
 
-	private static String buildCreateIndexInfoCommand(
+	private String buildCreateIndexInfoCommand(
+		Node node,
 		String namespace,
 		String setName,
 		String indexName,
 		String binName,
 		IndexType indexType,
 		IndexCollectionType indexCollectionType,
-		CTX[] ctx
+		CTX[] ctx,
+		Expression exp
 	) {
 		StringBuilder sb = new StringBuilder(1024);
-		sb.append("sindex-create:ns=");
+		Version currentServerVersion = node.getVersion();
+		String createIndexCommand = currentServerVersion.isGreaterOrEqual(Version.SERVER_VERSION_8_1) ? "sindex-create:namespace=": "sindex-create:ns=";
+
+		sb.append(createIndexCommand);
 		sb.append(namespace);
 
 		if (setName != null && setName.length() > 0) {
@@ -4860,21 +5330,35 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 			sb.append(base64);
 		}
 
+		if (exp != null && exp.size() > 0) {
+			String base64 = exp.getBase64();
+
+			sb.append(";exp=");
+			sb.append(base64);
+		}
+
 		if (indexCollectionType != IndexCollectionType.DEFAULT) {
 			sb.append(";indextype=");
 			sb.append(indexCollectionType);
 		}
 
-		sb.append(";indexdata=");
-		sb.append(binName);
-		sb.append(",");
+		if (binName != null) {
+			sb.append(";indexdata=");
+			sb.append(binName);
+			sb.append(",");
+		} else {
+			sb.append(";type=");
+		}
 		sb.append(indexType);
 		return sb.toString();
 	}
 
-	private static String buildDropIndexInfoCommand(String namespace, String setName, String indexName) {
+	private String buildDropIndexInfoCommand(Node node, String namespace, String setName, String indexName) {
 		StringBuilder sb = new StringBuilder(500);
-		sb.append("sindex-delete:ns=");
+		Version currentServerVersion = node.getVersion();
+		String deleteIndexCommand = currentServerVersion.isGreaterOrEqual(Version.SERVER_VERSION_8_1) ? "sindex-delete:namespace=": "sindex-delete:ns=";
+
+		sb.append(deleteIndexCommand);
 		sb.append(namespace);
 
 		if (setName != null && setName.length() > 0) {
@@ -4886,13 +5370,12 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		return sb.toString();
 	}
 
-	private String sendInfoCommand(Policy policy, String command) {
-		Node node = cluster.getRandomNode();
+	private String sendInfoCommand(Policy policy, Node node, String command) {
 		Connection conn = node.getConnection(policy.connectTimeout, policy.socketTimeout);
 		Info info;
 
 		try {
-			info = new Info(conn, command);
+			info = new Info(node, conn, command);
 			node.putConnection(conn);
 		}
 		catch (Throwable e) {
@@ -4906,6 +5389,7 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		EventLoop eventLoop,
 		IndexListener listener,
 		Policy policy,
+		Node node,
 		String namespace,
 		String indexName,
 		String command,
@@ -4931,7 +5415,7 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 			public void onFailure(AerospikeException ae) {
 				listener.onFailure(ae);
 			}
-		}, new InfoPolicy(policy), cluster.getRandomNode(), command);
+		}, new InfoPolicy(policy), node, command);
 	}
 
 	private static int parseIndexErrorCode(String response) {

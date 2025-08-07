@@ -28,6 +28,7 @@ import com.aerospike.client.Record;
 import com.aerospike.client.ResultCode;
 import com.aerospike.client.Txn;
 import com.aerospike.client.cluster.Cluster;
+import com.aerospike.client.configuration.*;
 import com.aerospike.client.metrics.LatencyType;
 import com.aerospike.client.policy.BatchPolicy;
 import com.aerospike.client.policy.ReadModeSC;
@@ -55,7 +56,7 @@ public final class Batch {
 		@Override
 		protected void writeBuffer() {
 			if (batch.node.hasBatchAny()) {
-				setBatchOperate(batchPolicy, null, null, null, records, batch);
+				setBatchOperate(batchPolicy, null, null, null, records, batch, null);
 			}
 			else {
 				setBatchRead(batchPolicy, records, batch);
@@ -208,16 +209,19 @@ public final class Batch {
 
 	public static final class OperateListCommand extends BatchCommand {
 		private final List<BatchRecord> records;
+		private final ConfigurationProvider configProvider;
 
 		public OperateListCommand(
 			Cluster cluster,
 			BatchNode batch,
 			BatchPolicy policy,
 			List<BatchRecord> records,
-			BatchStatus status
+			BatchStatus status,
+			ConfigurationProvider cp
 		) {
 			super(cluster, batch, policy, status, true);
 			this.records = records;
+			this.configProvider = cp;
 		}
 
 		@Override
@@ -231,7 +235,7 @@ public final class Batch {
 		protected void writeBuffer() {
 			AerospikeClient client = cluster.client;
 			setBatchOperate(batchPolicy, client.batchWritePolicyDefault, client.batchUDFPolicyDefault,
-				client.batchDeletePolicyDefault, records, batch);
+				client.batchDeletePolicyDefault, records, batch, configProvider);
 		}
 
 		@Override
@@ -281,7 +285,7 @@ public final class Batch {
 
 		@Override
 		protected BatchCommand createCommand(BatchNode batchNode) {
-			return new OperateListCommand(cluster, batchNode, batchPolicy, records, status);
+			return new OperateListCommand(cluster, batchNode, batchPolicy, records, status, configProvider);
 		}
 
 		@Override
