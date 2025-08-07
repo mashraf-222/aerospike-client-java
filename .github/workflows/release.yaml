@@ -18,9 +18,9 @@ on:
         type: string
         required: true
     secrets:
-      GPG_SECRET_KEY_ORG:
+      GPG_JAVA_CLIENT_PRIVATE_KEY:
         required: true
-      GPG_PASS_ORG:
+      GPG_JAVA_CLIENT_PASS:
         required: true
       JFROG_OIDC_PROVIDER:
         required: true
@@ -49,7 +49,7 @@ jobs:
         with:
           distribution: "semeru"
           java-version: ${{ inputs.java-version }}
-          gpg-private-key: ${{ secrets.GPG_SECRET_KEY_ORG }}
+          gpg-private-key: ${{ secrets.GPG_JAVA_CLIENT_PRIVATE_KEY }}
           gpg-passphrase: GPG_PASS
 
       - name: Get release or snapshot-version
@@ -122,16 +122,14 @@ jobs:
 
           ls -laR ${{ github.workspace }}/local_repo
         env:
-          GPG_PASS: ${{ secrets.GPG_PASS_ORG }}
+          GPG_PASS: ${{ secrets.GPG_JAVA_CLIENT_PASS }}
 
       # Publishing release to JFrog
       - name: Publish to JFrog
         uses: ./.github/actions/publish-to-jfrog
         with:
-          crypto-type: ${{ inputs.crypto-type }}
           oidc-provider: ${{ secrets.JFROG_OIDC_PROVIDER }}
           oidc-audience: ${{ secrets.JFROG_OIDC_AUDIENCE }}
-          artifact-name: ${{ steps.get-artifact-name.outputs.artifact-name }}
           artifact-id: ${{ steps.get-artifact-id.outputs.artifact-id }}
           artifact-version: ${{ steps.get-artifact-version.outputs.artifact-version }}
           package-install-location: ${{ github.workspace }}/local_repo
