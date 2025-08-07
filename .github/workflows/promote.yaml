@@ -69,7 +69,17 @@ jobs:
       - name: Get info
         id: get-build-info
         run: |
-          echo build-info=$(jf rt curl /api/build/${{ inputs.jf-target-build }}/${{ inputs.build-number }}) >> $GITHUB_OUTPUT
+          API_PATH="/api/build/${{ inputs.jf-target-build }}/${{ inputs.build-number }}?project=clients"
+          status_code=$(jf rt curl "${API_PATH}" -o /dev/null -s -w "%{http_code}")
+
+          # Exit with 1 unless the request succeeded (HTTP 200)
+          if [[ "$status_code" -ne 200 ]]; then
+            echo "ERROR: could not fetch build for build number ${{ inputs.build-number }} (HTTP $status_code)" >&2
+
+            exit 1
+          fi
+
+          echo build-info=$(jf rt curl "${API_PATH}" ) >> $GITHUB_OUTPUT
 
       # Snapshot builds are not promoted to production. We consider a snapshot build if the version in pom has been updated/changed as part of changes
       # we are promoting in the build
@@ -225,6 +235,12 @@ jobs:
     runs-on: ${{ vars.BUILD_CONTAINER_DISTRO_VERSION }}
     needs: [promote, publish-release-sonatype]
     steps: 
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.target-branch }}
+          token: ${{ secrets.CLIENT_BOT_PAT }}
+
       # Pulling bc release from JFROG
       - uses: ./.github/actions/stage-release-artifacts
         with:

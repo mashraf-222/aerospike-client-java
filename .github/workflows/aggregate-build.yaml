@@ -76,4 +76,4 @@ jobs:
 
       - name: Promote release bundle to DEV stage
         run: | 
-          jf rbp --signing-key=aerospike clients-java-jdk${{ inputs.java-version }} ${{ inputs.release-version}} STAGE
+          jf rbp --signing-key=aerospike clients-java-jdk${{ inputs.java-version }} ${{ inputs.release-version}} DEV
