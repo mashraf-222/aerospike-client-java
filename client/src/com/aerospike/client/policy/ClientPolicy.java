@@ -325,7 +325,7 @@ public class ClientPolicy {
 	public TCPKeepAlive keepAlive;
 
 	/**
-	 * A IP translation table is used in cases where different clients use different server
+	 * An IP translation table is used in cases where different clients use different server
 	 * IP addresses.  This may be necessary when using clients from both inside and outside
 	 * a local area network.  Default is no translation.
 	 * <p>
@@ -353,10 +353,20 @@ public class ClientPolicy {
 	public boolean sharedThreadPool;
 
 	/**
-	 * Should use "services-alternate" instead of "services" in info request during cluster
-	 * tending.  "services-alternate" returns server configured external IP addresses that client
-	 * uses to talk to nodes.  "services-alternate" can be used in place of providing a client "ipMap".
+	 * Flag to signify if alternate IP address discovery info commands should be used.
 	 * <p>
+	 * If false, use:<br>
+	 * 	IP address: service-clear-std<br>
+	 * 	TLS IP address: service-tls-std<br>
+	 * 	Peers addresses: peers-clear-std<br>
+	 * 	Peers TLS addresses: peers-tls-std
+	 * 	<p>
+	 * If true, use:<br>
+	 * 	IP address: service-clear-alt<br>
+	 * 	TLS IP address: service-tls-alt<br>
+	 * 	Peers addresses: peers-clear-alt<br>
+	 * 	Peers TLS addresses: peers-tls-alt
+	 * 	<p>
 	 * Default: false (use original "services" info request)
 	 */
 	public boolean useServicesAlternate;
