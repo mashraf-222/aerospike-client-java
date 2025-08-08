@@ -204,7 +204,7 @@ public final class NodeValidator {
 				}
 			}
 
-			List<String> commands = new ArrayList<String>(5);
+			List<String> commands = new ArrayList<String>(6);
 			commands.add("node");
 			commands.add("partition-generation");
 			commands.add("build");
