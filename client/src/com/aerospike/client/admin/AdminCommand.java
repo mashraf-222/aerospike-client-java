@@ -234,7 +234,7 @@ public class AdminCommand {
 		Node node = cluster.getRandomNode();
 		Version nodeVer = node.getVersion();
 		if (nodeVer.compareTo(Version.SERVER_VERSION_8_1) < 0 ) {
-			throw new AerospikeException("Node version " + nodeVer + "is less than required minimum version " + Version.SERVER_VERSION_8_1);
+			throw new AerospikeException("Node version " + nodeVer + " is less than required minimum version " + Version.SERVER_VERSION_8_1);
 		}
 		String hash = hashPassword("nopassword");
 		writeHeader(CREATE_USER, 3);
