@@ -29,6 +29,8 @@ import com.aerospike.client.Info;
 import com.aerospike.client.Log;
 import com.aerospike.client.admin.AdminCommand;
 import com.aerospike.client.admin.AdminCommand.LoginCommand;
+import com.aerospike.client.policy.ClientPolicy;
+import com.aerospike.client.util.Crypto;
 import com.aerospike.client.util.Util;
 import com.aerospike.client.util.Version;
 
@@ -202,11 +204,15 @@ public final class NodeValidator {
 				}
 			}
 
-			List<String> commands = new ArrayList<String>(5);
+			List<String> commands = new ArrayList<String>(6);
 			commands.add("node");
 			commands.add("partition-generation");
 			commands.add("build");
 			commands.add("features");
+			ClientPolicy clientPolicy = cluster.client.getClientPolicy();
+			String userAgent = "1,java-" + cluster.client.getVersion() + "," + clientPolicy.appId;
+			String b64userAgent = Crypto.encodeBase64(userAgent.getBytes());
+			commands.add("user-agent-set:value=" + b64userAgent);
 
 			boolean validateCluster = cluster.validateClusterName();
 
