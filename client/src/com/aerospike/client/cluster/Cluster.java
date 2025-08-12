@@ -399,8 +399,6 @@ public class Cluster implements Runnable, Closeable {
 
 		tendInterval = clientPolicy.tendInterval;
 		connectTimeout = clientPolicy.timeout;
-		errorRateWindow = clientPolicy.errorRateWindow;
-		maxErrorRate = clientPolicy.maxErrorRate;
 		loginTimeout = clientPolicy.loginTimeout;
 
 		if (clientPolicy.maxSocketIdle < 0) {
@@ -417,6 +415,16 @@ public class Cluster implements Runnable, Closeable {
 
 		useServicesAlternate = clientPolicy.useServicesAlternate;
 		rackAware = clientPolicy.rackAware;
+
+		errorRateWindow = clientPolicy.errorRateWindow;
+		if (maxErrorRate != clientPolicy.maxErrorRate) {
+			maxErrorRate = clientPolicy.maxErrorRate;
+			if (!init) {
+				for (Node node : nodes) {
+					node.maxErrorRate = maxErrorRate;
+				}
+			}
+		}
 
 		if (init || !rackIdsEqual(clientPolicy.rackIds, this.rackIds)) {
 			int[] rackIdsTemp;
@@ -720,7 +728,7 @@ public class Cluster implements Runnable, Closeable {
 		}
 
 		// Reset connection error window for all nodes every connErrorWindow tend iterations.
-		if (maxErrorRate > 0 && tendCount % errorRateWindow == 0) {
+		if (tendCount % errorRateWindow == 0) {
 			for (Node node : nodes) {
 				node.resetErrorRate();
 			}
@@ -1196,7 +1204,7 @@ public class Cluster implements Runnable, Closeable {
 		}
 
 		config = provider.fetchConfiguration();
-		client.mergePoliciesWithConfig();
+		client.mergePoliciesWithConfig(false);
 		applyCommonClientPolicyParameters(client.getClientPolicy(), false);
 
 		synchronized(metricsLock) {
