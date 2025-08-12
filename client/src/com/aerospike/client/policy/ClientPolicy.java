@@ -30,8 +30,6 @@ import com.aerospike.client.configuration.serializers.StaticConfiguration;
 import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicClientConfig;
 import com.aerospike.client.configuration.serializers.staticconfig.StaticClientConfig;
 
-import static java.lang.String.format;
-
 /**
  * Container object for client policy Command.
  */
