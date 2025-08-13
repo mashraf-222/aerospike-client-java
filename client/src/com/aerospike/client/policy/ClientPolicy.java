@@ -493,6 +493,23 @@ public class ClientPolicy {
 	public ClientPolicy() {
 	}
 
+	private void validateErrorRateConfig() {
+		float ratio = (errorRateWindow == 0)? (float) 0.0 : ((float)maxErrorRate / (float)errorRateWindow);
+
+		if ( !(1 <= ratio && ratio <= 100)) {
+			int mer = maxErrorRate;
+			int erw = errorRateWindow;
+
+			this.maxErrorRate = 100;
+			this.errorRateWindow = 1;
+
+			Log.warn("Invalid circuit breaker configuration: max_error_rate: " + mer + ", error_rate_window: " + erw +
+					 ", ratio: " + ratio +". The ratio (max_error_rate/error_rate_window) must be between 1 and 100." +
+					 " Resetting to defaults - max_error_rate: " + maxErrorRate + " and error_rate_window: " +
+					 errorRateWindow);
+		}
+	}
+
 	private void updateFromConfig(ConfigurationProvider configProvider, boolean log) {
 		boolean logUpdate = false;
 		if (configProvider == null) {
@@ -571,6 +588,7 @@ public class ClientPolicy {
 				Log.info("Set ClientPolicy.maxErrorRate = " + this.maxErrorRate);
 			}
 		}
+		validateErrorRateConfig();
 		if (dynCC.failIfNotConnected != null && this.failIfNotConnected != dynCC.failIfNotConnected.value) {
 			this.failIfNotConnected = dynCC.failIfNotConnected.value;
 			if (logUpdate) {
