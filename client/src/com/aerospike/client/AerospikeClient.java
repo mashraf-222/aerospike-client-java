@@ -350,12 +350,11 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 			this.configProvider = null;
 		}
 
+		mergedClientPolicy = policy;
 		if (configProvider != null) {
-			mergedClientPolicy = new ClientPolicy(policy, this.configProvider);
-			mergePoliciesWithConfig();
+			mergePoliciesWithConfig(true);
 		}
 		else {
-			mergedClientPolicy = policy;
 			mergedReadPolicyDefault = readPolicyDefault;
 			mergedWritePolicyDefault = writePolicyDefault;
 			mergedScanPolicyDefault = scanPolicyDefault;
@@ -624,8 +623,9 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	 * Merge the default policies and the current clientPolicy with any applicable config properties.  This should
 	 * be done at init and every time the config is updated
 	 */
-	public void mergePoliciesWithConfig() {
-		mergedReadPolicyDefault = new Policy(readPolicyDefault, configProvider,true);
+	public void mergePoliciesWithConfig(boolean init) {
+		mergedClientPolicy = new ClientPolicy(mergedClientPolicy, configProvider, init);
+		mergedReadPolicyDefault = new Policy(readPolicyDefault, configProvider, true);
 		mergedWritePolicyDefault = new WritePolicy(writePolicyDefault, configProvider, true, "");
 		mergedScanPolicyDefault = new ScanPolicy(scanPolicyDefault, configProvider, true);
 		mergedQueryPolicyDefault = new QueryPolicy(queryPolicyDefault, configProvider, true);
@@ -637,7 +637,6 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		mergedTxnVerifyPolicyDefault = new TxnVerifyPolicy(txnVerifyPolicyDefault, configProvider, true);
 		mergedTxnRollPolicyDefault = new TxnRollPolicy(txnRollPolicyDefault, configProvider, true);
 		mergedOperatePolicyReadDefault = new WritePolicy(operatePolicyReadDefault, configProvider, true, "(Operate)");
-		mergedClientPolicy = new ClientPolicy(mergedClientPolicy, configProvider, true);
 	}
 
 	//-------------------------------------------------------

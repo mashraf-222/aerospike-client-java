@@ -80,6 +80,7 @@ public class Node implements Closeable {
 	final AtomicInteger connsOpened;
 	final AtomicInteger connsClosed;
 	private final AtomicInteger errorRateCount;
+	protected int maxErrorRate;
 	private final Counter errorCounter;
 	private final Counter timeoutCounter;
 	private final Counter keyBusyCounter;
@@ -116,6 +117,7 @@ public class Node implements Closeable {
 		this.connsOpened = new AtomicInteger(1);
 		this.connsClosed = new AtomicInteger(0);
 		this.errorRateCount = new AtomicInteger(0);
+		this.maxErrorRate = cluster.maxErrorRate;
 		this.errorCounter = new Counter();
 		this.timeoutCounter = new Counter();
 		this.keyBusyCounter = new Counter();
@@ -351,9 +353,7 @@ public class Node implements Closeable {
 	private final void restart() {
 		try {
 			// Reset error rate.
-			if (cluster.maxErrorRate > 0) {
-				resetErrorRate();
-			}
+			resetErrorRate();
 
 			// Login when user authentication is enabled.
 			if (cluster.authEnabled) {
@@ -388,6 +388,10 @@ public class Node implements Closeable {
 				Log.warn("Node restart failed: " + this + ' ' + Util.getErrorMessage(e));
 			}
 		}
+	}
+
+	private boolean isErrorRateValid() {
+		return this.errorRateCount.get() <= this.maxErrorRate;
 	}
 
 	private final void verifyPartitionGeneration(HashMap<String,String> infoMap) {
@@ -1117,7 +1121,21 @@ public class Node implements Closeable {
 	}
 
 	public final void resetErrorRate() {
-		errorRateCount.set(0);
+		if (isErrorRateValid()) {
+			errorRateCount.set(0);
+			// Error rate limit was not breached. Next error rate trigger is doubled up to a max of cluster maxErrorRate
+			maxErrorRate = Math.min(maxErrorRate * 2, cluster.maxErrorRate);
+		}
+		else {
+			errorRateCount.set(0);
+			// Error rate limit was breached. Next error rate trigger is half.
+			if (maxErrorRate >= 2) {
+				maxErrorRate /= 2;
+			}
+			else {
+				maxErrorRate = 1;
+			}
+		}
 	}
 
 	public final boolean errorRateWithinLimit() {
