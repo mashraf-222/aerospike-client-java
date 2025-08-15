@@ -31,7 +31,6 @@ import com.aerospike.client.configuration.serializers.StaticConfiguration;
 import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicClientConfig;
 import com.aerospike.client.configuration.serializers.staticconfig.StaticClientConfig;
 import com.aerospike.client.util.Util;
-import com.aerospike.client.util.Util.*;
 
 /**
  * Container object for client policy Command.
