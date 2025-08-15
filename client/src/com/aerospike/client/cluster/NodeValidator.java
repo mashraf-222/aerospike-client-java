@@ -29,6 +29,7 @@ import com.aerospike.client.Info;
 import com.aerospike.client.Log;
 import com.aerospike.client.admin.AdminCommand;
 import com.aerospike.client.admin.AdminCommand.LoginCommand;
+import com.aerospike.client.command.Buffer;
 import com.aerospike.client.policy.ClientPolicy;
 import com.aerospike.client.util.Crypto;
 import com.aerospike.client.util.Util;
@@ -175,6 +176,23 @@ public final class NodeValidator {
 		return addresses;
 	}
 
+	private String getB64userAgent(Cluster cluster) {
+		String appIdValue;
+		ClientPolicy clientPolicy = cluster.client.getClientPolicy();
+		if (clientPolicy.appId != null) {
+			appIdValue = clientPolicy.appId;
+		} else {
+			byte[] userBytes = cluster.getUser();
+			if (userBytes != null && userBytes.length > 0) {
+				appIdValue = Buffer.utf8ToString(userBytes, 0, userBytes.length);
+			} else {
+				appIdValue = "not-set";
+			}
+		}
+		String userAgent = "1,java-" + cluster.client.getVersion() + "," + appIdValue;
+		return Crypto.encodeBase64(userAgent.getBytes());
+	}
+
 	private void validateAddress(Cluster cluster, InetAddress address, String tlsName, int port, boolean detectLoadBalancer)
 		throws Exception {
 
@@ -209,10 +227,7 @@ public final class NodeValidator {
 			commands.add("partition-generation");
 			commands.add("build");
 			commands.add("features");
-			ClientPolicy clientPolicy = cluster.client.getClientPolicy();
-			String userAgent = "1,java-" + cluster.client.getVersion() + "," + clientPolicy.appId;
-			String b64userAgent = Crypto.encodeBase64(userAgent.getBytes());
-			commands.add("user-agent-set:value=" + b64userAgent);
+			commands.add("user-agent-set:value=" + getB64userAgent(cluster));
 
 			boolean validateCluster = cluster.validateClusterName();
 
