@@ -1254,8 +1254,6 @@ public class Cluster implements Runnable, Closeable {
 		this.metricsListener.onEnable(this, this.metricsPolicy);
 		metricsEnabled = true;
 		Log.info("Metrics have been enabled.");
-		String fullStackTrace = (Arrays.toString(Thread.currentThread().getStackTrace()).replaceAll(", ", System.lineSeparator()));
-		System.out.println(fullStackTrace);
 	}
 
 	public final void disableMetrics() {
