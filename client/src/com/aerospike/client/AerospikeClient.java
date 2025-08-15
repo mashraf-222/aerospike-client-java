@@ -351,22 +351,21 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		}
 
 		mergedClientPolicy = policy;
+		mergedReadPolicyDefault = readPolicyDefault;
+		mergedWritePolicyDefault = writePolicyDefault;
+		mergedScanPolicyDefault = scanPolicyDefault;
+		mergedQueryPolicyDefault = queryPolicyDefault;
+		mergedBatchPolicyDefault = batchPolicyDefault;
+		mergedBatchParentPolicyWriteDefault = batchParentPolicyWriteDefault;
+		mergedBatchWritePolicyDefault = batchWritePolicyDefault;
+		mergedBatchDeletePolicyDefault = batchDeletePolicyDefault;
+		mergedBatchUDFPolicyDefault = batchUDFPolicyDefault;
+		mergedTxnVerifyPolicyDefault = txnVerifyPolicyDefault;
+		mergedTxnRollPolicyDefault = txnRollPolicyDefault;
+		mergedOperatePolicyReadDefault = operatePolicyReadDefault;
+
 		if (configProvider != null) {
-			mergePoliciesWithConfig(true);
-		}
-		else {
-			mergedReadPolicyDefault = readPolicyDefault;
-			mergedWritePolicyDefault = writePolicyDefault;
-			mergedScanPolicyDefault = scanPolicyDefault;
-			mergedQueryPolicyDefault = queryPolicyDefault;
-			mergedBatchPolicyDefault = batchPolicyDefault;
-			mergedBatchParentPolicyWriteDefault = batchParentPolicyWriteDefault;
-			mergedBatchWritePolicyDefault = batchWritePolicyDefault;
-			mergedBatchDeletePolicyDefault = batchDeletePolicyDefault;
-			mergedBatchUDFPolicyDefault = batchUDFPolicyDefault;
-			mergedTxnVerifyPolicyDefault = txnVerifyPolicyDefault;
-			mergedTxnRollPolicyDefault = txnRollPolicyDefault;
-			mergedOperatePolicyReadDefault = operatePolicyReadDefault;
+			mergePoliciesWithConfig();
 		}
 
 		version = this.getClass().getPackage().getImplementationVersion();
@@ -623,8 +622,27 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	 * Merge the default policies and the current clientPolicy with any applicable config properties.  This should
 	 * be done at init and every time the config is updated
 	 */
-	public void mergePoliciesWithConfig(boolean init) {
-		mergedClientPolicy = new ClientPolicy(mergedClientPolicy, configProvider, init);
+	public void mergePoliciesWithConfig() {
+		mergedClientPolicy = new ClientPolicy(mergedClientPolicy, configProvider, true);
+		mergedReadPolicyDefault = new Policy(mergedReadPolicyDefault, configProvider, true);
+		mergedWritePolicyDefault = new WritePolicy(mergedWritePolicyDefault, configProvider, true, "");
+		mergedScanPolicyDefault = new ScanPolicy(mergedScanPolicyDefault, configProvider, true);
+		mergedQueryPolicyDefault = new QueryPolicy(mergedQueryPolicyDefault, configProvider, true);
+		mergedBatchPolicyDefault = new BatchPolicy(mergedBatchPolicyDefault, configProvider, true, "");
+		mergedBatchParentPolicyWriteDefault = new BatchPolicy(mergedBatchParentPolicyWriteDefault, configProvider, true, "(Parent)");
+		mergedBatchWritePolicyDefault = new BatchWritePolicy(mergedBatchWritePolicyDefault, configProvider, true);
+		mergedBatchDeletePolicyDefault = new BatchDeletePolicy(mergedBatchDeletePolicyDefault, configProvider, true);
+		mergedBatchUDFPolicyDefault = new BatchUDFPolicy(mergedBatchUDFPolicyDefault, configProvider, true);
+		mergedTxnVerifyPolicyDefault = new TxnVerifyPolicy(mergedTxnVerifyPolicyDefault, configProvider, true);
+		mergedTxnRollPolicyDefault = new TxnRollPolicy(mergedTxnRollPolicyDefault, configProvider, true);
+		mergedOperatePolicyReadDefault = new WritePolicy(mergedOperatePolicyReadDefault, configProvider, true, "(Operate)");
+	}
+
+	/**
+	 * Restore default values to the merged default policies. A "re-merging" with any existing config will also occur.
+	 */
+	public void restorePolicyDefaults() {
+		mergedClientPolicy = new ClientPolicy(new ClientPolicy(), configProvider, true);
 		mergedReadPolicyDefault = new Policy(readPolicyDefault, configProvider, true);
 		mergedWritePolicyDefault = new WritePolicy(writePolicyDefault, configProvider, true, "");
 		mergedScanPolicyDefault = new ScanPolicy(scanPolicyDefault, configProvider, true);

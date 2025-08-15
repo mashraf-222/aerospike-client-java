@@ -426,7 +426,7 @@ public class Cluster implements Runnable, Closeable {
 			}
 		}
 
-		if (init || !rackIdsEqual(clientPolicy.rackIds, this.rackIds)) {
+		if (init || !Util.rackIdsEqual(clientPolicy.rackIds, this.rackIds)) {
 			int[] rackIdsTemp;
 
 			if (clientPolicy.rackIds != null && !clientPolicy.rackIds.isEmpty()) {
@@ -455,29 +455,6 @@ public class Cluster implements Runnable, Closeable {
 				}
 			}
 		}
-	}
-
-	private static final boolean rackIdsEqual(List<Integer> racks1, int[] racks2) {
-		if (racks1 == null) {
-			return racks2 == null;
-		}
-		else if (racks2 == null) {
-			return false;
-		}
-
-		if (racks1.size() != racks2.length) {
-			return false;
-		}
-
-		for (int i = 0; i < racks2.length; i++) {
-			int r1 = racks1.get(i);
-			int r2 = racks2[i];
-
-			if (r1 != r2) {
-				return false;
-			}
-		}
-		return true;
 	}
 
 	public void forceSingleNode() {
@@ -1204,7 +1181,7 @@ public class Cluster implements Runnable, Closeable {
 		}
 
 		config = provider.fetchConfiguration();
-		client.mergePoliciesWithConfig(false);
+		client.mergePoliciesWithConfig();
 		applyCommonClientPolicyParameters(client.getClientPolicy(), false);
 
 		synchronized(metricsLock) {
@@ -1233,7 +1210,7 @@ public class Cluster implements Runnable, Closeable {
 		if (mp == null) {
 			mp = new MetricsPolicy();
 		}
-        return new MetricsPolicy(mp, config);
+        return new MetricsPolicy(mp, config, metricsEnabled);
 	}
 
 	public final void enableMetrics(MetricsPolicy policy) {
@@ -1276,6 +1253,9 @@ public class Cluster implements Runnable, Closeable {
 
 		this.metricsListener.onEnable(this, this.metricsPolicy);
 		metricsEnabled = true;
+		Log.info("Metrics have been enabled.");
+		String fullStackTrace = (Arrays.toString(Thread.currentThread().getStackTrace()).replaceAll(", ", System.lineSeparator()));
+		System.out.println(fullStackTrace);
 	}
 
 	public final void disableMetrics() {
@@ -1296,6 +1276,7 @@ public class Cluster implements Runnable, Closeable {
 		if (metricsEnabled) {
 			metricsEnabled = false;
 			metricsListener.onDisable(this);
+			Log.info("Metrics have been disabled.");
 		}
 	}
 

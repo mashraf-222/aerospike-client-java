@@ -97,29 +97,46 @@ public final class MetricsPolicy {
 	 * Copy metrics policy from another metrics policy AND override certain policy attributes if they exist in the
 	 * configProvider.
 	 */
-	public MetricsPolicy(MetricsPolicy other, Configuration config) {
+	public MetricsPolicy(MetricsPolicy other, Configuration config, boolean metricsEnabled) {
 		this(other);
-		if ( config == null) {
+		boolean logUpdate = false;
+		if (config == null) {
 			return;
 		}
 		DynamicMetricsConfig dynMC = config.dynamicConfiguration.dynamicMetricsConfig;
 		if (dynMC == null) {
 			return;
 		}
-		if (dynMC.labels != null) {
+		if (Log.infoEnabled()) {
+			logUpdate = true;
+		}
+		if (dynMC.labels != null && !dynMC.labels.equals(this.labels)) {
 			this.labels = dynMC.labels;
+			if (logUpdate) {
+				Log.info("Set MetricsPolicy.labels = " + this.labels);
+			}
 		}
 		if (dynMC.latencyShift != null)  {
 			if (dynMC.latencyShift.value != this.latencyShift) {
-				metricsRestartRequired = true;
+				this.latencyShift = dynMC.latencyShift.value;
+				if (metricsEnabled) {
+					metricsRestartRequired = true;
+				}
+				if (logUpdate) {
+					Log.info("Set MetricsPolicy.latencyShift = " + this.latencyShift);
+				}
 			}
-			this.latencyShift = dynMC.latencyShift.value;
 		}
 		if (dynMC.latencyColumns != null) {
 			if (dynMC.latencyColumns.value != this.latencyColumns) {
-				metricsRestartRequired = true;
+				this.latencyColumns = dynMC.latencyColumns.value;
+				if (metricsEnabled) {
+					metricsRestartRequired = true;
+				}
+				if (logUpdate) {
+					Log.info("Set MetricsPolicy.latencyColumns = " + this.latencyColumns);
+				}
 			}
-			this.latencyColumns = dynMC.latencyColumns.value;
 		}
 		if (latencyColumns < 1) {
 			Log.error("An invalid # of latency columns was provided. Setting latency columns to default (7).");

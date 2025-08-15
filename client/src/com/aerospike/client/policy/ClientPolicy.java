@@ -19,6 +19,7 @@ package com.aerospike.client.policy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
 import com.aerospike.client.Log;
@@ -29,6 +30,8 @@ import com.aerospike.client.configuration.serializers.DynamicConfiguration;
 import com.aerospike.client.configuration.serializers.StaticConfiguration;
 import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicClientConfig;
 import com.aerospike.client.configuration.serializers.staticconfig.StaticClientConfig;
+import com.aerospike.client.util.Util;
+import com.aerospike.client.util.Util.*;
 
 /**
  * Container object for client policy Command.
@@ -564,7 +567,7 @@ public class ClientPolicy {
 		if (dynCC == null) {
 			return;
 		}
-		if (dynCC.appId != null && this.appId != dynCC.appId.value) {
+		if (dynCC.appId != null && !Objects.equals(this.appId, dynCC.appId.value)) {
 			this.appId = dynCC.appId.value;
 			if (logUpdate) {
 				Log.info("Set ClientPolicy.appId = " + this.appId);
@@ -617,7 +620,7 @@ public class ClientPolicy {
 				Log.info("Set ClientPolicy.rackAware = " + this.rackAware);
 			}
 		}
-		if (dynCC.rackIds != null && this.rackIds != dynCC.rackIds) {
+		if (dynCC.rackIds != null && !Util.rackIdsEqual(this.rackIds, dynCC.rackIds.stream().mapToInt(i->i).toArray())) {
 			this.rackIds = dynCC.rackIds;
 			if (logUpdate) {
 				Log.info("Set ClientPolicy.rackIds = " + this.rackIds);
