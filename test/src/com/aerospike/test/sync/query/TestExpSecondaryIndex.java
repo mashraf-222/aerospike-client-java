@@ -19,6 +19,8 @@ package com.aerospike.test.sync.query;
 
 import java.util.List;
 import org.junit.AfterClass;
+import org.junit.Assume;
+import org.junit.BeforeClass;
 import org.junit.Assert;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -39,6 +41,7 @@ import com.aerospike.client.query.IndexType;
 import com.aerospike.client.query.RecordSet;
 import com.aerospike.client.query.Statement;
 import com.aerospike.client.task.IndexTask;
+import com.aerospike.client.util.Version;
 import com.aerospike.test.sync.TestSync;
 
 
@@ -64,6 +67,13 @@ public class TestExpSecondaryIndex extends TestSync {
 			Exp.unknown()
 		)
 	);
+
+	@BeforeClass
+	public static void setup() {
+		Version serverVersion = client.getCluster().getRandomNode().getVersion();
+		boolean condition = serverVersion.isGreaterOrEqual(8, 1, 0, 0);
+		Assume.assumeTrue("SI Expression tests skipped because the server does not support this feature", condition);
+	}
 
 	public void insertTestRecords() {
 		insertPersonRecord( 1, "Tim", 312, "Australia");
