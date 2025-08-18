@@ -24,39 +24,18 @@ jobs:
   make-matrix:
     runs-on: ${{ vars.BUILD_CONTAINER_DISTRO_VERSION }}
     outputs:
-      input-matrix: ${{ steps.set.outputs.input-matrix }}
+      input-matrix: ${{ steps.create-server-matrix.outputs.input-matrix }}
       java-version: ${{ steps.get-java-version.outputs.java-version }}
     steps:
       - uses: actions/checkout@v4       # brings versions.json into the workspace
         with:
           ref: ${{ github.ref }}
 
-      - id: set                         # create the matrix (compact JSON string)
-        shell: bash
-        env:
-            DEFAULT_JSON: ${{ vars.DEFAULT_SERVER_VERSIONS }}
-            TEST_SERVERS_FILE_PATH: ${{ vars.TEST_SERVERS_FILE_PATH }}
-        run: |
-          FILE=${TEST_SERVERS_FILE_PATH}
-
-          if [[ -s "$FILE" ]]; then
-            echo "Using $FILE from repository"
-            JSON=$(cat "$FILE")
-          else
-            echo "$FILE missing or empty – using DEFAULT_SERVER_VERSIONS"
-            JSON="$DEFAULT_JSON"
-          fi
-
-          MATRIX=$(echo "$JSON" | jq -c '
-            to_entries
-            | map({
-                server:  .key,
-                version: .value.version,
-                type: .value.type,
-              })
-          ')
-
-          echo input-matrix="$MATRIX" >> $GITHUB_OUTPUT
+      - id: create-server-matrix
+        uses: ./.github/actions/make-server-matrix
+        with:
+          default_json: ${{ vars.DEFAULT_SERVER_VERSIONS }}
+          test_servers_file_path: ${{ vars.TEST_SERVERS_FILE_PATH }}
 
       - name: Get java version
         id: get-java-version
@@ -66,7 +45,7 @@ jobs:
       - name: debug - print input variables
         run: |
           echo ${{ steps.get-java-version.outputs.java-version }}
-          echo ${{ steps.set.outputs.input-matrix }}
+          echo ${{ steps.create-server-matrix.outputs.input-matrix }}
 
   build:
     uses: ./.github/workflows/build-pr.yaml
