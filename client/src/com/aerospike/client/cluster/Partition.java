@@ -207,8 +207,9 @@ public final class Partition {
 
 		case MASTER:
 		case MASTER_PROLES:
-		case RANDOM:
 			return getMasterNode(cluster);
+		case RANDOM:
+			return cluster.getRandomNode();
 		}
 	}
 
