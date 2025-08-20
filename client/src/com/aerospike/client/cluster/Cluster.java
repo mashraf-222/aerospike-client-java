@@ -111,11 +111,11 @@ public class Cluster implements Runnable, Closeable {
 	// Password in hashed format in bytes.
 	private byte[] passwordHash;
 
-	// Random node index.
+	// Random node index counter.
 	private final AtomicInteger nodeIndex;
 
-	// Random partition replica index.
-	final AtomicInteger replicaIndex;
+	// Random partition replica index counter.
+	final AtomicInteger replicaIndexRandom;
 
 	// Count of connections in recover queue.
 	private final AtomicInteger recoverCount;
@@ -324,7 +324,7 @@ public class Cluster implements Runnable, Closeable {
 		nodes = new Node[0];
 		partitionMap = new HashMap<String,Partitions>();
 		nodeIndex = new AtomicInteger();
-		replicaIndex = new AtomicInteger();
+		replicaIndexRandom = new AtomicInteger();
 		recoverCount = new AtomicInteger();
 		recoverQueue = new ConcurrentLinkedDeque<ConnectionRecover>();
 		closed = new AtomicBoolean();
