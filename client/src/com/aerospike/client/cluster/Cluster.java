@@ -113,10 +113,10 @@ public class Cluster implements Runnable, Closeable {
 	// Password in hashed format in bytes.
 	private byte[] passwordHash;
 
-	// Random node index.
+	// Random node index counter.
 	private final AtomicInteger nodeIndex;
 
-	// Random partition replica index.
+	// Random partition replica index counter.
 	final AtomicInteger replicaIndex;
 
 	// Count of connections in recover queue.
