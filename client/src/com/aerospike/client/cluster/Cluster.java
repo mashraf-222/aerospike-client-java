@@ -115,7 +115,7 @@ public class Cluster implements Runnable, Closeable {
 	private final AtomicInteger nodeIndex;
 
 	// Random partition replica index counter.
-	final AtomicInteger replicaIndexRandom;
+	final AtomicInteger replicaIndex;
 
 	// Count of connections in recover queue.
 	private final AtomicInteger recoverCount;
@@ -324,7 +324,7 @@ public class Cluster implements Runnable, Closeable {
 		nodes = new Node[0];
 		partitionMap = new HashMap<String,Partitions>();
 		nodeIndex = new AtomicInteger();
-		replicaIndexRandom = new AtomicInteger();
+		replicaIndex = new AtomicInteger();
 		recoverCount = new AtomicInteger();
 		recoverQueue = new ConcurrentLinkedDeque<ConnectionRecover>();
 		closed = new AtomicBoolean();
