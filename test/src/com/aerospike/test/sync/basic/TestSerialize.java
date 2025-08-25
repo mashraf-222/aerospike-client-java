@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.aerospike.client.Bin;
@@ -32,6 +33,7 @@ import com.aerospike.client.Record;
 import com.aerospike.client.Value;
 import com.aerospike.test.sync.TestSync;
 
+@Ignore("Serializer has been disabled.")
 public class TestSerialize extends TestSync {
 	private static final String binName = args.getBinName("serialbin");
 

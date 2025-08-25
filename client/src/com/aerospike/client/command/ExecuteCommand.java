@@ -46,7 +46,7 @@ public final class ExecuteCommand extends ReadCommand {
 	}
 
 	@Override
-	protected boolean isWrite() {
+	public boolean isWrite() {
 		return true;
 	}
 

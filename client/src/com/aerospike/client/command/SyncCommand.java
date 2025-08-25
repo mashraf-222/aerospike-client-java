@@ -280,10 +280,6 @@ public abstract class SyncCommand extends Command {
 		return true;
 	}
 
-	protected boolean isWrite() {
-		return false;
-	}
-
 	protected abstract Node getNode();
 	protected abstract void writeBuffer();
 	protected abstract void parseResult(Connection conn) throws AerospikeException, IOException;

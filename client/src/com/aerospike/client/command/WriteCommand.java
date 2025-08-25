@@ -46,7 +46,7 @@ public final class WriteCommand extends SyncCommand {
 	}
 
 	@Override
-	protected boolean isWrite() {
+	public boolean isWrite() {
 		return true;
 	}
 

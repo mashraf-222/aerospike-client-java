@@ -223,7 +223,7 @@ public final class Batch {
 		}
 
 		@Override
-		protected boolean isWrite() {
+		public boolean isWrite() {
 			// This method is only called to set inDoubt on node level errors.
 			// setError() will filter out reads when setting record level inDoubt.
 			return true;
@@ -318,7 +318,7 @@ public final class Batch {
 		}
 
 		@Override
-		protected boolean isWrite() {
+		public boolean isWrite() {
 			return attr.hasWrite;
 		}
 
@@ -403,7 +403,7 @@ public final class Batch {
 		}
 
 		@Override
-		protected boolean isWrite() {
+		public boolean isWrite() {
 			return attr.hasWrite;
 		}
 

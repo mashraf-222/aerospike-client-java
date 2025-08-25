@@ -40,7 +40,7 @@ public final class TouchCommand extends SyncCommand {
 	}
 
 	@Override
-	protected boolean isWrite() {
+	public boolean isWrite() {
 		return true;
 	}
 

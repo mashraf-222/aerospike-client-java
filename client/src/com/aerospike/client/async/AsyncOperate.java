@@ -32,7 +32,7 @@ public final class AsyncOperate extends AsyncRead {
 	}
 
 	@Override
-	boolean isWrite() {
+	public boolean isWrite() {
 		return args.hasWrite;
 	}
 

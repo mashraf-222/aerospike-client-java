@@ -41,7 +41,7 @@ public final class AsyncDelete extends AsyncCommand {
 	}
 
 	@Override
-	boolean isWrite() {
+	public boolean isWrite() {
 		return true;
 	}
 

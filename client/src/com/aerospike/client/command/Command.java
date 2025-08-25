@@ -1685,6 +1685,7 @@ public abstract class Command {
 		// Set flags.
 		int generation = 0;
 		int infoAttr = 0;
+		int ttl = isWrite() ? policy.expiration : 0;
 
 		switch (policy.recordExistsAction) {
 		case UPDATE:
@@ -1759,6 +1760,7 @@ public abstract class Command {
 		dataBuffer[13] = 0; // clear the result code
 		Buffer.intToBytes(generation, dataBuffer, 14);
 		Buffer.intToBytes(policy.expiration, dataBuffer, 18);
+		Buffer.intToBytes(ttl, dataBuffer, 18);
 		Buffer.intToBytes(serverTimeout, dataBuffer, 22);
 		Buffer.shortToBytes(fieldCount, dataBuffer, 26);
 		Buffer.shortToBytes(operationCount, dataBuffer, 28);
@@ -2134,5 +2136,9 @@ public abstract class Command {
 
 	private static class OpResults extends ArrayList<Object> {
 		private static final long serialVersionUID = 1L;
+	}
+
+	public boolean isWrite() {
+		return false;
 	}
 }

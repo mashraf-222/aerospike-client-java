@@ -17,6 +17,7 @@
 package com.aerospike.test.sync.query;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -65,7 +66,7 @@ public class TestIndex extends TestSync {
 
 		for (Node node : nodes) {
 			String response = Info.request(node, cmd);
-			assertEquals(response, "FAIL:201:no-index");
+			assertTrue((response.equals("FAIL:201:no-index") || response.equals("ERROR:201:no index")));
 		}
 	}
 

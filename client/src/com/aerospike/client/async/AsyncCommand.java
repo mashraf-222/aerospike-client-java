@@ -185,10 +185,6 @@ public abstract class AsyncCommand extends Command {
 		return false;
 	}
 
-	boolean isWrite() {
-		return false;
-	}
-
 	abstract Node getNode(Cluster cluster);
 	abstract void writeBuffer();
 	abstract boolean parseResult();
