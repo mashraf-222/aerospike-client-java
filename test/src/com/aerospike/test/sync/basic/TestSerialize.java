@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2021 Aerospike, Inc.
+ * Copyright 2012-2025 Aerospike, Inc.
  *
  * Portions may be licensed to Aerospike, Inc. under one or more contributor
  * license agreements WHICH ARE COMPATIBLE WITH THE APACHE LICENSE, VERSION 2.0.
@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.aerospike.client.Bin;
@@ -35,6 +36,7 @@ import com.aerospike.test.sync.TestSync;
 public class TestSerialize extends TestSync {
 	private static final String binName = args.getBinName("serialbin");
 
+	@Ignore("Object serializer has been disabled.")
 	@Test
 	public void serializeArray() {
 		Key key = new Key(args.namespace, args.set, "serialarraykey");
@@ -118,6 +120,7 @@ public class TestSerialize extends TestSync {
 		}
 	}
 
+	@Ignore("Object serializer has been disabled.")
 	@Test
 	public void serializeComplex() {
 		Key key = new Key(args.namespace, args.set, "serialcomplexkey");

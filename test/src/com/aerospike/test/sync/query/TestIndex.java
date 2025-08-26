@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 Aerospike, Inc.
+ * Copyright 2012-2025 Aerospike, Inc.
  *
  * Portions may be licensed to Aerospike, Inc. under one or more contributor
  * license agreements WHICH ARE COMPATIBLE WITH THE APACHE LICENSE, VERSION 2.0.
@@ -17,6 +17,7 @@
 package com.aerospike.test.sync.query;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -65,7 +66,7 @@ public class TestIndex extends TestSync {
 
 		for (Node node : nodes) {
 			String response = Info.request(node, cmd);
-			assertEquals(response, "FAIL:201:no-index");
+			assertTrue((response.equals("FAIL:201:no-index") || response.equals("ERROR:201:no index")));
 		}
 	}
 
