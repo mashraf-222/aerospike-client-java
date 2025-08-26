@@ -1758,7 +1758,6 @@ public abstract class Command {
 		dataBuffer[12] = 0; // unused
 		dataBuffer[13] = 0; // clear the result code
 		Buffer.intToBytes(generation, dataBuffer, 14);
-		Buffer.intToBytes(policy.expiration, dataBuffer, 18);
 		Buffer.intToBytes(ttl, dataBuffer, 18);
 		Buffer.intToBytes(serverTimeout, dataBuffer, 22);
 		Buffer.shortToBytes(fieldCount, dataBuffer, 26);
