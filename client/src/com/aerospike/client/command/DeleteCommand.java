@@ -41,7 +41,7 @@ public final class DeleteCommand extends SyncCommand {
 	}
 
 	@Override
-	public boolean isWrite() {
+	protected boolean isWrite() {
 		return true;
 	}
 

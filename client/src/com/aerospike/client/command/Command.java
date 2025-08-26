@@ -308,7 +308,7 @@ public abstract class Command {
 		dataOffset += args.size;
 		sizeBuffer();
 
-		writeHeaderReadWrite(policy, args.readAttr, args.writeAttr, fieldCount, args.operations.length);
+		writeHeaderReadWrite(policy, args, fieldCount);
 		writeKey(policy, key);
 
 		if (policy.filterExp != null) {
@@ -1675,17 +1675,16 @@ public abstract class Command {
 	/**
 	 * Header write for operate command.
 	 */
-	private final void writeHeaderReadWrite(
-		WritePolicy policy,
-		int readAttr,
-		int writeAttr,
-		int fieldCount,
-		int operationCount
-	) {
+	private final void writeHeaderReadWrite(WritePolicy policy, OperateArgs args, int fieldCount) {
+		int readAttr = args.readAttr;
+		int writeAttr = args.writeAttr;
+		int operationCount = args.operations.length;
+		boolean isWrite = args.hasWrite;
+
 		// Set flags.
 		int generation = 0;
 		int infoAttr = 0;
-		int ttl = isWrite() ? policy.expiration : 0;
+		int ttl = isWrite ? policy.expiration : 0;
 
 		switch (policy.recordExistsAction) {
 		case UPDATE:
@@ -2136,9 +2135,5 @@ public abstract class Command {
 
 	private static class OpResults extends ArrayList<Object> {
 		private static final long serialVersionUID = 1L;
-	}
-
-	public boolean isWrite() {
-		return false;
 	}
 }

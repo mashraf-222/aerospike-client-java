@@ -30,7 +30,7 @@ public final class OperateCommand extends ReadCommand {
 	}
 
 	@Override
-	public boolean isWrite() {
+	protected boolean isWrite() {
 		return args.hasWrite;
 	}
 

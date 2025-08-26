@@ -52,7 +52,7 @@ public final class AsyncExecute extends AsyncRead {
 	}
 
 	@Override
-	public boolean isWrite() {
+	boolean isWrite() {
 		return true;
 	}
 

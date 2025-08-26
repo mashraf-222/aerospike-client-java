@@ -33,10 +33,10 @@ import com.aerospike.client.Record;
 import com.aerospike.client.Value;
 import com.aerospike.test.sync.TestSync;
 
-@Ignore("Serializer has been disabled.")
 public class TestSerialize extends TestSync {
 	private static final String binName = args.getBinName("serialbin");
 
+	@Ignore("Object serializer has been disabled.")
 	@Test
 	public void serializeArray() {
 		Key key = new Key(args.namespace, args.set, "serialarraykey");
@@ -120,6 +120,7 @@ public class TestSerialize extends TestSync {
 		}
 	}
 
+	@Ignore("Object serializer has been disabled.")
 	@Test
 	public void serializeComplex() {
 		Key key = new Key(args.namespace, args.set, "serialcomplexkey");

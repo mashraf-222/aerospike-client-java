@@ -53,7 +53,7 @@ public final class AsyncInfoCommand extends AsyncCommand {
 	}
 
 	@Override
-	public boolean isWrite() {
+	boolean isWrite() {
 		return true;
 	}
 

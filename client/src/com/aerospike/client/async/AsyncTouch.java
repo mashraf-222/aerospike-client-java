@@ -40,7 +40,7 @@ public final class AsyncTouch extends AsyncCommand {
 	}
 
 	@Override
-	public boolean isWrite() {
+	boolean isWrite() {
 		return true;
 	}
 

@@ -34,7 +34,7 @@ public final class ServerCommand extends MultiCommand {
 	}
 
 	@Override
-	public boolean isWrite() {
+	protected boolean isWrite() {
 		return true;
 	}
 
