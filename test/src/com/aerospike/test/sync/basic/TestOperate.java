@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2021 Aerospike, Inc.
+ * Copyright 2012-2025 Aerospike, Inc.
  *
  * Portions may be licensed to Aerospike, Inc. under one or more contributor
  * license agreements WHICH ARE COMPATIBLE WITH THE APACHE LICENSE, VERSION 2.0.
@@ -25,6 +25,7 @@ import com.aerospike.client.Bin;
 import com.aerospike.client.Key;
 import com.aerospike.client.Operation;
 import com.aerospike.client.Record;
+import com.aerospike.client.policy.WritePolicy;
 import com.aerospike.test.sync.TestSync;
 
 public class TestOperate extends TestSync {
@@ -73,5 +74,21 @@ public class TestOperate extends TestSync {
 		record = client.get(null, key);
 		assertBinEqual(key, record, bin2.name, 2);
 		assertTrue(record.bins.size() == 1);
+	}
+
+	@Test
+	public void operateRead()
+	{
+		// Write initial record.
+		Key key = new Key(args.namespace, args.set, "opkeyr");
+		Bin bin1 = new Bin("optintread", 1);
+
+		client.put(null, key, bin1);
+
+		WritePolicy writePolicy = new WritePolicy();
+		writePolicy.expiration = 86400;
+
+		// Read bin1
+		Record record = client.operate(writePolicy, key, Operation.get(bin1.name));
 	}
 }

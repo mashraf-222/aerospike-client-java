@@ -402,7 +402,7 @@ public class Command {
 		dataOffset += args.size;
 		sizeBuffer();
 
-		writeHeaderReadWrite(policy, args.readAttr, args.writeAttr, fieldCount, args.operations.length);
+		writeHeaderReadWrite(policy, args, fieldCount);
 		writeKey(policy, key);
 
 		if (policy.filterExp != null) {
@@ -1836,16 +1836,16 @@ public class Command {
 	/**
 	 * Header write for operate command.
 	 */
-	private final void writeHeaderReadWrite(
-		WritePolicy policy,
-		int readAttr,
-		int writeAttr,
-		int fieldCount,
-		int operationCount
-	) {
+	private final void writeHeaderReadWrite(WritePolicy policy, OperateArgs args, int fieldCount) {
+		int readAttr = args.readAttr;
+		int writeAttr = args.writeAttr;
+		int operationCount = args.operations.length;
+		boolean isWrite = args.hasWrite;
+
 		// Set flags.
 		int generation = 0;
 		int infoAttr = 0;
+		int ttl = isWrite ? policy.expiration : 0;
 
 		switch (policy.recordExistsAction) {
 		case UPDATE:
@@ -1919,7 +1919,7 @@ public class Command {
 		dataBuffer[12] = 0; // unused
 		dataBuffer[13] = 0; // clear the result code
 		Buffer.intToBytes(generation, dataBuffer, 14);
-		Buffer.intToBytes(policy.expiration, dataBuffer, 18);
+		Buffer.intToBytes(ttl, dataBuffer, 18);
 		Buffer.intToBytes(serverTimeout, dataBuffer, 22);
 		Buffer.shortToBytes(fieldCount, dataBuffer, 26);
 		Buffer.shortToBytes(operationCount, dataBuffer, 28);
