@@ -119,7 +119,12 @@ public class Policy {
 	 * completes, the command will abort with
 	 * {@link com.aerospike.client.AerospikeException.Timeout}.
 	 * <p>
-	 * If totalTimeout is zero, there will be no total time limit.
+	 * If totalTimeout is zero, there will be no total time limit on the client side.
+	 * However, the server converts zero timeouts to the server configuration field
+	 * transaction-max-ms (default 1000ms) for all commands except queries. For short
+	 * queries {@link QueryDuration#SHORT}, the server converts zero timeouts to a
+	 * hard-coded 1000ms. For long queries, there is no timeout conversion on the
+	 * server.
 	 * <p>
 	 * Default for scan/query: 0
 	 * <p>
