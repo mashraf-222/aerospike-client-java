@@ -1,0 +1,18 @@
+name: clients-java-push-to-dev
+
+on:
+  push:
+    branches:
+      - dev/versioning-from-ci # TODO: used to test the workflow. Removed this line at some point int time.
+      - stage
+      - stage-jdk8
+  workflow_dispatch:
+
+jobs:
+  build-stage:
+    name: Build stage
+    uses: ./.github/workflows/release-stage.yaml
+    with:
+      ref: ${{ github.ref }}
+      build-number: ${{ github.run_number }}
+    secrets: inherit

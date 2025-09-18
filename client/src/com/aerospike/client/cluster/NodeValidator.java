@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 Aerospike, Inc.
+ * Copyright 2012-2025 Aerospike, Inc.
  *
  * Portions may be licensed to Aerospike, Inc. under one or more contributor
  * license agreements WHICH ARE COMPATIBLE WITH THE APACHE LICENSE, VERSION 2.0.
@@ -29,18 +29,22 @@ import com.aerospike.client.Info;
 import com.aerospike.client.Log;
 import com.aerospike.client.admin.AdminCommand;
 import com.aerospike.client.admin.AdminCommand.LoginCommand;
+import com.aerospike.client.command.Buffer;
+import com.aerospike.client.policy.ClientPolicy;
+import com.aerospike.client.util.Crypto;
 import com.aerospike.client.util.Util;
+import com.aerospike.client.util.Version;
 
 public final class NodeValidator {
 	Node fallback;
 	String name;
-	List<Host> aliases;
 	Host primaryHost;
 	InetSocketAddress primaryAddress;
 	Connection primaryConn;
 	byte[] sessionToken;
 	long sessionExpiration;
 	int features;
+	Version version;
 
 	/**
 	 * Return first valid node referenced by seed host aliases. In most cases, aliases
@@ -49,7 +53,6 @@ public final class NodeValidator {
 	 */
 	public Node seedNode(Cluster cluster, Host host, Peers peers) throws Throwable {
 		name = null;
-		aliases = null;
 		primaryHost = null;
 		primaryAddress = null;
 		primaryConn = null;
@@ -63,11 +66,6 @@ public final class NodeValidator {
 		for (InetAddress address : addresses) {
 			try {
 				validateAddress(cluster, address, host.tlsName, host.port, true);
-
-				// Only add address alias when not set by load balancer detection logic.
-				if (this.aliases == null) {
-					setAliases(address, host.tlsName, host.port);
-				}
 
 				Node node = new Node(cluster, this);
 
@@ -144,7 +142,6 @@ public final class NodeValidator {
 		for (InetAddress address : addresses) {
 			try {
 				validateAddress(cluster, address, host.tlsName, host.port, false);
-				setAliases(address, host.tlsName, host.port);
 				return;
 			}
 			catch (Throwable e) {
@@ -179,6 +176,23 @@ public final class NodeValidator {
 		return addresses;
 	}
 
+	private String getB64userAgent(Cluster cluster) {
+		String appIdValue;
+		ClientPolicy clientPolicy = cluster.client.getClientPolicy();
+		if (clientPolicy.appId != null) {
+			appIdValue = clientPolicy.appId;
+		} else {
+			byte[] userBytes = cluster.getUser();
+			if (userBytes != null && userBytes.length > 0) {
+				appIdValue = Buffer.utf8ToString(userBytes, 0, userBytes.length);
+			} else {
+				appIdValue = "not-set";
+			}
+		}
+		String userAgent = "1,java-" + cluster.client.getVersion() + "," + appIdValue;
+		return Crypto.encodeBase64(userAgent.getBytes());
+	}
+
 	private void validateAddress(Cluster cluster, InetAddress address, String tlsName, int port, boolean detectLoadBalancer)
 		throws Exception {
 
@@ -208,10 +222,12 @@ public final class NodeValidator {
 				}
 			}
 
-			List<String> commands = new ArrayList<String>(5);
+			List<String> commands = new ArrayList<String>(6);
 			commands.add("node");
 			commands.add("partition-generation");
+			commands.add("build");
 			commands.add("features");
+			commands.add("user-agent-set:value=" + getB64userAgent(cluster));
 
 			boolean validateCluster = cluster.validateClusterName();
 
@@ -246,6 +262,7 @@ public final class NodeValidator {
 
 			validateNode(map);
 			validatePartitionGeneration(map);
+			validateServerBuildVersion(map);
 			setFeatures(map);
 
 			if (validateCluster) {
@@ -283,6 +300,14 @@ public final class NodeValidator {
 
 		if (gen == -1) {
 			throw new AerospikeException.InvalidNode("Node " + this.name + ' ' + this.primaryHost + " is not yet fully initialized");
+		}
+	}
+
+	private void validateServerBuildVersion(HashMap<String,String> map) {
+		String build = map.get("build");
+		version = new Version(build);
+		if (!version.toString().equals(build)) {
+			throw new AerospikeException("Node " + name + " " + primaryAddress.toString() + " version is invalid: " + build);
 		}
 	}
 
@@ -399,7 +424,6 @@ public final class NodeValidator {
 							}
 
 							// Authenticated connection.  Set real host.
-							setAliases(address, tlsName, h.port);
 							this.primaryHost = new Host(address.getHostAddress(), tlsName, h.port);
 							this.primaryAddress = socketAddress;
 							this.primaryConn.close();
@@ -426,12 +450,6 @@ public final class NodeValidator {
 		if (Log.infoEnabled()) {
 			Log.info("Invalid address " + result + ". access-address is probably not configured on server.");
 		}
-	}
-
-	private void setAliases(InetAddress address, String tlsName, int port) {
-		// Add capacity for current address plus IPV6 address and hostname.
-		this.aliases = new ArrayList<Host>(3);
-		this.aliases.add(new Host(address.getHostAddress(), tlsName, port));
 	}
 
 	private static final class SwitchClear {

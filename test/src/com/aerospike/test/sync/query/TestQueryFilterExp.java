@@ -639,7 +639,9 @@ public class TestQueryFilterExp extends TestSync {
 		}
 	}
 
+	// TODO: remove when deviceSize() is removed
 	@Test
+	@Deprecated(since = "9.1.0", forRemoval = true)
 	public void queryDeviceSize() {
 		int begin = 1;
 		int end = 10;
@@ -670,7 +672,9 @@ public class TestQueryFilterExp extends TestSync {
 		}
 	}
 
+	// TODO: remove when deviceSize() is removed
 	@Test
+	@Deprecated(since = "9.1.0", forRemoval = true)
 	public void queryMemorySize() {
 		int begin = 1;
 		int end = 10;

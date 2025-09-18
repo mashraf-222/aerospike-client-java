@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 Aerospike, Inc.
+ * Copyright 2012-2025 Aerospike, Inc.
  *
  * Portions may be licensed to Aerospike, Inc. under one or more contributor
  * license agreements WHICH ARE COMPATIBLE WITH THE APACHE LICENSE, VERSION 2.0.
@@ -16,6 +16,11 @@
  */
 package com.aerospike.client.policy;
 
+import com.aerospike.client.Log;
+import com.aerospike.client.configuration.ConfigurationProvider;
+import com.aerospike.client.configuration.serializers.Configuration;
+import com.aerospike.client.configuration.serializers.DynamicConfiguration;
+import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicBatchWriteConfig;
 import com.aerospike.client.exp.Expression;
 
 /**
@@ -101,12 +106,43 @@ public final class BatchWritePolicy {
 	public boolean durableDelete;
 
 	/**
+	 * Execute the write command only if the record is not already locked by this transaction.
+	 * If this field is true and the record is already locked by this transaction, the command
+	 * will throw an exception with the {@link com.aerospike.client.ResultCode#MRT_ALREADY_LOCKED}
+	 * error code.
+	 * <p>
+	 * This field is useful for safely retrying non-idempotent writes as an alternative to simply
+	 * aborting the transaction.
+	 * <p>
+	 * Default: false.
+	 */
+	public boolean onLockingOnly;
+
+	/**
 	 * Send user defined key in addition to hash digest.
 	 * If true, the key will be stored with the record on the server.
 	 * <p>
 	 * Default: false (do not send the user defined key)
 	 */
 	public boolean sendKey;
+
+	/**
+	 * Copy policy from another policy AND override certain policy attributes if they exist in the configProvider.
+	 * Any policy overrides will not get logged.
+	 */
+	public BatchWritePolicy(BatchWritePolicy other, ConfigurationProvider configProvider) {
+		this(other);
+		updateFromConfig(configProvider, false);
+	}
+
+	/**
+	 * Copy policy from another policy AND override certain policy attributes if they exist in the configProvider.
+	 * Any default policy overrides will get logged.
+	 */
+	public BatchWritePolicy(BatchWritePolicy other, ConfigurationProvider configProvider, boolean isDefaultPolicy) {
+		this(other);
+		updateFromConfig(configProvider, isDefaultPolicy);
+	}
 
 	/**
 	 * Copy constructor.
@@ -119,6 +155,7 @@ public final class BatchWritePolicy {
 		this.generation = other.generation;
 		this.expiration = other.expiration;
 		this.durableDelete = other.durableDelete;
+		this.onLockingOnly = other.onLockingOnly;
 		this.sendKey = other.sendKey;
 	}
 
@@ -127,6 +164,42 @@ public final class BatchWritePolicy {
 	 */
 	public BatchWritePolicy() {
 	}
+
+	private void updateFromConfig(ConfigurationProvider configProvider, boolean log) {
+		boolean logUpdate = false;
+		if (configProvider == null) {
+			return;
+		}
+		Configuration config = configProvider.fetchConfiguration();
+		if (config == null) {
+			return;
+		}
+		DynamicConfiguration dConfig = config.getDynamicConfiguration();
+		if (dConfig == null) {
+			return;
+		}
+		DynamicBatchWriteConfig dynBWC = dConfig.getDynamicBatchWriteConfig();
+		if (dynBWC == null) {
+			return;
+		}
+
+		if (log && Log.infoEnabled()) {
+			logUpdate = true;
+		}
+		if (dynBWC.sendKey != null && this.sendKey != dynBWC.sendKey.value) {
+			this.sendKey = dynBWC.sendKey.value;
+			if (logUpdate) {
+				Log.info("Set BatchWritePolicy.sendKey = " + this.sendKey);
+			}
+		}
+		if (dynBWC.durableDelete != null && this.durableDelete != dynBWC.durableDelete.value) {
+			this.durableDelete = dynBWC.durableDelete.value;
+			if (logUpdate) {
+				Log.info("Set BatchWritePolicy.durableDelete = " + this.durableDelete);
+			}
+		}
+	}
+
 
 	// Include setters to facilitate Spring's ConfigurationProperties.
 
@@ -156,6 +229,10 @@ public final class BatchWritePolicy {
 
 	public void setDurableDelete(boolean durableDelete) {
 		this.durableDelete = durableDelete;
+	}
+
+	public void setOnLockingOnly(boolean onLockingOnly) {
+		this.onLockingOnly = onLockingOnly;
 	}
 
 	public void setSendKey(boolean sendKey) {

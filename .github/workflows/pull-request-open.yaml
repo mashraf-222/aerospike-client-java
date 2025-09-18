@@ -1,0 +1,62 @@
+name: PR open
+
+permissions:
+  # This is required for requesting the OIDC token
+  id-token: write
+
+on:
+  pull_request:
+    branches:
+      - stage
+      - stage-jdk8
+      - dev/*
+    types:
+      - opened
+      - reopened
+      - synchronize
+  workflow_dispatch:
+    inputs:
+      source-branch:
+        type: string
+        description: Base branch to use if manually starting. By default base_ref will empty if triggering manually hence base_ref is only available on PRs.
+
+jobs:
+  make-matrix:
+    runs-on: ${{ vars.BUILD_CONTAINER_DISTRO_VERSION }}
+    outputs:
+      input-matrix: ${{ steps.create-server-matrix.outputs.input-matrix }}
+      java-version: ${{ steps.get-java-version.outputs.java-version }}
+    steps:
+      - uses: actions/checkout@v4       # brings versions.json into the workspace
+        with:
+          ref: ${{ github.ref }}
+
+      - id: create-server-matrix
+        uses: ./.github/actions/make-server-matrix
+        with:
+          default_json: ${{ vars.DEFAULT_SERVER_VERSIONS }}
+          test_servers_file_path: ${{ vars.TEST_SERVERS_FILE_PATH }}
+
+      - name: Get java version
+        id: get-java-version
+        run: |
+          echo java-version="$(grep '<java.version>' pom.xml | sed -e 's/<[^>]*>//g' | awk '{$1=$1};1' | sed 's/^1\.8$/8/')"  >> $GITHUB_OUTPUT
+
+      - name: debug - print input variables
+        run: |
+          echo ${{ steps.get-java-version.outputs.java-version }}
+          echo ${{ steps.create-server-matrix.outputs.input-matrix }}
+
+  build:
+    uses: ./.github/workflows/build-pr.yaml
+    needs: make-matrix
+    strategy:
+      matrix: 
+        include: ${{ fromJson(needs.make-matrix.outputs.input-matrix) }}
+    name: build-${{ matrix.server }}-${{ matrix.version }}
+    with:
+      java-version: ${{ needs.make-matrix.outputs.java-version }}
+      run-tests: true 
+      server-tag: ${{ matrix.version }}
+      server-type: ${{ matrix.type }}
+    secrets: inherit

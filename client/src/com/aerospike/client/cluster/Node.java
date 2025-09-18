@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 Aerospike, Inc.
+ * Copyright 2012-2025 Aerospike, Inc.
  *
  * Portions may be licensed to Aerospike, Inc. under one or more contributor
  * license agreements WHICH ARE COMPATIBLE WITH THE APACHE LICENSE, VERSION 2.0.
@@ -18,16 +18,14 @@ package com.aerospike.client.cluster;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 import com.aerospike.client.AerospikeException;
 import com.aerospike.client.Host;
@@ -43,10 +41,12 @@ import com.aerospike.client.async.EventState;
 import com.aerospike.client.async.Monitor;
 import com.aerospike.client.async.NettyConnection;
 import com.aerospike.client.command.SyncCommand;
+import com.aerospike.client.metrics.Counter;
 import com.aerospike.client.metrics.LatencyType;
 import com.aerospike.client.metrics.MetricsPolicy;
 import com.aerospike.client.metrics.NodeMetrics;
 import com.aerospike.client.util.Util;
+import com.aerospike.client.util.Version;
 
 /**
  * Server node representation.  This class manages server node connections and health status.
@@ -67,21 +67,23 @@ public class Node implements Closeable {
 
 	protected final Cluster cluster;
 	private final String name;
-	private final Host host;
-	protected final List<Host> aliases;
+	private String hostname; // Optional hostname.
+	private final Host host; // Host with IP address name.
 	protected final InetSocketAddress address;
 	private final Pool[] connectionPools;
 	private final AsyncPool[] asyncConnectionPools;
 	private Connection tendConnection;
 	private byte[] sessionToken;
 	private long sessionExpiration;
-	private volatile Map<String,Integer> racks;
+	protected volatile Map<String,Integer> racks;
 	private volatile NodeMetrics metrics;
 	final AtomicInteger connsOpened;
 	final AtomicInteger connsClosed;
 	private final AtomicInteger errorRateCount;
-	private final AtomicLong errorCount;
-	private final AtomicLong timeoutCount;
+	protected int maxErrorRate;
+	private final Counter errorCounter;
+	private final Counter timeoutCounter;
+	private final Counter keyBusyCounter;
 	protected int connectionIter;
 	private int peersGeneration;
 	int partitionGeneration;
@@ -94,6 +96,7 @@ public class Node implements Closeable {
 	protected boolean rebalanceChanged;
 	protected volatile boolean performLogin;
 	protected volatile boolean active;
+	private final Version version;
 
 	/**
 	 * Initialize server node with connection parameters.
@@ -104,18 +107,20 @@ public class Node implements Closeable {
 	public Node(Cluster cluster, NodeValidator nv) {
 		this.cluster = cluster;
 		this.name = nv.name;
-		this.aliases = nv.aliases;
 		this.host = nv.primaryHost;
 		this.address = nv.primaryAddress;
 		this.tendConnection = nv.primaryConn;
 		this.sessionToken = nv.sessionToken;
 		this.sessionExpiration = nv.sessionExpiration;
 		this.features = nv.features;
+		this.version = nv.version;
 		this.connsOpened = new AtomicInteger(1);
 		this.connsClosed = new AtomicInteger(0);
 		this.errorRateCount = new AtomicInteger(0);
-		this.errorCount = new AtomicLong(0);
-		this.timeoutCount = new AtomicLong(0);
+		this.maxErrorRate = cluster.maxErrorRate;
+		this.errorCounter = new Counter();
+		this.timeoutCounter = new Counter();
+		this.keyBusyCounter = new Counter();
 		this.peersGeneration = -1;
 		this.partitionGeneration = -1;
 		this.rebalanceGeneration = -1;
@@ -247,7 +252,7 @@ public class Node implements Closeable {
 			}
 
 			String[] commands = cluster.rackAware ? INFO_PERIODIC_REB : INFO_PERIODIC;
-			HashMap<String,String> infoMap = Info.request(tendConnection, commands);
+			HashMap<String,String> infoMap = infoRequest(tendConnection, commands);
 
 			verifyNodeName(infoMap);
 			verifyPeersGeneration(infoMap, peers);
@@ -270,6 +275,11 @@ public class Node implements Closeable {
 			peers.genChanged = true;
 			refreshFailed(e);
 		}
+	}
+
+	private HashMap<String,String> infoRequest(Connection conn, String... names) {
+		Info info = new Info(this, conn, names);
+		return info.parseMultiResponse();
 	}
 
 	private boolean shouldLogin() {
@@ -343,9 +353,7 @@ public class Node implements Closeable {
 	private final void restart() {
 		try {
 			// Reset error rate.
-			if (cluster.maxErrorRate > 0) {
-				resetErrorRate();
-			}
+			resetErrorRate();
 
 			// Login when user authentication is enabled.
 			if (cluster.authEnabled) {
@@ -380,6 +388,10 @@ public class Node implements Closeable {
 				Log.warn("Node restart failed: " + this + ' ' + Util.getErrorMessage(e));
 			}
 		}
+	}
+
+	private boolean isErrorRateValid() {
+		return this.errorRateCount.get() <= this.maxErrorRate;
 	}
 
 	private final void verifyPartitionGeneration(HashMap<String,String> infoMap) {
@@ -420,7 +432,7 @@ public class Node implements Closeable {
 			if (Log.debugEnabled()) {
 				Log.debug("Update peers for node " + this);
 			}
-			PeerParser parser = new PeerParser(cluster, tendConnection, peers.peers);
+			PeerParser parser = new PeerParser(cluster, this, tendConnection, peers.peers);
 			peersCount = peers.peers.size();
 
 			boolean peersValidated = true;
@@ -455,10 +467,13 @@ public class Node implements Closeable {
 						// Create new node.
 						Node node = cluster.createNode(nv);
 						peers.nodes.put(nv.name, node);
-						nodeValidated = true;							
+						nodeValidated = true;
 
 						if (peer.replaceNode != null) {
-							peers.removeList.add(peer.replaceNode);
+							if (Log.infoEnabled()) {
+								Log.info("Replace node: " + peer.replaceNode);
+							}
+							peers.removeNodes.add(peer.replaceNode);
 						}
 						break;
 					}
@@ -499,14 +514,37 @@ public class Node implements Closeable {
 				node.referenceCount++;
 				return true;
 			}
-			
+
 			// Match peer hosts with the node host.
 			for (Host h : peer.hosts) {
-				if (h.equals(node.host)) {
-					// Main node host is also the same as one of the peer hosts.
-					// Peer should not be added.
-					node.referenceCount++;
-					return true;
+				if (h.port == node.host.port) {
+					// Check for IP address (node.host.name is an IP address) or hostname if it exists.
+					if (h.name.equals(node.host.name) || (node.hostname != null && h.name.equals(node.hostname))) {
+						// Main node host is also the same as one of the peer hosts.
+						// Peer should not be added.
+						node.referenceCount++;
+						return true;
+					}
+
+					// Peer name might be a hostname. Get peer IP addresses and check with node IP address.
+					try {
+						InetAddress[] addresses = InetAddress.getAllByName(h.name);
+
+						for (InetAddress address : addresses) {
+							if (address.equals(node.address.getAddress()) ||
+								address.isLoopbackAddress()) {
+								// Set peer hostname for faster future lookups.
+								node.hostname = h.name;
+								node.referenceCount++;
+								return true;
+							}
+						}
+					}
+					catch (Throwable t) {
+						// Peer name is invalid. replaceNode may be set, but that node will
+						// not be replaced because NodeValidator will reject it.
+						Log.error("Invalid peer received by cluster tend: " + h.name);
+					}
 				}
 			}
 			peer.replaceNode = node;
@@ -558,7 +596,7 @@ public class Node implements Closeable {
 			if (Log.debugEnabled()) {
 				Log.debug("Update racks for node " + this);
 			}
-			RackParser parser = new RackParser(tendConnection);
+			RackParser parser = new RackParser(this, tendConnection);
 
 			rebalanceGeneration = parser.getGeneration();
 			racks = parser.getRacks();
@@ -646,7 +684,7 @@ public class Node implements Closeable {
 				new Connection(address, timeout, this, pool);
 
 			long elapsed = System.nanoTime() - begin;
-			metrics.addLatency(LatencyType.CONN, TimeUnit.NANOSECONDS.toMillis(elapsed));
+			metrics.addLatency(null, LatencyType.CONN, elapsed);
 		}
 		else {
 			conn = (cluster.tlsPolicy != null && !cluster.tlsPolicy.forLoginOnly) ?
@@ -1072,8 +1110,8 @@ public class Node implements Closeable {
 	/**
 	 * Add elapsed time in nanoseconds to latency buckets corresponding to latency type.
 	 */
-	public final void addLatency(LatencyType type, long elapsed) {
-		metrics.addLatency(type, elapsed);
+	public final void addLatency(String namespace, LatencyType type, long elapsed) {
+		metrics.addLatency(namespace, type, elapsed);
 	}
 
 	public final void incrErrorRate() {
@@ -1083,7 +1121,21 @@ public class Node implements Closeable {
 	}
 
 	public final void resetErrorRate() {
-		errorRateCount.set(0);
+		if (isErrorRateValid()) {
+			errorRateCount.set(0);
+			// Error rate limit was not breached. Next error rate trigger is doubled up to a max of cluster maxErrorRate
+			maxErrorRate = Math.min(maxErrorRate * 2, cluster.maxErrorRate);
+		}
+		else {
+			errorRateCount.set(0);
+			// Error rate limit was breached. Next error rate trigger is half.
+			if (maxErrorRate >= 2) {
+				maxErrorRate /= 2;
+			}
+			else {
+				maxErrorRate = 1;
+			}
+		}
 	}
 
 	public final boolean errorRateWithinLimit() {
@@ -1100,30 +1152,93 @@ public class Node implements Closeable {
 	 * Increment transaction error count. If the error is retryable, multiple errors per
 	 * transaction may occur.
 	 */
-	public void addError() {
-		errorCount.getAndIncrement();
+	public void addError(String namespace) {
+		errorCounter.increment(namespace);
 	}
 
 	/**
 	 * Increment transaction timeout count. If the timeout is retryable (ie socketTimeout),
 	 * multiple timeouts per transaction may occur.
 	 */
-	public void addTimeout() {
-		timeoutCount.getAndIncrement();
+	public void addTimeout(String namespace) {
+		timeoutCounter.increment(namespace);
 	}
 
 	/**
-	 * Return transaction error count. The value is cumulative and not reset per metrics interval.
+	 * Increment the key busy counter.
+	 */
+	public void addKeyBusy(String namespace) {
+		keyBusyCounter.increment(namespace);
+	}
+
+	/**
+	 * Add to the count of bytes sent to the node.
+	 */
+	public void addBytesOut(String namespace, long count) {
+		metrics.bytesOutCounter.increment(namespace, count);
+	}
+
+	/**
+	 * Add to the count of bytes received from the node.
+	 */
+	public void addBytesIn(String namespace, long count) {
+		metrics.bytesInCounter.increment(namespace, count);
+	}
+
+	/**
+	 * Return error count. The value is cumulative and not reset per metrics interval.
 	 */
 	public long getErrorCount() {
-		return errorCount.get();
+        return errorCounter.getTotal();
 	}
 
 	/**
-	 * Return transaction timeout count. The value is cumulative and not reset per metrics interval.
+	 * Return error count by namespace. The value is cumulative and not reset per metrics interval.
+	 */
+	public long getErrorCountByNS(String namespace) {
+		return errorCounter.getCountByNS(namespace);
+	}
+
+	/**
+	 * Return timeout count. The value is cumulative and not reset per metrics interval.
 	 */
 	public long getTimeoutCount() {
-		return timeoutCount.get();
+        return timeoutCounter.getTotal();
+	}
+
+	/**
+	 * Return timeout count. The value is cumulative and not reset per metrics interval.
+	 */
+	public long getTimeoutCountbyNS(String namespace) {
+		return timeoutCounter.getCountByNS(namespace);
+	}
+
+	/**
+	 * Return key busy count. The value is cumulative and not reset per metrics interval.
+	 */
+	public long getKeyBusyCount() {
+		return keyBusyCounter.getTotal();
+	}
+
+	/**
+	 * Return key busy count for a given namespace. The value is cumulative and not reset per metrics interval.
+	 */
+	public long getKeyBusyCountByNS(String namespace) {
+		return keyBusyCounter.getCountByNS(namespace);
+	}
+
+	/**
+	 * Return count of bytes in by namespace. The value is cumulative and not reset per metrics interval.
+	 */
+	public long getBytesInByNS(String namespace) {
+		return metrics.bytesInCounter.getCountByNS(namespace);
+	}
+
+	/**
+	 * Return count of bytes out by namespace. The value is cumulative and not reset per metrics interval.
+	 */
+	public long getBytesOutByNS(String namespace) {
+		return metrics.bytesOutCounter.getCountByNS(namespace);
 	}
 
 	/**
@@ -1181,6 +1296,18 @@ public class Node implements Closeable {
 	public final int getRebalanceGeneration() {
 		return rebalanceGeneration;
 	}
+
+	/**
+	 * Return this node's build version
+	 */
+	public Version getVersion() {
+		return version;
+	}
+
+	/**
+	 * Return metrics enablement status
+	 */
+	public boolean areMetricsEnabled() { return cluster.metricsEnabled;}
 
 	/**
 	 * Return if this node has the same rack as the client for the

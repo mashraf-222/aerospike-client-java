@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 Aerospike, Inc.
+ * Copyright 2012-2025 Aerospike, Inc.
  *
  * Portions may be licensed to Aerospike, Inc. under one or more contributor
  * license agreements WHICH ARE COMPATIBLE WITH THE APACHE LICENSE, VERSION 2.0.
@@ -32,6 +32,7 @@ import com.aerospike.client.command.BatchAttr;
 import com.aerospike.client.command.BatchNode;
 import com.aerospike.client.command.BatchNodeList;
 import com.aerospike.client.command.Command;
+import com.aerospike.client.configuration.*;
 import com.aerospike.client.listener.BatchRecordSequenceListener;
 import com.aerospike.client.listener.BatchSequenceListener;
 import com.aerospike.client.listener.ExistsSequenceListener;
@@ -63,7 +64,7 @@ public final class AsyncBatch {
 		@Override
 		protected void writeBuffer() {
 			if (batch.node.hasBatchAny()) {
-				setBatchOperate(batchPolicy, null, null, null, records, batch);
+				setBatchOperate(batchPolicy, null, null, null, records, batch, null);
 			}
 			else {
 				setBatchRead(batchPolicy, records, batch);
@@ -118,7 +119,7 @@ public final class AsyncBatch {
 		@Override
 		protected void writeBuffer() {
 			if (batch.node.hasBatchAny()) {
-				setBatchOperate(batchPolicy, null, null, null, records, batch);
+				setBatchOperate(batchPolicy, null, null, null, records, batch, null);
 			}
 			else {
 				setBatchRead(batchPolicy, records, batch);
@@ -382,15 +383,18 @@ public final class AsyncBatch {
 
 	public static final class OperateListCommand extends AsyncBatchCommand {
 		private final List<BatchRecord> records;
+		private final ConfigurationProvider configProvider;
 
 		public OperateListCommand(
 			AsyncBatchExecutor parent,
 			BatchNode batch,
 			BatchPolicy batchPolicy,
-			List<BatchRecord> records
+			List<BatchRecord> records,
+			ConfigurationProvider cp
 		) {
 			super(parent, batch, batchPolicy, true);
 			this.records = records;
+			configProvider = cp;
 		}
 
 		@Override
@@ -404,7 +408,7 @@ public final class AsyncBatch {
 		protected void writeBuffer() {
 			AerospikeClient client = parent.cluster.client;
 			setBatchOperate(batchPolicy, client.batchWritePolicyDefault, client.batchUDFPolicyDefault,
-				client.batchDeletePolicyDefault, records, batch);
+				client.batchDeletePolicyDefault, records, batch, configProvider);
 		}
 
 		@Override
@@ -447,7 +451,7 @@ public final class AsyncBatch {
 
 				if (record.resultCode == ResultCode.NO_RESPONSE) {
 					record.inDoubt = record.hasWrite;
-					
+
 					if (record.inDoubt && policy.txn != null) {
 						policy.txn.onWriteInDoubt(record.key);
 					}
@@ -457,7 +461,7 @@ public final class AsyncBatch {
 
 		@Override
 		protected AsyncBatchCommand createCommand(BatchNode batchNode) {
-			return new OperateListCommand(parent, batchNode, batchPolicy, records);
+			return new OperateListCommand(parent, batchNode, batchPolicy, records, configProvider);
 		}
 
 		@Override
@@ -473,17 +477,20 @@ public final class AsyncBatch {
 	public static final class OperateSequenceCommand extends AsyncBatchCommand {
 		private final BatchRecordSequenceListener listener;
 		private final List<BatchRecord> records;
+		private final ConfigurationProvider configProvider;
 
 		public OperateSequenceCommand(
 			AsyncBatchExecutor parent,
 			BatchNode batch,
 			BatchPolicy batchPolicy,
 			BatchRecordSequenceListener listener,
-			List<BatchRecord> records
+			List<BatchRecord> records,
+			ConfigurationProvider cp
 		) {
 			super(parent, batch, batchPolicy, true);
 			this.listener = listener;
 			this.records = records;
+			this.configProvider = cp;
 		}
 
 		@Override
@@ -497,7 +504,7 @@ public final class AsyncBatch {
 		protected void writeBuffer() {
 			AerospikeClient client = parent.cluster.client;
 			setBatchOperate(batchPolicy, client.batchWritePolicyDefault, client.batchUDFPolicyDefault,
-					client.batchDeletePolicyDefault, records, batch);
+					client.batchDeletePolicyDefault, records, batch, configProvider);
 		}
 
 		@Override
@@ -542,7 +549,7 @@ public final class AsyncBatch {
 					// Set inDoubt, but do not call onRecord() because user already has access to full
 					// BatchRecord list and can examine each record for inDoubt when the exception occurs.
 					record.inDoubt = record.hasWrite;
-					
+
 					if (record.inDoubt && policy.txn != null) {
 						policy.txn.onWriteInDoubt(record.key);
 					}
@@ -552,7 +559,7 @@ public final class AsyncBatch {
 
 		@Override
 		protected AsyncBatchCommand createCommand(BatchNode batchNode) {
-			return new OperateSequenceCommand(parent, batchNode, batchPolicy, listener, records);
+			return new OperateSequenceCommand(parent, batchNode, batchPolicy, listener, records, configProvider);
 		}
 
 		@Override
@@ -623,7 +630,7 @@ public final class AsyncBatch {
 
 				if (record.resultCode == ResultCode.NO_RESPONSE) {
 					record.inDoubt = true;
-					
+
 					if (policy.txn != null) {
 						policy.txn.onWriteInDoubt(record.key);
 					}
@@ -708,11 +715,11 @@ public final class AsyncBatch {
 					Key key = keys[index];
 					BatchRecord record = new BatchRecord(key, null, ResultCode.NO_RESPONSE, attr.hasWrite && inDoubt, attr.hasWrite);
 					sent[index] = true;
-					
+
 					if (record.inDoubt && policy.txn != null) {
 						policy.txn.onWriteInDoubt(key);
 					}
-					
+
 					AsyncBatch.onRecord(listener, record, index);
 				}
 			}
@@ -811,7 +818,7 @@ public final class AsyncBatch {
 
 				if (record.resultCode == ResultCode.NO_RESPONSE) {
 					record.inDoubt = true;
-					
+
 					if (policy.txn != null) {
 						policy.txn.onWriteInDoubt(record.key);
 					}
@@ -914,7 +921,7 @@ public final class AsyncBatch {
 					Key key = keys[index];
 					BatchRecord record = new BatchRecord(key, null, ResultCode.NO_RESPONSE, attr.hasWrite && inDoubt, attr.hasWrite);
 					sent[index] = true;
-					
+
 					if (record.inDoubt && policy.txn != null) {
 						policy.txn.onWriteInDoubt(record.key);
 					}
@@ -935,7 +942,7 @@ public final class AsyncBatch {
 	}
 
 	//-------------------------------------------------------
-	// MRT
+	// Transaction
 	//-------------------------------------------------------
 
 	public static final class TxnVerify extends AsyncBatchCommand {

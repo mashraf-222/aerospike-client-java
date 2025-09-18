@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 Aerospike, Inc.
+ * Copyright 2012-2025 Aerospike, Inc.
  *
  * Portions may be licensed to Aerospike, Inc. under one or more contributor
  * license agreements WHICH ARE COMPATIBLE WITH THE APACHE LICENSE, VERSION 2.0.
@@ -15,6 +15,14 @@
  * the License.
  */
 package com.aerospike.client.policy;
+
+import java.util.Objects;
+
+import com.aerospike.client.Log;
+import com.aerospike.client.configuration.ConfigurationProvider;
+import com.aerospike.client.configuration.serializers.Configuration;
+import com.aerospike.client.configuration.serializers.DynamicConfiguration;
+import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicWriteConfig;
 
 /**
  * Container object for policy attributes used in write operations.
@@ -102,12 +110,44 @@ public final class WritePolicy extends Policy {
 	public boolean durableDelete;
 
 	/**
+	 * Execute the write command only if the record is not already locked by this transaction.
+	 * If this field is true and the record is already locked by this transaction, the command
+	 * will throw an exception with the {@link com.aerospike.client.ResultCode#MRT_ALREADY_LOCKED}
+	 * error code.
+	 * <p>
+	 * This field is useful for safely retrying non-idempotent writes as an alternative to simply
+	 * aborting the transaction. This field is not applicable to record delete commands.
+	 * <p>
+	 * Default: false.
+	 */
+	public boolean onLockingOnly;
+
+	/**
 	 * Operate in XDR mode.  Some external connectors may need to emulate an XDR client.
 	 * If enabled, an XDR bit is set for writes in the wire protocol.
 	 * <p>
 	 * Default: false.
 	 */
 	public boolean xdr;
+
+	/**
+	 * Copy write policy from another write policy AND override certain policy attributes if they exist in the
+	 * configProvider. Any policy overrides will not get logged.
+	 */
+	public WritePolicy(WritePolicy other, ConfigurationProvider configProvider) {
+		this(other);
+		updateFromConfig(configProvider, false, "");
+	}
+
+	/**
+	 * Copy write policy from another write policy AND override certain policy attributes if they exist in the
+	 * configProvider. Any default policy overrides will get logged.
+	 */
+	public WritePolicy(WritePolicy other, ConfigurationProvider configProvider, boolean isDefaultPolicy,
+					   String preText) {
+		this(other);
+		updateFromConfig(configProvider, isDefaultPolicy, preText);
+	}
 
 	/**
 	 * Copy write policy from another write policy.
@@ -121,6 +161,7 @@ public final class WritePolicy extends Policy {
 		this.expiration = other.expiration;
 		this.respondAllOps = other.respondAllOps;
 		this.durableDelete = other.durableDelete;
+		this.onLockingOnly = other.onLockingOnly;
 		this.xdr = other.xdr;
 	}
 
@@ -143,43 +184,113 @@ public final class WritePolicy extends Policy {
 	public int hashCode() {
 		final int prime = 31;
 		int result = super.hashCode();
-		result = prime * result + ((commitLevel == null) ? 0 : commitLevel.hashCode());
-		result = prime * result + (durableDelete ? 1231 : 1237);
-		result = prime * result + expiration;
-		result = prime * result + generation;
-		result = prime * result + ((generationPolicy == null) ? 0 : generationPolicy.hashCode());
-		result = prime * result + ((recordExistsAction == null) ? 0 : recordExistsAction.hashCode());
-		result = prime * result + (respondAllOps ? 1231 : 1237);
-		result = prime * result + (xdr ? 1231 : 1237);
+		result = prime * result + Objects.hash(commitLevel, durableDelete, expiration, onLockingOnly, generation,
+				generationPolicy, recordExistsAction, respondAllOps, xdr);
 		return result;
 	}
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (!super.equals(obj))
+		}
+		if (!super.equals(obj)) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if (getClass() != obj.getClass()) {
 			return false;
+		}
 		WritePolicy other = (WritePolicy) obj;
-		if (commitLevel != other.commitLevel)
-			return false;
-		if (durableDelete != other.durableDelete)
-			return false;
-		if (expiration != other.expiration)
-			return false;
-		if (generation != other.generation)
-			return false;
-		if (generationPolicy != other.generationPolicy)
-			return false;
-		if (recordExistsAction != other.recordExistsAction)
-			return false;
-		if (respondAllOps != other.respondAllOps)
-			return false;
-		if (xdr != other.xdr)
-			return false;
-		return true;
+		return commitLevel == other.commitLevel && durableDelete == other.durableDelete
+				&& expiration == other.expiration && onLockingOnly == other.onLockingOnly
+				&& generation == other.generation && generationPolicy == other.generationPolicy
+				&& recordExistsAction == other.recordExistsAction && respondAllOps == other.respondAllOps
+				&& xdr == other.xdr;
+	}
+
+	private void updateFromConfig(ConfigurationProvider configProvider, boolean log, String preText) {
+		boolean logUpdate = false;
+		if (configProvider == null) {
+			return;
+		}
+		Configuration config = configProvider.fetchConfiguration();
+		if (config == null) {
+			return;
+		}
+		DynamicConfiguration dConfig = config.getDynamicConfiguration();
+		if (dConfig == null) {
+			return;
+		}
+		DynamicWriteConfig dynWC = dConfig.getDynamicWriteConfig();
+		if (dynWC == null) {
+			return;
+		}
+		if (!Objects.equals(preText, "")) {
+			preText = " " + preText;
+		}
+		if (log && Log.infoEnabled()) {
+			logUpdate = true;
+		}
+		if (dynWC.connectTimeout != null && this.connectTimeout != dynWC.connectTimeout.value) {
+			this.connectTimeout = dynWC.connectTimeout.value;
+			if (logUpdate) {
+				Log.info("Set" + preText + " WritePolicy.connectTimeout = " + this.connectTimeout);
+			}
+		}
+		if (dynWC.failOnFilteredOut != null && this.failOnFilteredOut != dynWC.failOnFilteredOut.value) {
+			this.failOnFilteredOut = dynWC.failOnFilteredOut.value;
+			if (logUpdate) {
+				Log.info("Set" + preText + " WritePolicy.failOnFilteredOut = " + this.failOnFilteredOut);
+			}
+		}
+		if (dynWC.replica != null && this.replica != dynWC.replica) {
+			this.replica = dynWC.replica;
+			if (logUpdate) {
+				Log.info("Set" + preText + " WritePolicy.replica = " + this.replica);
+			}
+		}
+		if (dynWC.sendKey != null && this.sendKey != dynWC.sendKey.value) {
+			this.sendKey = dynWC.sendKey.value;
+			if (logUpdate) {
+				Log.info("Set" + preText + " WritePolicy.sendKey = " + this.sendKey);
+			}
+		}
+		if (dynWC.sleepBetweenRetries != null && this.sleepBetweenRetries != dynWC.sleepBetweenRetries.value) {
+			this.sleepBetweenRetries = dynWC.sleepBetweenRetries.value;
+			if (logUpdate) {
+				Log.info("Set" + preText + " WritePolicy.sleepBetweenRetries = " + this.sleepBetweenRetries);
+			}
+		}
+		if (dynWC.socketTimeout != null && this.socketTimeout != dynWC.socketTimeout.value) {
+			this.socketTimeout = dynWC.socketTimeout.value;
+			if (logUpdate) {
+				Log.info("Set" + preText + " WritePolicy.socketTimeout = " + this.socketTimeout);
+			}
+		}
+		if (dynWC.timeoutDelay != null && this.timeoutDelay != dynWC.timeoutDelay.value) {
+			this.timeoutDelay = dynWC.timeoutDelay.value;
+			if (logUpdate) {
+				Log.info("Set" + preText + " WritePolicy.timeoutDelay = " + this.timeoutDelay);
+			}
+		}
+		if (dynWC.totalTimeout != null && this.totalTimeout != dynWC.totalTimeout.value) {
+			this.totalTimeout = dynWC.totalTimeout.value;
+			if (logUpdate) {
+				Log.info("Set" + preText + " WritePolicy.totalTimeout = " + this.totalTimeout);
+			}
+		}
+		if (dynWC.maxRetries != null && this.maxRetries != dynWC.maxRetries.value) {
+			this.maxRetries = dynWC.maxRetries.value;
+			if (logUpdate) {
+				Log.info("Set" + preText + " WritePolicy.maxRetries = " + this.maxRetries);
+			}
+		}
+		if (dynWC.durableDelete != null && this.durableDelete != dynWC.durableDelete.value) {
+			this.durableDelete = dynWC.durableDelete.value;
+			if (logUpdate) {
+				Log.info("Set" + preText + " WritePolicy.durableDelete = " + this.durableDelete);
+			}
+		}
 	}
 
 	// Include setters to facilitate Spring's ConfigurationProperties.
@@ -210,6 +321,10 @@ public final class WritePolicy extends Policy {
 
 	public void setDurableDelete(boolean durableDelete) {
 		this.durableDelete = durableDelete;
+	}
+
+	public void setOnLockingOnly(boolean onLockingOnly) {
+		this.onLockingOnly = onLockingOnly;
 	}
 
 	public void setXdr(boolean xdr) {

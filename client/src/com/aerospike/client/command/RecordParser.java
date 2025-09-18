@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 Aerospike, Inc.
+ * Copyright 2012-2025 Aerospike, Inc.
  *
  * Portions may be licensed to Aerospike, Inc. under one or more contributor
  * license agreements WHICH ARE COMPATIBLE WITH THE APACHE LICENSE, VERSION 2.0.
@@ -37,13 +37,16 @@ public final class RecordParser {
 	public final int fieldCount;
 	public final int opCount;
 	public int dataOffset;
+	public long bytesIn;
 
 	/**
 	 * Sync record parser.
 	 */
 	public RecordParser(Connection conn, byte[] buffer) throws IOException {
+		bytesIn = 0;
 		// Read header.
 		conn.readFully(buffer, 8, Command.STATE_READ_HEADER);
+		bytesIn += 8;
 
 		long sz = Buffer.bytesToLong(buffer, 0);
 		int receiveSize = (int)(sz & 0xFFFFFFFFFFFFL);
@@ -78,6 +81,7 @@ public final class RecordParser {
 		}
 
 		conn.readFully(buffer, receiveSize, Command.STATE_READ_DETAIL);
+		bytesIn += receiveSize;
 		conn.updateLastUsed();
 
 		long type = (sz >> 48) & 0xff;
@@ -194,7 +198,7 @@ public final class RecordParser {
 			int type = dataBuffer[dataOffset++];
 			int size = len - 1;
 
-			if (type == FieldType.MRT_DEADLINE) {
+			if (type == FieldType.TXN_DEADLINE) {
 				int deadline = Buffer.littleBytesToInt(dataBuffer, dataOffset);
 				txn.setDeadline(deadline);
 			}

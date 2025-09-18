@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 Aerospike, Inc.
+ * Copyright 2012-2025 Aerospike, Inc.
  *
  * Portions may be licensed to Aerospike, Inc. under one or more contributor
  * license agreements WHICH ARE COMPATIBLE WITH THE APACHE LICENSE, VERSION 2.0.
@@ -28,6 +28,7 @@ import com.aerospike.client.cdt.CTX;
 import com.aerospike.client.cluster.Cluster;
 import com.aerospike.client.cluster.ClusterStats;
 import com.aerospike.client.cluster.Node;
+import com.aerospike.client.configuration.*;
 import com.aerospike.client.exp.Expression;
 import com.aerospike.client.listener.BatchListListener;
 import com.aerospike.client.listener.BatchOperateListListener;
@@ -77,6 +78,16 @@ import com.aerospike.client.task.RegisterTask;
  * AerospikeClient without being constrained by final methods.
  */
 public interface IAerospikeClient extends Closeable {
+	/**
+	 * Return the client version
+	 */
+	public String getVersion();
+
+	/**
+	 * Returns the client's ConfigurationProvider, if any was added to the clientPolicy
+	 */
+	public ConfigurationProvider getConfigProvider();
+
 	//-------------------------------------------------------
 	// Default Policies
 	//-------------------------------------------------------
@@ -188,23 +199,23 @@ public interface IAerospikeClient extends Closeable {
 	public InfoPolicy copyInfoPolicyDefault();
 
 	/**
-	 * Return MRT record version verify policy default. Use when the policy will not be modified.
+	 * Return transaction record version verify policy default. Use when the policy will not be modified.
 	 */
 	public TxnVerifyPolicy getTxnVerifyPolicyDefault();
 
 	/**
-	 * Copy MRT record version verify policy default. Use when the policy will be modified for use
+	 * Copy transaction record version verify policy default. Use when the policy will be modified for use
 	 * in a specific command.
 	 */
 	public TxnVerifyPolicy copyTxnVerifyPolicyDefault();
 
 	/**
-	 * Return MRT roll forward/back policy default. Use when the policy will not be modified.
+	 * Return transaction roll forward/back policy default. Use when the policy will not be modified.
 	 */
 	public TxnRollPolicy getTxnRollPolicyDefault();
 
 	/**
-	 * Copy MRT roll forward/back policy default. Use when the policy will be modified for use
+	 * Copy transaction roll forward/back policy default. Use when the policy will be modified for use
 	 * in a specific command.
 	 */
 	public TxnRollPolicy copyTxnRollPolicyDefault();
@@ -279,17 +290,17 @@ public interface IAerospikeClient extends Closeable {
 	public Cluster getCluster();
 
 	//-------------------------------------------------------
-	// Multi-Record Transactions
+	// Transaction
 	//-------------------------------------------------------
 
 	/**
-	 * Attempt to commit the given multi-record transaction. First, the expected record versions are
+	 * Attempt to commit the given transaction. First, the expected record versions are
 	 * sent to the server nodes for verification. If all nodes return success, the transaction is
 	 * committed. Otherwise, the transaction is aborted.
 	 * <p>
 	 * Requires server version 8.0+
 	 *
-	 * @param txn	multi-record transaction
+	 * @param txn	transaction
 	 * @return		status of the commit on success
 	 * @throws AerospikeException.Commit	if verify commit fails
 	 */
@@ -297,7 +308,7 @@ public interface IAerospikeClient extends Closeable {
 		throws AerospikeException.Commit;
 
 	/**
-	 * Asynchronously attempt to commit the given multi-record transaction. First, the expected
+	 * Asynchronously attempt to commit the given transaction. First, the expected
 	 * record versions are sent to the server nodes for verification. If all nodes return success,
 	 * the transaction is committed. Otherwise, the transaction is aborted.
 	 * <p>
@@ -309,24 +320,24 @@ public interface IAerospikeClient extends Closeable {
 	 * @param eventLoop		event loop that will process the command. If NULL, the event
 	 * 						loop will be chosen by round-robin.
 	 * @param listener		where to send results
-	 * @param txn			multi-record transaction
+	 * @param txn			transaction
 	 * @throws AerospikeException	if event loop registration fails
 	 */
 	void commit(EventLoop eventLoop, CommitListener listener, Txn txn)
 		throws AerospikeException;
 
 	/**
-	 * Abort and rollback the given multi-record transaction.
+	 * Abort and rollback the given transaction.
 	 * <p>
 	 * Requires server version 8.0+
 	 *
-	 * @param txn	multi-record transaction
+	 * @param txn	transaction
 	 * @return		status of the abort
 	 */
 	AbortStatus abort(Txn txn);
 
 	/**
-	 * Asynchronously abort and rollback the given multi-record transaction.
+	 * Asynchronously abort and rollback the given transaction.
 	 * <p>
 	 * This method registers the command with an event loop and returns.
 	 * The event loop thread will process the command and send the results to the listener.
@@ -336,7 +347,7 @@ public interface IAerospikeClient extends Closeable {
 	 * @param eventLoop		event loop that will process the command. If NULL, the event
 	 * 						loop will be chosen by round-robin.
 	 * @param listener		where to send results
-	 * @param txn			multi-record transaction
+	 * @param txn			transaction
 	 * @throws AerospikeException	if event loop registration fails
 	 */
 	void abort(EventLoop eventLoop, AbortListener listener, Txn txn)
@@ -1962,6 +1973,58 @@ public interface IAerospikeClient extends Closeable {
 	) throws AerospikeException;
 
 	/**
+	 * Create an expression-based secondary index with the provided index collection type
+	 * This asynchronous server call will return before command is complete.
+	 * The user can optionally wait for command completion by using the returned
+	 * IndexTask instance.
+	 *
+	 * @param policy				generic configuration parameters, pass in null for defaults
+	 * @param namespace				namespace - equivalent to database name
+	 * @param setName				optional set name - equivalent to database table
+	 * @param indexName				name of secondary index
+	 * @param indexType				underlying data type of secondary index
+	 * @param indexCollectionType	index collection type
+	 * @param exp					expression on which to build the index
+	 * @throws AerospikeException
+	 */
+	public IndexTask createIndex(
+		Policy policy,
+		String namespace,
+		String setName,
+		String indexName,
+		IndexType indexType,
+		IndexCollectionType indexCollectionType,
+		Expression exp
+	) throws AerospikeException;
+
+	/**
+	 * Asynchronously create an expression-based secondary index with the provided index collection type
+	 * This asynchronous server call will return before command is complete.
+	 * The user can optionally wait for command completion by using the returned
+	 * IndexTask instance.
+	 *
+	 * @param policy				generic configuration parameters, pass in null for defaults
+	 * @param namespace				namespace - equivalent to database name
+	 * @param setName				optional set name - equivalent to database table
+	 * @param indexName				name of secondary index
+	 * @param indexType				underlying data type of secondary index
+	 * @param indexCollectionType	index collection type
+	 * @param exp					expression on which to build the index
+	 * @throws AerospikeException
+	 */
+	public void createIndex(
+		EventLoop eventLoop,
+		IndexListener listener,
+		Policy policy,
+		String namespace,
+		String setName,
+		String indexName,
+		IndexType indexType,
+		IndexCollectionType indexCollectionType,
+		Expression exp
+	) throws AerospikeException;
+
+	/**
 	 * Delete secondary index.
 	 * This asynchronous server call will return before command is complete.
 	 * The user can optionally wait for command completion by using the returned
@@ -2070,6 +2133,18 @@ public interface IAerospikeClient extends Closeable {
 	 * @throws AerospikeException	if command fails
 	 */
 	public void createUser(AdminPolicy policy, String user, String password, List<String> roles)
+		throws AerospikeException;
+
+	/**
+	 * Create PKI user with roles.  PKI users are authenticated via TLS and a certificate instead of a password.
+	 * WARNING: This function should only be called for server versions 8.1+
+	 *
+	 * @param policy				admin configuration parameters, pass in null for defaults
+	 * @param user					user name
+	 * @param roles					variable arguments array of role names.  Predefined roles are listed in {@link com.aerospike.client.admin.Role}
+	 * @throws AerospikeException	if command fails
+	 */
+	public void createPkiUser(AdminPolicy policy, String user, List<String> roles)
 		throws AerospikeException;
 
 	/**

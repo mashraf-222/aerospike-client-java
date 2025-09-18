@@ -1,0 +1,56 @@
+run-name: Build artifact for ${{ inputs.crypto-type }} ${{ inputs.java-version }}
+
+permissions:
+  # This is required for requesting the OIDC token
+  id-token: write
+
+on:
+  workflow_call:
+    inputs:
+      java-version:
+        type: string
+        required: true
+      server-tag:
+        type: string
+        required: false
+        default: "latest"
+        description: "Server docker image tag"
+      run-tests:
+        type: boolean
+        required: false
+        default: false
+        description: Spin up aerospike enterprise server and run tests
+      crypto-type:
+        type: string
+        required: true
+      server-type:
+        type: string
+        required: true
+    secrets:
+      JFROG_OIDC_PROVIDER:
+        required: true
+      JFROG_OIDC_AUDIENCE:
+        required: true
+
+jobs:
+  build:
+    runs-on: ${{ vars.BUILD_CONTAINER_DISTRO_VERSION }}
+    steps:
+      - uses: actions/checkout@v4       # brings versions.json into the workspace
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: ${{ vars.JAVA_PROVIDER }} # See 'Supported distributions' for available options
+          java-version: ${{ inputs.java-version }}
+
+      - name: Build and test
+        uses: ./.github/actions/build-and-test
+        with:
+          crypto-type: ${{ inputs.crypto-type }}
+          server-tag: ${{ inputs.server-tag }}
+          server-type: ${{ inputs.server-type }}
+          oidc-provider: ${{ secrets.JFROG_OIDC_PROVIDER }}
+          oidc-audience: ${{ secrets.JFROG_OIDC_AUDIENCE }}

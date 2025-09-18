@@ -1,0 +1,57 @@
+name: Build and est
+description: "Build and test code base"
+
+inputs:
+  crypto-type:
+    description: "Crypto type to use. This should either be bouncycastle or gnu"
+    required: false
+    default: gnu
+  server-tag:
+    required: false
+    default: "latest"
+    description: "Server docker image tag"
+  oidc-provider:
+    required: true
+    description: "OIDC provider"
+  oidc-audience:
+    required: true
+    description: "OIDC audience"
+  run-tests:
+    required: true
+    default: "true"
+    description: Spin up aerospike enterprise server and run tests
+  server-type:
+    required: true
+    description: Server type `aerospike-server` or `aerospike-enterprise-server` 
+
+runs:
+  using: "composite"
+  steps:
+    # Using script to set profile since we would like to have the sticky effect. Set it once and have it
+    # remain for remainder of the job
+    - name: Stage crypto
+      shell: bash
+      run: |
+        ./set_crypto ${{ inputs.crypto-type }}
+
+    # Running build install
+    - name: Build
+      shell: bash
+      run: mvn clean install
+
+    # Starting test bench
+    - name: Run Aerospike
+      if: ${{ inputs.run-tests == 'true' }}
+      uses: ./.github/actions/run-ee-server
+      with:
+        server-tag: ${{ inputs.server-tag }}
+        server-type: ${{ inputs.server-type }}
+        oidc-provider: ${{ inputs.oidc-provider }}
+        oidc-audience: ${{ inputs.oidc-audience }}
+
+    # Running tests
+    - name: Run tests
+      shell: bash
+      if: ${{ inputs.run-tests == 'true' }}
+      working-directory: test
+      run: mvn test -DskipTests=false

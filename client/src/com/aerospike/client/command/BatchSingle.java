@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 Aerospike, Inc.
+ * Copyright 2012-2025 Aerospike, Inc.
  *
  * Portions may be licensed to Aerospike, Inc. under one or more contributor
  * license agreements WHICH ARE COMPATIBLE WITH THE APACHE LICENSE, VERSION 2.0.
@@ -91,12 +91,15 @@ public final class BatchSingle {
 		}
 
 		@Override
-		protected void parseResult(Connection conn) throws IOException {
+		protected void parseResult(Node node, Connection conn) throws IOException {
 			RecordParser rp = new RecordParser(conn, dataBuffer);
 			rp.parseFields(policy.txn, key, false);
 
 			if (rp.resultCode == ResultCode.OK) {
 				records[index] = rp.parseRecord(isOperation);
+			}
+			if (node.areMetricsEnabled()) {
+				node.addBytesIn(namespace, rp.bytesIn);
 			}
 		}
 	}
@@ -127,12 +130,15 @@ public final class BatchSingle {
 		}
 
 		@Override
-		protected void parseResult(Connection conn) throws IOException {
+		protected void parseResult(Node node, Connection conn) throws IOException {
 			RecordParser rp = new RecordParser(conn, dataBuffer);
 			rp.parseFields(policy.txn, key, false);
 
 			if (rp.resultCode == 0) {
 				records[index] = new Record(null, rp.generation, rp.expiration);
+			}
+			if (node.areMetricsEnabled()) {
+				node.addBytesIn(namespace, rp.bytesIn);
 			}
 		}
 	}
@@ -157,9 +163,12 @@ public final class BatchSingle {
 		}
 
 		@Override
-		protected void parseResult(Connection conn) throws IOException {
+		protected void parseResult(Node node, Connection conn) throws IOException {
 			RecordParser rp = new RecordParser(conn, dataBuffer);
 			rp.parseFields(policy.txn, key, false);
+			if (node.areMetricsEnabled()) {
+				node.addBytesIn(namespace, rp.bytesIn);
+			}
 
 			if (rp.resultCode == ResultCode.OK) {
 				record.setRecord(rp.parseRecord(true));
@@ -197,9 +206,12 @@ public final class BatchSingle {
 		}
 
 		@Override
-		protected void parseResult(Connection conn) throws IOException {
+		protected void parseResult(Node node, Connection conn) throws IOException {
 			RecordParser rp = new RecordParser(conn, dataBuffer);
 			rp.parseFields(policy.txn, key, false);
+			if (node.areMetricsEnabled()) {
+				node.addBytesIn(namespace, rp.bytesIn);
+			}
 			existsArray[index] = rp.resultCode == 0;
 		}
 	}
@@ -230,9 +242,12 @@ public final class BatchSingle {
 		}
 
 		@Override
-		protected void parseResult(Connection conn) throws IOException {
+		protected void parseResult(Node node, Connection conn) throws IOException {
 			RecordParser rp = new RecordParser(conn, dataBuffer);
 			rp.parseFields(policy.txn, key, record.hasWrite);
+			if (node.areMetricsEnabled()) {
+				node.addBytesIn(namespace, rp.bytesIn);
+			}
 
 			if (rp.resultCode == ResultCode.OK) {
 				record.setRecord(rp.parseRecord(true));
@@ -274,14 +289,19 @@ public final class BatchSingle {
 		}
 
 		@Override
-		protected void parseResult(Connection conn) throws IOException {
+		protected void parseResult(Node node, Connection conn) throws IOException {
 			RecordParser rp = new RecordParser(conn, dataBuffer);
 			rp.parseFields(policy.txn, key, true);
 
-			if (rp.resultCode == ResultCode.OK || rp.resultCode == ResultCode.KEY_NOT_FOUND_ERROR) {
+			if (node.areMetricsEnabled()) {
+				node.addBytesIn(namespace, rp.bytesIn);
+			}
+			if (rp.resultCode == ResultCode.OK) {
 				record.setRecord(new Record(null, rp.generation, rp.expiration));
 			}
 			else {
+				// A KEY_NOT_FOUND_ERROR on a delete is benign, but still results in an overall
+				// batch status of false to be consistent with the original batch code.
 				record.setError(rp.resultCode, Command.batchInDoubt(true, commandSentCounter));
 				status.setRowError();
 			}
@@ -327,10 +347,12 @@ public final class BatchSingle {
 		}
 
 		@Override
-		protected void parseResult(Connection conn) throws IOException {
+		protected void parseResult(Node node, Connection conn) throws IOException {
 			RecordParser rp = new RecordParser(conn, dataBuffer);
 			rp.parseFields(policy.txn, key, true);
-
+			if (node.areMetricsEnabled()) {
+				node.addBytesIn(namespace, rp.bytesIn);
+			}
 			if (rp.resultCode == ResultCode.OK) {
 				record.setRecord(rp.parseRecord(false));
 			}
@@ -361,7 +383,7 @@ public final class BatchSingle {
 	}
 
 	//-------------------------------------------------------
-	// MRT
+	// Transaction
 	//-------------------------------------------------------
 
 	public static final class TxnVerify extends BaseCommand {
@@ -390,9 +412,11 @@ public final class BatchSingle {
 		}
 
 		@Override
-		protected void parseResult(Connection conn) throws IOException {
+		protected void parseResult(Node node, Connection conn) throws IOException {
 			RecordParser rp = new RecordParser(conn, dataBuffer);
-
+			if (node.areMetricsEnabled()) {
+				node.addBytesIn(namespace, rp.bytesIn);
+			}
 			if (rp.resultCode == ResultCode.OK) {
 				record.resultCode = rp.resultCode;
 			}
@@ -429,9 +453,11 @@ public final class BatchSingle {
 		}
 
 		@Override
-		protected void parseResult(Connection conn) throws IOException {
+		protected void parseResult(Node node, Connection conn) throws IOException {
 			RecordParser rp = new RecordParser(conn, dataBuffer);
-
+			if (node.areMetricsEnabled()) {
+				node.addBytesIn(namespace, rp.bytesIn);
+			}
 			if (rp.resultCode == ResultCode.OK) {
 				record.resultCode = rp.resultCode;
 			}
@@ -464,7 +490,7 @@ public final class BatchSingle {
 			Node node,
 			boolean hasWrite
 		) {
-			super(cluster, policy);
+			super(cluster, policy, key.namespace);
 			this.status = status;
 			this.key = key;
 			this.node = node;

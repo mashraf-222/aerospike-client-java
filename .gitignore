@@ -12,4 +12,7 @@ apidocs
 *.jar
 *.iml
 .idea/
+.vscode
 dependency-reduced-pom.xml
+gnu.config
+bouncycastle.config

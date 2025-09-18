@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 Aerospike, Inc.
+ * Copyright 2012-2025 Aerospike, Inc.
  *
  * Portions may be licensed to Aerospike, Inc. under one or more contributor
  * license agreements WHICH ARE COMPATIBLE WITH THE APACHE LICENSE, VERSION 2.0.
@@ -16,17 +16,23 @@
  */
 package com.aerospike.client.policy;
 
-import com.aerospike.client.exp.Expression;
-import com.aerospike.client.Txn;
 import java.util.Objects;
+
+import com.aerospike.client.Log;
+import com.aerospike.client.Txn;
+import com.aerospike.client.configuration.ConfigurationProvider;
+import com.aerospike.client.configuration.serializers.Configuration;
+import com.aerospike.client.configuration.serializers.DynamicConfiguration;
+import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicReadConfig;
+import com.aerospike.client.exp.Expression;
 
 /**
  * Command policy attributes used in all database commands.
  */
 public class Policy {
 	/**
-	 * Multi-record transaction identifier (MRT). If this field is populated, the corresponding
-	 * command will be included in the MRT. This field is ignored for scan/query.
+	 * Multi-record transaction. If this field is populated, the corresponding
+	 * command will be included in the transaction. This field is ignored for scan/query.
 	 * <p>
 	 * Default: null
 	 */
@@ -113,7 +119,12 @@ public class Policy {
 	 * completes, the command will abort with
 	 * {@link com.aerospike.client.AerospikeException.Timeout}.
 	 * <p>
-	 * If totalTimeout is zero, there will be no total time limit.
+	 * If totalTimeout is zero, there will be no total time limit on the client side.
+	 * However, the server converts zero timeouts to the server configuration field
+	 * transaction-max-ms (default 1000ms) for all commands except queries. For short
+	 * queries {@link QueryDuration#SHORT}, the server converts zero timeouts to a
+	 * hard-coded 1000ms. For long queries, there is no timeout conversion on the
+	 * server.
 	 * <p>
 	 * Default for scan/query: 0
 	 * <p>
@@ -234,10 +245,11 @@ public class Policy {
 
 	/**
 	 * Use zlib compression on command buffers sent to the server and responses received
-	 * from the server when the buffer size is greater than 128 bytes.
+	 * from the server when the buffer size is greater than 128 bytes. This option will
+	 * increase cpu and memory usage (for extra compressed buffers), but decrease the size
+	 * of data sent over the network.
 	 * <p>
-	 * This option will increase cpu and memory usage (for extra compressed buffers),but
-	 * decrease the size of data sent over the network.
+	 * This compression feature requires the Enterprise Edition Server.
 	 * <p>
 	 * Default: false
 	 */
@@ -273,6 +285,24 @@ public class Policy {
 		this.sendKey = other.sendKey;
 		this.compress = other.compress;
 		this.failOnFilteredOut = other.failOnFilteredOut;
+	}
+
+	/**
+	 * Copy policy from another policy AND override certain policy attributes if they exist in the configProvider.
+	 * Any policy overrides will not get logged.
+	 */
+	public Policy(Policy other, ConfigurationProvider configProvider) {
+		this(other);
+		updateFromConfig(configProvider,false);
+	}
+
+	/**
+	 * Copy policy from another policy AND override certain policy attributes if they exist in the configProvider.
+	 * Any default policy overrides will get logged.
+	 */
+	public Policy(Policy other, ConfigurationProvider configProvider, boolean isDefaultPolicy) {
+		this(other);
+		updateFromConfig(configProvider, isDefaultPolicy);
 	}
 
 	/**
@@ -368,8 +398,12 @@ public class Policy {
 
 	@Override
 	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
 		Policy policy = (Policy) o;
 		return connectTimeout == policy.connectTimeout && socketTimeout == policy.socketTimeout && totalTimeout == policy.totalTimeout && timeoutDelay == policy.timeoutDelay && maxRetries == policy.maxRetries && sleepBetweenRetries == policy.sleepBetweenRetries && readTouchTtlPercent == policy.readTouchTtlPercent && sendKey == policy.sendKey && compress == policy.compress && failOnFilteredOut == policy.failOnFilteredOut && Objects.equals(txn, policy.txn) && readModeAP == policy.readModeAP && readModeSC == policy.readModeSC && replica == policy.replica && Objects.equals(filterExp, policy.filterExp);
 	}
@@ -377,5 +411,88 @@ public class Policy {
 	@Override
 	public int hashCode() {
 		return Objects.hash(txn, readModeAP, readModeSC, replica, filterExp, connectTimeout, socketTimeout, totalTimeout, timeoutDelay, maxRetries, sleepBetweenRetries, readTouchTtlPercent, sendKey, compress, failOnFilteredOut);
+	}
+
+	private void updateFromConfig(ConfigurationProvider configProvider, boolean log) {
+		boolean logUpdate = false;
+		if (configProvider == null) {
+			return;
+		}
+		Configuration config = configProvider.fetchConfiguration();
+		if (config == null) {
+			return;
+		}
+		DynamicConfiguration dConfig = config.getDynamicConfiguration();
+		if (dConfig == null) {
+			return;
+		}
+		DynamicReadConfig dynRC = dConfig.getDynamicReadConfig();
+		if (dynRC == null) {
+			return;
+		}
+
+		if (log && Log.infoEnabled()) {
+			logUpdate = true;
+		}
+		if (dynRC.readModeAP != null && this.readModeAP != dynRC.readModeAP) {
+			this.readModeAP = dynRC.readModeAP;
+			if (logUpdate) {
+				Log.info("Set Policy.readModeAP = " + this.readModeAP);
+			}
+		}
+		if (dynRC.readModeSC != null && this.readModeSC != dynRC.readModeSC) {
+			this.readModeSC = dynRC.readModeSC;
+			if (logUpdate) {
+				Log.info("Set Policy.readModeSC = " + this.readModeSC);
+			}
+		}
+		if (dynRC.connectTimeout != null && this.connectTimeout != dynRC.connectTimeout.value) {
+			this.connectTimeout = dynRC.connectTimeout.value;
+			if (logUpdate) {
+				Log.info("Set Policy.connectTimeout = " + this.connectTimeout);
+			}
+		}
+		if (dynRC.failOnFilteredOut != null && this.failOnFilteredOut != dynRC.failOnFilteredOut.value) {
+			this.failOnFilteredOut = dynRC.failOnFilteredOut.value;
+			if (logUpdate) {
+				Log.info("Set Policy.failOnFilteredOut = " + this.failOnFilteredOut);
+			}
+		}
+		if (dynRC.replica != null && this.replica != dynRC.replica) {
+			this.replica = dynRC.replica;
+			if (logUpdate) {
+				Log.info("Set Policy.replica = " + this.replica);
+			}
+		}
+		if (dynRC.sleepBetweenRetries != null && this.sleepBetweenRetries != dynRC.sleepBetweenRetries.value) {
+			this.sleepBetweenRetries = dynRC.sleepBetweenRetries.value;
+			if (logUpdate) {
+				Log.info("Set Policy.sleepBetweenRetries = " + this.sleepBetweenRetries);
+			}
+		}
+		if (dynRC.socketTimeout != null && this.socketTimeout != dynRC.socketTimeout.value) {
+			this.socketTimeout = dynRC.socketTimeout.value;
+			if (logUpdate) {
+				Log.info("Set Policy.socketTimeout = " + this.socketTimeout);
+			}
+		}
+		if (dynRC.timeoutDelay != null && this.timeoutDelay != dynRC.timeoutDelay.value) {
+			this.timeoutDelay = dynRC.timeoutDelay.value;
+			if (logUpdate) {
+				Log.info("Set Policy.timeoutDelay = " + this.timeoutDelay);
+			}
+		}
+		if (dynRC.totalTimeout != null && this.totalTimeout != dynRC.totalTimeout.value) {
+			this.totalTimeout = dynRC.totalTimeout.value;
+			if (logUpdate) {
+				Log.info("Set Policy.totalTimeout = " + this.totalTimeout);
+			}
+		}
+		if (dynRC.maxRetries != null && this.maxRetries != dynRC.maxRetries.value) {
+			this.maxRetries = dynRC.maxRetries.value;
+			if (logUpdate) {
+				Log.info("Set Policy.maxRetries = " + this.maxRetries);
+			}
+		}
 	}
 }
