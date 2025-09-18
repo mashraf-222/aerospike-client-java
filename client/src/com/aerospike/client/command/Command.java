@@ -210,7 +210,7 @@ public class Command {
 		dataOffset = MSG_TOTAL_HEADER_SIZE;
 
 		writeKey(key);
-		writeFieldLE(id, FieldType.MRT_ID);
+		writeFieldLE(id, FieldType.TXN_ID);
 		writeFieldVersion(ver);
 		end();
 	}
@@ -307,7 +307,7 @@ public class Command {
 				}
 
 				writeBatchFields(key, fieldCount, 0);
-				writeFieldLE(id, FieldType.MRT_ID);
+				writeFieldLE(id, FieldType.TXN_ID);
 
 				if (ver != null) {
 					writeFieldVersion(ver);
