@@ -13,3 +13,5 @@ build:
     artifact:
       - client/target/*.jar
       - benchmarks/target/*.jar
+    environment:
+      BUILD_TRIGGER: 1
