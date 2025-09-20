@@ -222,18 +222,11 @@ public final class NodeValidator {
 				}
 			}
 
-			String build = Info.request(conn, "build");
-			validateServerBuildVersion(build);
-
 			List<String> commands = new ArrayList<String>(6);
 			commands.add("node");
 			commands.add("partition-generation");
+			commands.add("build");
 			commands.add("features");
-
-			boolean sendUserAgent = version.isGreaterOrEqual(8, 1, 0, 0);
-			if (sendUserAgent) {
-				commands.add("user-agent-set:value=" + getB64userAgent(cluster));
-			}
 
 			boolean validateCluster = cluster.validateClusterName();
 			if (validateCluster) {
@@ -267,6 +260,12 @@ public final class NodeValidator {
 
 			validateNode(map);
 			validatePartitionGeneration(map);
+			validateServerBuildVersion(map);
+
+			boolean sendUserAgent = version.isGreaterOrEqual(Version.SERVER_VERSION_8_1);
+			if (sendUserAgent) {
+				Info.request(conn, "user-agent-set:value=" + getB64userAgent(cluster));
+			}
 			setFeatures(map);
 
 			if (validateCluster) {
@@ -307,11 +306,9 @@ public final class NodeValidator {
 		}
 	}
 
-	private void validateServerBuildVersion(String build) {
-		version = new Version(build);
-		if (!version.toString().equals(build)) {
-			throw new AerospikeException("Node " + name + " " + primaryAddress.toString() + " version is invalid: " + build);
-		}
+	private void validateServerBuildVersion(HashMap<String,String> map) {
+		String build = map.get("build");
+		version = new Version(build, name, primaryAddress);
 	}
 
 	private void setFeatures(HashMap<String,String> map) {
