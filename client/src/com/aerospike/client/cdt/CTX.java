@@ -20,6 +20,7 @@ import java.util.List;
 
 import com.aerospike.client.AerospikeException;
 import com.aerospike.client.Value;
+import com.aerospike.client.exp.Exp;
 import com.aerospike.client.util.Crypto;
 import com.aerospike.client.util.Pack;
 import com.aerospike.client.util.Unpacker;
@@ -30,6 +31,26 @@ import com.aerospike.client.util.Unpacker;
  * levels on nesting.
  */
 public final class CTX {
+	/**
+	 * Apply operation to all children of the current context.
+	 * This allows traversing all items in a collection without filtering.
+	 */
+	public static CTX allChildren() {
+		Exp exp = Exp.val(0xc3);
+
+		return new CTX(0x04, exp);
+	}
+
+	/**
+	 * Apply operation to all children of the current context that match the given filter expression.
+	 * The filter expression can use loop variables to access individual child elements.
+	 * 
+	 * @param expression expression that evaluates to a boolean for each child element
+	 */
+	public static CTX allChildrenWithFilter(Exp expression) {
+		return new CTX(0x04, expression);
+	}
+
 	/**
 	 * Lookup list by index offset.
 	 * <p>
@@ -177,9 +198,17 @@ public final class CTX {
 
 	public final int id;
 	public final Value value;
+	public final Exp expression;
 
 	private CTX(int id, Value value) {
 		this.id = id;
 		this.value = value;
+		this.expression = null;
+	}
+
+	private CTX(int id, Exp expression) {
+		this.id = id;
+		this.expression = expression;
+		this.value = null;
 	}
 }

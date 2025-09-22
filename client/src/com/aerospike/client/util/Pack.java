@@ -775,7 +775,11 @@ public final class Pack {
 
 			for (CTX c : ctx) {
 				packer.packInt(c.id);
-				c.value.pack(packer);
+				if (c.expression != null){
+					c.expression.pack(packer);
+				} else {
+					c.value.pack(packer);
+				}
 			}
 		}
 	}
@@ -796,7 +800,11 @@ public final class Pack {
 
 		for (CTX c : ctx) {
 			packer.packInt(c.id);
-			c.value.pack(packer);
+			if (c.expression != null){
+				c.expression.pack(packer);
+			} else {
+				c.value.pack(packer);
+			}
 		}
 
 		return packer.getBuffer();

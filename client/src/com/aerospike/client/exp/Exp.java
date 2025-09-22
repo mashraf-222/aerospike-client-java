@@ -1133,6 +1133,35 @@ public abstract class Exp {
 		return new CmdStr(VAR, name);
 	}
 
+	/**
+	 * Create expression that returns the map loop variable value or key.
+	 * Used inside expressions applied to all map items using CTX.allChildrenWithFilter().
+	 * 
+	 * <pre>{@code
+	 * // Access the map value during iteration
+	 * Exp.mapLoopVar(LoopVarPart.VALUE)
+	 * 
+	 * // Access the map key during iteration
+	 * Exp.mapLoopVar(LoopVarPart.MAP_KEY)
+	 * }</pre>
+	 */
+	public static Exp mapLoopVar(LoopVarPart part) {
+		return new CmdInt(VAR_BUILT_IN, part.id);
+	}
+
+	/**
+	 * Create expression that returns the string loop variable value or key.
+	 * Used inside expressions applied to string operations.
+	 * 
+	 * <pre>{@code
+	 * // Access the map key as string during iteration
+	 * Exp.stringLoopVar(LoopVarPart.MAP_KEY)
+	 * }</pre>
+	 */
+	public static Exp stringLoopVar(LoopVarPart part) {
+		return new CmdInt(VAR_BUILT_IN, part.id);
+	}
+
 	//--------------------------------------------------
 	// Miscellaneous
 	//--------------------------------------------------
@@ -1228,6 +1257,7 @@ public abstract class Exp {
 	private static final int BIN = 81;
 	private static final int BIN_TYPE = 82;
 	private static final int COND = 123;
+	private static final int VAR_BUILT_IN = 122;
 	private static final int VAR = 124;
 	private static final int LET = 125;
 	private static final int QUOTED = 126;
