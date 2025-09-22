@@ -34,24 +34,20 @@ public final class Version implements Comparable<Version> {
 
 	public static Version getServerVersion(InfoPolicy policy, Node node) {
 		String response = Info.request(policy, node, "build");
-		return new Version(response);
+		return Version.convertStringToVersion(response);
 	}
 
-	private int major;
-	private int minor;
-	private int patch;
-	private int build;
-	private String extension;
+	private final int major;
+	private final int minor;
+	private final int patch;
+	private final int build;
 
-	public Version(String version) {
-		convertStringToVersion(version);
-	}
-
-	public Version(String version, String nodeName, InetSocketAddress primaryAddress) {
-		convertStringToVersion(version);
-		if (!this.toString().equals(version)) {
-			throw new AerospikeException("Node " + nodeName + " " + primaryAddress.toString() + " version is invalid: " + version);
+	public static Version convertStringToVersion(String strVersion, String nodeName, InetSocketAddress primaryAddress) {
+		Version version = convertStringToVersion(strVersion);
+		if (!version.toString().equals(strVersion)) {
+			throw new AerospikeException("Node " + nodeName + " " + primaryAddress.toString() + " version is invalid: " + strVersion);
 		}
+		return version;
 	}
 
 	public Version(int major, int minor, int patch, int build) {
@@ -59,33 +55,32 @@ public final class Version implements Comparable<Version> {
 		this.minor = minor;
 		this.patch = patch;
 		this.build = build;
-		this.extension = null;
 	}
 
-	private void convertStringToVersion(String version) {
+	public static Version convertStringToVersion(String version) {
 		int begin = 0;
 		int i = begin;
 		int max = version.length();
 
 		i = getNextVersionDigitEndOffset(i, max, version);
-		major = (i > begin)? Integer.parseInt(version.substring(begin, i)) : 0;
+		int major = (i > begin)? Integer.parseInt(version.substring(begin, i)) : 0;
 		begin = ++i;
 
 		i = getNextVersionDigitEndOffset(i, max, version);
-		minor = (i > begin)? Integer.parseInt(version.substring(begin, i)) : 0;
+		int minor = (i > begin)? Integer.parseInt(version.substring(begin, i)) : 0;
 		begin = ++i;
 
 		i = getNextVersionDigitEndOffset(i, max, version);
-		patch = (i > begin)? Integer.parseInt(version.substring(begin, i)) : 0;
+		int patch = (i > begin)? Integer.parseInt(version.substring(begin, i)) : 0;
 		begin = ++i;
 
 		i = getNextVersionDigitEndOffset(i, max, version);
-		build = (i > begin)? Integer.parseInt(version.substring(begin, i)) : 0;
-		begin = i;
-		extension = (begin < max)? version.substring(begin) : "";
+		int build = (i > begin)? Integer.parseInt(version.substring(begin, i)) : 0;
+
+		return new Version(major, minor, patch, build);
 	}
 
-	private int getNextVersionDigitEndOffset(int i, int max, String version) {
+	private static int getNextVersionDigitEndOffset(int i, int max, String version) {
 		while (i < max) {
 			if (! Character.isDigit(version.charAt(i))) {
 				break;
@@ -128,10 +123,7 @@ public final class Version implements Comparable<Version> {
 
 	@Override
 	public String toString() {
-		if (extension == null) {
-			return major + "." + minor + "." + patch + "." + build;
-		}
-		return major + "." + minor + "." + patch + "." + build + extension;
+		return major + "." + minor + "." + patch + "." + build;
 	}
 
 	@Override

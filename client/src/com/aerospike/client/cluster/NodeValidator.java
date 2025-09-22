@@ -308,7 +308,7 @@ public final class NodeValidator {
 
 	private void validateServerBuildVersion(HashMap<String,String> map) {
 		String build = map.get("build");
-		version = new Version(build, name, primaryAddress);
+		version = Version.convertStringToVersion(build, name, primaryAddress);
 	}
 
 	private void setFeatures(HashMap<String,String> map) {

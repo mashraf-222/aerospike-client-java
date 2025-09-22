@@ -60,7 +60,7 @@ public class TestAdd extends TestSync {
 	@Test
 	public void addNullValue() {
 		Version version = Version.getServerVersion(client, null);
-		Version requiredVersion = new Version("3.6.1");
+		Version requiredVersion = Version.convertStringToVersion("3.6.1");
 
 		// Do not run on servers < 3.6.1
 		if (version.isLessThan(requiredVersion)) {
