@@ -17,8 +17,6 @@
 package com.aerospike.client.util;
 
 import java.net.InetSocketAddress;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import com.aerospike.client.AerospikeException;
 import com.aerospike.client.IAerospikeClient;
@@ -36,7 +34,7 @@ public final class Version implements Comparable<Version> {
 
 	public static Version getServerVersion(InfoPolicy policy, Node node) {
 		String response = Info.request(policy, node, "build");
-		return Version.convertStringToVersion(response);
+		return new Version(response);
 	}
 
 	private final int major;
@@ -45,11 +43,32 @@ public final class Version implements Comparable<Version> {
 	private final int build;
 
 	public static Version convertStringToVersion(String strVersion, String nodeName, InetSocketAddress primaryAddress) {
-		Version version = convertStringToVersion(strVersion);
-		if (version == null) {
+		Version version = new Version(strVersion);
+		if (!strVersion.startsWith(version.toString())) {
 			throw new AerospikeException("Node " + nodeName + " " + primaryAddress.toString() + " version is invalid: " + strVersion);
 		}
 		return version;
+	}
+
+	public Version(String version) {
+		int begin = 0;
+		int i = begin;
+		int max = version.length();
+
+		i = getNextVersionDigitEndOffset(i, max, version);
+		major = (i > begin)? Integer.parseInt(version.substring(begin, i)) : 0;
+		begin = ++i;
+
+		i = getNextVersionDigitEndOffset(i, max, version);
+		minor = (i > begin)? Integer.parseInt(version.substring(begin, i)) : 0;
+		begin = ++i;
+
+		i = getNextVersionDigitEndOffset(i, max, version);
+		patch = (i > begin)? Integer.parseInt(version.substring(begin, i)) : 0;
+		begin = ++i;
+
+		i = getNextVersionDigitEndOffset(i, max, version);
+		build = (i > begin)? Integer.parseInt(version.substring(begin, i)) : 0;
 	}
 
 	public Version(int major, int minor, int patch, int build) {
@@ -59,25 +78,14 @@ public final class Version implements Comparable<Version> {
 		this.build = build;
 	}
 
-	public static Version convertStringToVersion(String version) {
-		Pattern pattern = Pattern.compile("^(?<major>\\d+)(?:\\.(?<minor>\\d+))?(?:\\.(?<patch>\\d+))?(?:\\.(?<build>\\d+))?(?:[-_\\.~]*?(?<suffix>.+))?$");
-		Matcher matcher = pattern.matcher(version);
-		if (!matcher.matches()) {
-			return null;
+	private int getNextVersionDigitEndOffset(int i, int max, String version) {
+		while (i < max) {
+			if (! Character.isDigit(version.charAt(i))) {
+				break;
+			}
+			i++;
 		}
-
-		int major, minor, patch, build;
-
-		try {
-			major = Integer.parseInt(matcher.group("major"));
-			minor = Integer.parseInt(matcher.group("minor"));
-			patch = Integer.parseInt(matcher.group("patch"));
-			build = Integer.parseInt(matcher.group("build"));
-		} catch (NumberFormatException ex) {
-			return null;
-		}
-
-		return new Version(major, minor, patch, build);
+		return i;
 	}
 
 	@Override

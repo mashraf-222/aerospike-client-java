@@ -110,8 +110,9 @@ public class TestServerInfo extends TestSync {
 	public void validateServerBuilds() {
 		List<String> builds = Arrays.asList("7.0.0.26", "8.1.0.0", "8.1.0.0-rc2");
 		for (String build : builds) {
-			Version ver = Version.convertStringToVersion(build);
+			Version ver = new Version(build);
 			assertNotNull(ver);
+			assertTrue(build.startsWith(ver.toString()));
 		}
 	}
 
@@ -119,8 +120,9 @@ public class TestServerInfo extends TestSync {
 	public void invalidateServerBuilds() {
 		List<String> builds = Arrays.asList("7.0.26", "8.1.C.0", "lol");
 		for (String build : builds) {
-			Version ver = Version.convertStringToVersion(build);
-			assertNull(ver);
+			Version ver = new Version(build);
+			assertNotNull(ver);
+			assertFalse(build.startsWith(ver.toString()));
 		}
 	}
 }
