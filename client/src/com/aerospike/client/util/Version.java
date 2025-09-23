@@ -16,6 +16,9 @@
  */
 package com.aerospike.client.util;
 
+import java.net.InetSocketAddress;
+
+import com.aerospike.client.AerospikeException;
 import com.aerospike.client.IAerospikeClient;
 import com.aerospike.client.Info;
 import com.aerospike.client.cluster.Node;
@@ -38,7 +41,14 @@ public final class Version implements Comparable<Version> {
 	private final int minor;
 	private final int patch;
 	private final int build;
-	private final String extension;
+
+	public static Version convertStringToVersion(String strVersion, String nodeName, InetSocketAddress primaryAddress) {
+		Version version = new Version(strVersion);
+		if (!strVersion.startsWith(version.toString())) {
+			throw new AerospikeException("Node " + nodeName + " " + primaryAddress.toString() + " version is invalid: " + strVersion);
+		}
+		return version;
+	}
 
 	public Version(String version) {
 		int begin = 0;
@@ -59,8 +69,6 @@ public final class Version implements Comparable<Version> {
 
 		i = getNextVersionDigitEndOffset(i, max, version);
 		build = (i > begin)? Integer.parseInt(version.substring(begin, i)) : 0;
-		begin = i;
-		extension = (begin < max)? version.substring(begin) : "";
 	}
 
 	public Version(int major, int minor, int patch, int build) {
@@ -68,7 +76,6 @@ public final class Version implements Comparable<Version> {
 		this.minor = minor;
 		this.patch = patch;
 		this.build = build;
-		this.extension = null;
 	}
 
 	private int getNextVersionDigitEndOffset(int i, int max, String version) {
@@ -114,10 +121,7 @@ public final class Version implements Comparable<Version> {
 
 	@Override
 	public String toString() {
-		if (extension == null) {
-			return major + "." + minor + "." + patch + "." + build;
-		}
-		return major + "." + minor + "." + patch + "." + build + extension;
+		return major + "." + minor + "." + patch + "." + build;
 	}
 
 	@Override
