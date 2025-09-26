@@ -16,16 +16,10 @@
  */
 package com.aerospike.client;
 
-import com.aerospike.client.cdt.CTX;
-import com.aerospike.client.exp.Exp;
-import com.aerospike.client.operation.SelectFlags;
-import com.aerospike.client.util.Pack;
-
 /**
  * Database operation definition.  The class is used in client's operate() method.
  */
 public final class Operation {
-	public static final int CONTEXT_SELECT = 0xfe;
 	/**
 	 * Create read bin database operation.
 	 */
@@ -88,32 +82,6 @@ public final class Operation {
 	 */
 	public static Operation delete() {
 		return new Operation(Type.DELETE);
-	}
-
-	/**
-	 * Create path expression operation that queries data using context path and expression filters.
-	 *
-	 * @param binName    name of bin to query
-	 * @param selectFlags flags controlling what data is returned (see {@link com.aerospike.client.operation.SelectFlags})
-	 * @param ctx        context path to specify data location and filters
-	 */
-	public static Operation pathExpression(String binName, SelectFlags selectFlags, CTX... ctx) {
-		byte[] packedBytes = Pack.pack(CONTEXT_SELECT, selectFlags.flag, ctx);
-		
-		return new Operation(Type.CDT_READ, binName, Value.get(packedBytes));
-	}
-
-	/**
-	 * Create operation that modifies CDT (Collection Data Type) values using expressions.
-	 * 
-	 * @param binName    name of bin to modify
-	 * @param expression expression defining the modification to apply
-	 * @param ctx        context path to specify data location and filters
-	 */
-	public static Operation modifyCdt(String binName, Exp expression, CTX... ctx) {
-		byte[] packedBytes = Pack.pack(CONTEXT_SELECT, expression, ctx);
-		
-		return new Operation(Type.CDT_MODIFY, binName, Value.get(packedBytes));
 	}
 
 	/**

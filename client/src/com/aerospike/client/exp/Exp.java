@@ -48,6 +48,8 @@ public abstract class Exp {
 		}
 	}
 
+	public static final int CTX_EXP = 0x04;
+
 	//--------------------------------------------------
 	// Build
 	//--------------------------------------------------
@@ -97,6 +99,7 @@ public abstract class Exp {
 	/**
 	 * Create bin expression of specified type.
 	 *
+
 	 * <pre>{@code
 	 * // String bin "a" == "views"
 	 * Exp.eq(Exp.bin("a", Type.STRING), Exp.val("views"))

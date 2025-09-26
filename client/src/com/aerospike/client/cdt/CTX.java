@@ -21,8 +21,10 @@ import java.util.List;
 import com.aerospike.client.AerospikeException;
 import com.aerospike.client.Value;
 import com.aerospike.client.exp.Exp;
+import com.aerospike.client.exp.Expression;
 import com.aerospike.client.util.Crypto;
 import com.aerospike.client.util.Pack;
+import com.aerospike.client.util.Packer;
 import com.aerospike.client.util.Unpacker;
 
 /**
@@ -38,7 +40,16 @@ public final class CTX {
 	public static CTX allChildren() {
 		Exp exp = Exp.val(0xc3);
 
-		return new CTX(0x04, exp);
+		Packer packer = new Packer();
+		packer.packArrayBegin(1);
+		exp.pack(packer);
+
+		packer.createBuffer();
+
+		packer.packArrayBegin(1);
+		exp.pack(packer);
+
+		return new CTX(Exp.CTX_EXP, Value.get(packer.getBuffer()));
 	}
 
 	/**
@@ -47,8 +58,17 @@ public final class CTX {
 	 * 
 	 * @param expression expression that evaluates to a boolean for each child element
 	 */
-	public static CTX allChildrenWithFilter(Exp expression) {
-		return new CTX(0x04, expression);
+	public static CTX allChildrenWithFilter(Exp exp) {
+		Packer packer = new Packer();
+		packer.packArrayBegin(1);
+		exp.pack(packer);
+
+		packer.createBuffer();
+
+		packer.packArrayBegin(1);
+		exp.pack(packer);
+
+		return new CTX(Exp.CTX_EXP, Value.get(packer.getBuffer()));
 	}
 
 	/**
@@ -172,7 +192,6 @@ public final class CTX {
 
 			Object obj = list.get(i);
 			Value val = Value.get(obj);
-
 			ctx[count++] = new CTX(id, val);
 			i++;
 		}
@@ -198,17 +217,9 @@ public final class CTX {
 
 	public final int id;
 	public final Value value;
-	public final Exp expression;
 
 	private CTX(int id, Value value) {
 		this.id = id;
 		this.value = value;
-		this.expression = null;
-	}
-
-	private CTX(int id, Exp expression) {
-		this.id = id;
-		this.expression = expression;
-		this.value = null;
 	}
 }

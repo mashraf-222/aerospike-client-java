@@ -60,20 +60,12 @@ public abstract class CDT {
 		for (int i = 0; i < last; i++) {
 			c = ctx[i];
 			packer.packInt(c.id);
-			if (c.expression != null){
-				c.expression.pack(packer);
-			} else {
-				c.value.pack(packer);
-			}
+			c.value.pack(packer);
 		}
 
 		c = ctx[last];
 		packer.packInt(c.id | flag);
-		if (c.expression != null){
-			c.expression.pack(packer);
-		} else {
-			c.value.pack(packer);
-		}
+		c.value.pack(packer);
 
 		packer.packArrayBegin(count + 1);
 		packer.packInt(command);
