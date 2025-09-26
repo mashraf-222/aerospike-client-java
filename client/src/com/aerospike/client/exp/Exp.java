@@ -1149,7 +1149,12 @@ public abstract class Exp {
 	 * }</pre>
 	 */
 	public static Exp mapLoopVar(LoopVarPart part) {
-		return new CmdInt(VAR_BUILT_IN, part.id);
+		return new CmdInt(Type.MAP.code, part.id);
+	}
+
+
+	public static Exp listLoopVar(LoopVarPart part) {
+		return new CmdInt(Type.LIST.code, part.id);
 	}
 
 	/**
@@ -1162,7 +1167,15 @@ public abstract class Exp {
 	 * }</pre>
 	 */
 	public static Exp stringLoopVar(LoopVarPart part) {
-		return new CmdInt(VAR_BUILT_IN, part.id);
+		return new CmdInt(Type.STRING.code, part.id);
+	}
+
+	public static Exp intLoopVar(LoopVarPart part) {
+		return new CmdInt(Type.INT.code, part.id);
+	}
+	
+	public static Exp floatLoopVar(LoopVarPart part) {
+		return new CmdInt(Type.FLOAT.code, part.id);
 	}
 
 	//--------------------------------------------------

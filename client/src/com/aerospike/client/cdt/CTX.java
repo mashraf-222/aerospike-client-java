@@ -21,7 +21,6 @@ import java.util.List;
 import com.aerospike.client.AerospikeException;
 import com.aerospike.client.Value;
 import com.aerospike.client.exp.Exp;
-import com.aerospike.client.exp.Expression;
 import com.aerospike.client.util.Crypto;
 import com.aerospike.client.util.Pack;
 import com.aerospike.client.util.Packer;
