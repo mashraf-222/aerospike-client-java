@@ -26,6 +26,9 @@ import com.aerospike.client.ResultCode;
 import com.aerospike.client.Value;
 import com.aerospike.client.cdt.CTX;
 import com.aerospike.client.cluster.Node;
+import com.aerospike.client.exp.Exp;
+import com.aerospike.client.exp.Expression;
+import com.aerospike.client.exp.LoopVarPart;
 import com.aerospike.client.query.IndexType;
 import com.aerospike.client.task.IndexTask;
 import com.aerospike.test.sync.TestSync;
@@ -98,4 +101,167 @@ public class TestIndex extends TestSync {
 			}
 		}
 	}
+/* 
+	@Test
+	public void allChildrenBase() {
+		CTX[] ctx1 = new CTX[] {
+			CTX.allChildren()
+		};
+
+		String base64 = CTX.toBase64(ctx1);
+		CTX[] ctx2 = CTX.fromBase64(base64);
+
+		assertEquals(ctx1.length, ctx2.length);
+		
+		CTX original = ctx1[0];
+		CTX restored = ctx2[0];
+		
+		assertEquals(original.id, restored.id);
+		
+		// allChildren uses expression, so check expression equivalence
+		Expression originalExp = Expression.fromBytes((byte[])original.value.getObject());
+		Expression restoredExp =  Expression.fromBytes((byte[])restored.value.getObject());
+		
+		assertEquals(originalExp.getBytes().length, restoredExp.getBytes().length);
+		
+		// Verify the expression bytes are equivalent
+		byte[] originalBytes = originalExp.getBytes();
+		byte[] restoredBytes = restoredExp.getBytes();
+		for (int i = 0; i < originalBytes.length; i++) {
+			assertEquals(originalBytes[i], restoredBytes[i]);
+		}
+	}
+
+	@Test
+	public void allChildrenWithFilterBase() {
+		Exp filter1 = Exp.gt(Exp.mapLoopVar(LoopVarPart.VALUE), Exp.val(10));
+		CTX[] ctxOne = new CTX[] {
+			CTX.allChildrenWithFilter(filter1)
+		};
+
+		String base64StringOne = CTX.toBase64(ctxOne);
+		CTX[] restoredContextOne = CTX.fromBase64(base64StringOne);
+
+		assertEquals(ctxOne.length, restoredContextOne.length);
+		assertEquals(ctxOne[0].id, restoredContextOne[0].id);
+		Expression expression = Expression.fromBytes((byte[])ctxOne[0].value.getObject());
+		Expression restoredExpression = Expression.fromBytes((byte[])restoredContextOne[0].value.getObject());
+		assertEquals(expression.getBytes().length, restoredExpression.getBytes().length);
+
+		// Test 2: String key filter
+		Exp filterTwo = Exp.eq(Exp.mapLoopVar(LoopVarPart.MAP_KEY), Exp.val("target_key"));
+		CTX[] contextTwo = new CTX[] {
+			CTX.allChildrenWithFilter(filterTwo)
+		};
+
+		String base64StringTwo = CTX.toBase64(contextTwo);
+		CTX[] restoredContextTwo = CTX.fromBase64(base64StringTwo);
+
+		assertEquals(contextTwo.length, restoredContextTwo.length);
+		assertEquals(contextTwo[0].id, restoredContextTwo[0].id);
+		Expression expressionTwo = Expression.fromBytes((byte[])contextTwo[0].value.getObject());
+		Expression restoredExpressionTwo = Expression.fromBytes((byte[])restoredContextTwo[0].value.getObject());
+		assertEquals(expressionTwo.getBytes().length, restoredExpressionTwo.getBytes().length);
+
+		// Test 3: Complex filter with AND/OR operations
+		Exp filterThree = Exp.and(
+			Exp.gt(Exp.mapLoopVar(LoopVarPart.VALUE), Exp.val(5)),
+			Exp.lt(Exp.mapLoopVar(LoopVarPart.VALUE), Exp.val(50))
+		);
+		CTX[] contextThree = new CTX[] {
+			CTX.allChildrenWithFilter(filterThree)
+		};
+
+		String base64StringThree = CTX.toBase64(contextThree);
+		CTX[] restoredContextThree = CTX.fromBase64(base64StringThree);
+
+		assertEquals(contextThree.length, restoredContextThree.length);
+		assertEquals(contextThree[0].id, restoredContextThree[0].id);
+		Expression expressionThree = Expression.fromBytes((byte[])contextThree[0].value.getObject());
+		Expression restoredExpressionThree = Expression.fromBytes((byte[])restoredContextThree[0].value.getObject());
+		assertEquals(expressionThree.getBytes().length, restoredExpressionThree.getBytes().length);
+
+		// Test 4: Complex nested CTX with allChildrenWithFilter
+		Exp filterFour = Exp.or(
+			Exp.eq(Exp.mapLoopVar(LoopVarPart.MAP_KEY), Exp.val("key1")),
+			Exp.eq(Exp.mapLoopVar(LoopVarPart.MAP_KEY), Exp.val("key2"))
+		);
+		CTX[] contextFour = new CTX[] {
+			CTX.mapKey(Value.get("parent")),
+			CTX.allChildrenWithFilter(filterFour)
+		};
+
+		String base64StringFour = CTX.toBase64(contextFour);
+		CTX[] restoreContextFour = CTX.fromBase64(base64StringFour);
+
+		assertEquals(contextFour.length, restoreContextFour.length);
+		
+		for (int i = 0; i < contextFour.length; i++) {
+			assertEquals(contextFour[i].id, restoreContextFour[i].id);
+			
+			if (contextFour[i].id == 0x04) { // Exp.CTX_EXP - expression-based CTX
+				Expression originalExpr = Expression.fromBytes((byte[])contextFour[i].value.getObject());
+				Expression restoredExpr = Expression.fromBytes((byte[])restoreContextFour[i].value.getObject());
+				
+				assertEquals(originalExpr.getBytes().length, restoredExpr.getBytes().length);
+				
+				byte[] originalBytes = originalExpr.getBytes();
+				byte[] restoredBytes = restoredExpr.getBytes();
+				for (int j = 0; j < originalBytes.length; j++) {
+					assertEquals(originalBytes[j], restoredBytes[j]);
+				}
+			} else if (contextFour[i].value != null) {
+				Object objectOne = contextFour[i].value.getObject();
+				Object objectTwo = restoreContextFour[i].value.getObject();
+				assertEquals(objectOne, objectTwo);
+			}
+		}
+	}
+
+	@Test
+	public void mixedContextWithAllChildrenBase() {
+		CTX[] ctx1 = new CTX[] {
+			CTX.mapKey(Value.get("root")),
+			CTX.allChildren(),
+			CTX.listIndex(-1),
+			CTX.allChildrenWithFilter(Exp.gt(Exp.mapLoopVar(LoopVarPart.VALUE), Exp.val(0))),
+			CTX.mapValue(Value.get("test"))
+		};
+
+		String base64 = CTX.toBase64(ctx1);
+		CTX[] ctx2 = CTX.fromBase64(base64);
+
+		assertEquals(ctx1.length, ctx2.length);
+
+		for (int i = 0; i < ctx1.length; i++) {
+			CTX itemOne = ctx1[i];
+			CTX itemTwo = ctx2[i];
+
+			assertEquals(itemOne.id, itemTwo.id);
+
+			if (itemOne.id == 0x04) { // Exp.CTX_EXP - expression-based CTX
+				Expression originalExpr = Expression.fromBytes((byte[])itemOne.value.getObject());
+				Expression restoredExpr = Expression.fromBytes((byte[])itemTwo.value.getObject());
+				
+				assertEquals(originalExpr.getBytes().length, restoredExpr.getBytes().length);
+				
+				byte[] originalBytes = originalExpr.getBytes();
+				byte[] restoredBytes = restoredExpr.getBytes();
+				for (int j = 0; j < originalBytes.length; j++) {
+					assertEquals(originalBytes[j], restoredBytes[j]);
+				}
+			} else if (itemOne.value != null) {
+				Object objectOne = itemOne.value.getObject();
+				Object objectTwo = itemTwo.value.getObject();
+
+				if (objectOne instanceof Integer && objectTwo instanceof Long) {
+					assertEquals((long)(Integer)objectOne, (long)(Long)objectTwo);
+				}
+				else {
+					assertEquals(objectOne, objectTwo);
+				}
+			}
+		}
+	}
+		*/
 }

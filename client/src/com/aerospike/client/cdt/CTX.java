@@ -23,7 +23,6 @@ import com.aerospike.client.Value;
 import com.aerospike.client.exp.Exp;
 import com.aerospike.client.util.Crypto;
 import com.aerospike.client.util.Pack;
-import com.aerospike.client.util.Packer;
 import com.aerospike.client.util.Unpacker;
 
 /**
@@ -37,37 +36,11 @@ public final class CTX {
 	 * This allows traversing all items in a collection without filtering.
 	 */
 	public static CTX allChildren() {
-		Exp exp = Exp.val(0xc3);
-
-		Packer packer = new Packer();
-		packer.packArrayBegin(1);
-		exp.pack(packer);
-
-		packer.createBuffer();
-
-		packer.packArrayBegin(1);
-		exp.pack(packer);
-
-		return new CTX(Exp.CTX_EXP, Value.get(packer.getBuffer()));
+		return new CTX(Exp.CTX_EXP, Exp.val(true));
 	}
 
-	/**
-	 * Apply operation to all children of the current context that match the given filter expression.
-	 * The filter expression can use loop variables to access individual child elements.
-	 * 
-	 * @param expression expression that evaluates to a boolean for each child element
-	 */
 	public static CTX allChildrenWithFilter(Exp exp) {
-		Packer packer = new Packer();
-		packer.packArrayBegin(1);
-		exp.pack(packer);
-
-		packer.createBuffer();
-
-		packer.packArrayBegin(1);
-		exp.pack(packer);
-
-		return new CTX(Exp.CTX_EXP, Value.get(packer.getBuffer()));
+		return new CTX(Exp.CTX_EXP, exp);
 	}
 
 	/**
@@ -175,7 +148,7 @@ public final class CTX {
 	/**
 	 * Deserialize bytes to context array.
 	 */
-	public static CTX[] fromBytes(byte[] bytes) {
+	public static CTX[] fromBytes(byte[] bytes, boolean fromBytesValue) {
 		List<?> list = (List<?>)Unpacker.unpackObjectList(bytes, 0, bytes.length);
 		int max = list.size();
 		CTX[] ctx = new CTX[max / 2];
@@ -190,8 +163,13 @@ public final class CTX {
 			}
 
 			Object obj = list.get(i);
-			Value val = Value.get(obj);
-			ctx[count++] = new CTX(id, val);
+			if (fromBytesValue) {
+				Value val = Value.get(obj);
+				ctx[count++] = new CTX(id, val);
+			} else {
+				// Exp expr = Exp.get(obj);
+				// ctx[count++] = new CTX(id, expr);
+			}
 			i++;
 		}
 		return ctx;
@@ -211,14 +189,22 @@ public final class CTX {
 	public static CTX[] fromBase64(String base64) {
 		byte[] b64 = base64.getBytes();
 		byte[] bytes = Crypto.decodeBase64(b64, 0, b64.length);
-		return fromBytes(bytes);
+		return fromBytes(bytes, true);
 	}
 
 	public final int id;
 	public final Value value;
+	public final Exp exp;
 
 	private CTX(int id, Value value) {
 		this.id = id;
 		this.value = value;
+		this.exp = null;
+	}
+
+	private CTX(int id, Exp exp) {
+		this.id = id;
+		this.value = null;
+		this.exp = exp;
 	}
 }

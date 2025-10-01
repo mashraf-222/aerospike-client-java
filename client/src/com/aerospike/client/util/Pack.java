@@ -775,7 +775,10 @@ public final class Pack {
 
 			for (CTX c : ctx) {
 				packer.packInt(c.id);
-				c.value.pack(packer);
+				if (c.value != null)
+					c.value.pack(packer);
+				else
+					c.exp.pack(packer);
 			}
 		}
 	}
@@ -787,7 +790,12 @@ public final class Pack {
 
 		for (CTX c : ctx) {
 			packer.packInt(c.id);
-			c.value.pack(packer);
+			if (c.value != null) {
+				c.value.pack(packer);
+			}
+			else {
+				c.exp.pack(packer);
+			}
 		}
 
 		packer.createBuffer();
@@ -796,7 +804,10 @@ public final class Pack {
 
 		for (CTX c : ctx) {
 			packer.packInt(c.id);
-			c.value.pack(packer);
+			if (c.value != null) 
+				c.value.pack(packer);
+			else 
+				c.exp.pack(packer);
 		}
 
 		return packer.getBuffer();

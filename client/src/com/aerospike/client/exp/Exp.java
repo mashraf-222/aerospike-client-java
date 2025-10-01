@@ -1136,46 +1136,24 @@ public abstract class Exp {
 		return new CmdStr(VAR, name);
 	}
 
-	/**
-	 * Create expression that returns the map loop variable value or key.
-	 * Used inside expressions applied to all map items using CTX.allChildrenWithFilter().
-	 * 
-	 * <pre>{@code
-	 * // Access the map value during iteration
-	 * Exp.mapLoopVar(LoopVarPart.VALUE)
-	 * 
-	 * // Access the map key during iteration
-	 * Exp.mapLoopVar(LoopVarPart.MAP_KEY)
-	 * }</pre>
-	 */
-	public static Exp mapLoopVar(LoopVarPart part) {
-		return new CmdInt(Type.MAP.code, part.id);
+	public static Exp loopVarString(LoopVarPart part) {
+		return new Var(Type.STRING.code, part.id);
 	}
 
-
-	public static Exp listLoopVar(LoopVarPart part) {
-		return new CmdInt(Type.LIST.code, part.id);
-	}
-
-	/**
-	 * Create expression that returns the string loop variable value or key.
-	 * Used inside expressions applied to string operations.
-	 * 
-	 * <pre>{@code
-	 * // Access the map key as string during iteration
-	 * Exp.stringLoopVar(LoopVarPart.MAP_KEY)
-	 * }</pre>
-	 */
-	public static Exp stringLoopVar(LoopVarPart part) {
-		return new CmdInt(Type.STRING.code, part.id);
-	}
-
-	public static Exp intLoopVar(LoopVarPart part) {
-		return new CmdInt(Type.INT.code, part.id);
+	public static Exp loopVarInt(LoopVarPart part) {
+		return new Var(Type.INT.code, part.id);
 	}
 	
-	public static Exp floatLoopVar(LoopVarPart part) {
-		return new CmdInt(Type.FLOAT.code, part.id);
+	public static Exp loopVarFloat(LoopVarPart part) {
+		return new Var(Type.FLOAT.code, part.id);
+	}
+
+	public static Exp loopVarList(LoopVarPart part)	{
+		return new Var(Type.LIST.code, part.id);
+	}
+
+	public static Exp loopVarMap(LoopVarPart part)	{
+		return new Var(Type.MAP.code, part.id);
 	}
 
 	//--------------------------------------------------
@@ -1272,12 +1250,12 @@ public abstract class Exp {
 	private static final int KEY = 80;
 	private static final int BIN = 81;
 	private static final int BIN_TYPE = 82;
+	private static final int VAR_BUILTIN = 122;
 	private static final int COND = 123;
-	private static final int VAR_BUILT_IN = 122;
 	private static final int VAR = 124;
 	private static final int LET = 125;
 	private static final int QUOTED = 126;
-	private static final int CALL = 127;
+	public static final int CALL = 127;
 	public static final int MODIFY = 0x40;
 	private static final long NANOS_PER_MILLIS = 1000000L;
 
@@ -1584,12 +1562,28 @@ public abstract class Exp {
 		}
 	}
 
-	private static final class ExpBytes extends Exp
-	{
+	private static final class Var extends Exp {
+		private final int type;
+		private final int varId;
+
+		private Var(int type, int varId) {
+			this.type = type;
+			this.varId = varId;
+		}
+
+		@Override
+		public void pack(Packer packer) {
+			packer.packArrayBegin(3);
+			packer.packInt(Exp.VAR_BUILTIN);
+			packer.packInt(type);
+			packer.packInt(varId);
+		}
+	}
+
+	private static final class ExpBytes extends Exp {
 		private final byte[] bytes;
 
-		private ExpBytes(Expression e)
-		{
+		private ExpBytes(Expression e) {
 			this.bytes = e.getBytes();
 		}
 

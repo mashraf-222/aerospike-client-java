@@ -25,6 +25,7 @@ public class CDTOperation {
 	
 	private static byte[] packCdtSelect(SelectFlags selectFlags, CDTOperation.Type type, CTX... ctx) {
         Packer packer = new Packer();
+
         packer.packArrayBegin(3);
 		packer.packInt(type.value);
 		packer.packArrayBegin(ctx.length * 2);
