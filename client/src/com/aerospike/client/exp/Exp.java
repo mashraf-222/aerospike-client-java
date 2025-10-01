@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.aerospike.client.util.Packer;
+import com.aerospike.client.util.Unpacker;
 
 /**
  * Expression generator.
@@ -59,6 +60,47 @@ public abstract class Exp {
 	 */
 	public static Expression build(Exp exp) {
 		return new Expression(exp);
+	}
+
+	/**
+	 * Helper method to create Exp objects from unpacked objects
+	 */
+	public static Exp get(Object obj) {
+		if (obj == null) {
+			return nil();
+		} else if (obj instanceof Boolean) {
+			return new Bool((Boolean)obj);
+		} else if (obj instanceof Long) {
+			return new Int((Long)obj);
+		} else if (obj instanceof Double) {
+			return new Float((Double)obj);
+		} else if (obj instanceof String) {
+			return new Str((String)obj);
+		} else if (obj instanceof byte[]) {
+			return new Blob((byte[])obj);
+		} else if (obj instanceof List) {
+			List<Object> list = (List<Object>)obj;
+			if (!list.isEmpty() && list.get(0) instanceof Number) {
+				// This might be a command array, try to reconstruct it
+				// For complex expressions, return as ExpBytes
+				Packer packer = new Packer();
+				packer.packObject(obj);
+				packer.createBuffer();
+				packer.packObject(obj);
+				return new ExpBytes(new Expression(packer.getBuffer()));
+			}
+			return new ListVal(list);
+		} else if (obj instanceof Map) {
+			Map<Object, Object> map = (Map<Object, Object>)obj;
+			return new MapVal(map);
+		} else {
+			// For unknown types, wrap as ExpBytes
+			Packer packer = new Packer();
+			packer.packObject(obj);
+			packer.createBuffer();
+			packer.packObject(obj);
+			return new ExpBytes(new Expression(packer.getBuffer()));
+		}
 	}
 
 	//--------------------------------------------------

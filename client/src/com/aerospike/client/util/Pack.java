@@ -778,7 +778,7 @@ public final class Pack {
 				if (c.value != null)
 					c.value.pack(packer);
 				else
-					c.exp.pack(packer);
+		        	packer.packByteArray(c.exp.getBytes(), 0, c.exp.getBytes().length);
 			}
 		}
 	}
@@ -794,7 +794,7 @@ public final class Pack {
 				c.value.pack(packer);
 			}
 			else {
-				c.exp.pack(packer);
+		        packer.packByteArray(c.exp.getBytes(), 0, c.exp.getBytes().length);
 			}
 		}
 
@@ -807,7 +807,7 @@ public final class Pack {
 			if (c.value != null) 
 				c.value.pack(packer);
 			else 
-				c.exp.pack(packer);
+		        packer.packByteArray(c.exp.getBytes(), 0, c.exp.getBytes().length);
 		}
 
 		return packer.getBuffer();

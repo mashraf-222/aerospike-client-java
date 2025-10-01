@@ -44,7 +44,7 @@ public class CDTExp {
                 if (c.value != null)
                     c.value.pack(packer);
                 else 
-                    c.exp.pack(packer);
+		            packer.packByteArray(c.exp.getBytes(), 0, c.exp.getBytes().length);
             }
 
             packer.packInt(selectFlag);
@@ -72,7 +72,7 @@ public class CDTExp {
                 if (c.value != null)
                     c.value.pack(packer);
                 else 
-                    c.exp.pack(packer);
+		            packer.packByteArray(c.exp.getBytes(), 0, c.exp.getBytes().length);
             }
 
             packer.packInt(selectFlags.flag);
