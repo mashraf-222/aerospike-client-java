@@ -19,14 +19,14 @@ public class CDTExp {
         }
     }
 
-    public static Exp cdtSelect(Exp.Type returnType, SelectFlags flags, Exp bin, CTX... ctx) {
+    public static Exp cdtSelect(Exp.Type returnType, int flags, Exp bin, CTX... ctx) {
         byte[] bytes = packCdtSelect(Type.SELECT, flags, ctx);
 
         return new Exp.Module(bin, bytes, returnType.code, MODULE);
     }
 
-    public static Exp cdtModify(Exp.Type returnType, SelectFlags flags, Exp modifyExp, Exp bin, CTX... ctx) {
-        byte[] bytes = packCdtModify(Type.SELECT, flags.flag | 4, modifyExp, ctx);
+    public static Exp cdtModify(Exp.Type returnType, int flags, Exp modifyExp, Exp bin, CTX... ctx) {
+        byte[] bytes = packCdtModify(Type.SELECT, flags | 4, modifyExp, ctx);
 
         return new Exp.Module(bin, bytes, returnType.code, MODULE | MODIFY);
     }
@@ -59,7 +59,7 @@ public class CDTExp {
         return packer.getBuffer();
 	}
 
-	private static byte[] packCdtSelect(Type type, SelectFlags selectFlags, CTX... ctx) {
+	private static byte[] packCdtSelect(Type type, int selectFlags, CTX... ctx) {
         Packer packer = new Packer();
 
         for (int i = 0; i < 2; i++) {
@@ -75,7 +75,7 @@ public class CDTExp {
 		            packer.packByteArray(c.exp.getBytes(), 0, c.exp.getBytes().length);
             }
 
-            packer.packInt(selectFlags.flag);
+            packer.packInt(selectFlags);
 
             if (i == 0) {
                 packer.createBuffer();
