@@ -3483,9 +3483,14 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		List<BatchNode> bns = BatchNodeList.generate(cluster, batchPolicy, keys, records, attr.hasWrite, executor);
 		AsyncCommand[] commands = new AsyncCommand[bns.size()];
 		int count = 0;
+		boolean opSizeSet = false;
 
 		for (BatchNode bn : bns) {
 			if (bn.offsetsSize == 1) {
+				if (!opSizeSet) {
+					attr.setOpSize(ops);
+					opSizeSet = true;
+				}
 				int i = bn.offsets[0];
 				commands[count++] = new AsyncBatchSingle.Operate(
 					executor, cluster, batchPolicy, attr, records[i], ops, bn.node);
@@ -3560,9 +3565,14 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		List<BatchNode> bns = BatchNodeList.generate(cluster, batchPolicy, keys, null, attr.hasWrite, executor);
 		AsyncCommand[] commands = new AsyncCommand[bns.size()];
 		int count = 0;
+		boolean opSizeSet = false;
 
 		for (BatchNode bn : bns) {
 			if (bn.offsetsSize == 1) {
+				if (!opSizeSet) {
+					attr.setOpSize(ops);
+					opSizeSet = true;
+				}
 				int i = bn.offsets[0];
 				commands[count++] = new AsyncBatchSingle.OperateSequence(
 					executor, cluster, batchPolicy, keys[i], attr, ops, bn.node, listener, i);
