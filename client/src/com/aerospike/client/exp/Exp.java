@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.aerospike.client.util.Packer;
-import com.aerospike.client.util.Unpacker;
 
 /**
  * Expression generator.

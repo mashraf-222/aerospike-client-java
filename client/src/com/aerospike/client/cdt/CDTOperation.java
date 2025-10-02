@@ -18,6 +18,7 @@ package com.aerospike.client.cdt;
 
 import com.aerospike.client.Operation;
 import com.aerospike.client.Value;
+import com.aerospike.client.command.ParticleType;
 import com.aerospike.client.util.Packer;
 import com.aerospike.client.exp.Expression;
 
@@ -47,7 +48,7 @@ public class CDTOperation {
         }
 
         byte[] packedBytes = packCdtSelect(flags, Type.SELECT, ctx);
-        return new Operation(Operation.Type.CDT_READ, binName, Value.get(packedBytes));
+        return new Operation(Operation.Type.CDT_READ, binName, Value.get(packedBytes, ParticleType.BLOB));
     }
 
     /**
@@ -65,7 +66,7 @@ public class CDTOperation {
         }
 
         byte[] packedBytes = packCdtApply(flags | 4, Type.SELECT, modifyExp, ctx);
-        return new Operation(Operation.Type.CDT_MODIFY, binName, Value.get(packedBytes));
+        return new Operation(Operation.Type.CDT_MODIFY, binName, Value.get(packedBytes, ParticleType.BLOB));
     }
 	
 	private static byte[] packCdtSelect(int flags, CDTOperation.Type type, CTX... ctx) {

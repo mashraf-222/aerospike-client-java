@@ -34,12 +34,29 @@ public class CDTExp {
         }
     }
 
+    /**
+     * Create a CDT select expression.
+     * @param returnType
+     * @param flags
+     * @param bin
+     * @param ctx
+     * @return
+     */
     public static Exp cdtSelect(Exp.Type returnType, int flags, Exp bin, CTX... ctx) {
         byte[] bytes = packCdtSelect(Type.SELECT, flags, ctx);
 
         return new Exp.Module(bin, bytes, returnType.code, MODULE);
     }
 
+    /**
+     * Create a CDT modify expression.
+     * @param returnType
+     * @param flags
+     * @param modifyExp
+     * @param bin
+     * @param ctx
+     * @return
+     */
     public static Exp cdtModify(Exp.Type returnType, int flags, Exp modifyExp, Exp bin, CTX... ctx) {
         byte[] bytes = packCdtModify(Type.SELECT, flags | 4, modifyExp, ctx);
 
