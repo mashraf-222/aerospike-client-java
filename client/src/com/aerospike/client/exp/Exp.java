@@ -48,6 +48,8 @@ public abstract class Exp {
 		}
 	}
 
+	public static final int CTX_EXP = 0x04;
+
 	//--------------------------------------------------
 	// Build
 	//--------------------------------------------------
@@ -57,6 +59,47 @@ public abstract class Exp {
 	 */
 	public static Expression build(Exp exp) {
 		return new Expression(exp);
+	}
+
+	/**
+	 * Helper method to create Exp objects from unpacked objects
+	 */
+	public static Exp get(Object obj) {
+		if (obj == null) {
+			return nil();
+		} else if (obj instanceof Boolean) {
+			return new Bool((Boolean)obj);
+		} else if (obj instanceof Long) {
+			return new Int((Long)obj);
+		} else if (obj instanceof Double) {
+			return new Float((Double)obj);
+		} else if (obj instanceof String) {
+			return new Str((String)obj);
+		} else if (obj instanceof byte[]) {
+			return new Blob((byte[])obj);
+		} else if (obj instanceof List) {
+			List<Object> list = (List<Object>)obj;
+			if (!list.isEmpty() && list.get(0) instanceof Number) {
+				// This might be a command array, try to reconstruct it
+				// For complex expressions, return as ExpBytes
+				Packer packer = new Packer();
+				packer.packObject(obj);
+				packer.createBuffer();
+				packer.packObject(obj);
+				return new ExpBytes(new Expression(packer.getBuffer()));
+			}
+			return new ListVal(list);
+		} else if (obj instanceof Map) {
+			Map<Object, Object> map = (Map<Object, Object>)obj;
+			return new MapVal(map);
+		} else {
+			// For unknown types, wrap as ExpBytes
+			Packer packer = new Packer();
+			packer.packObject(obj);
+			packer.createBuffer();
+			packer.packObject(obj);
+			return new ExpBytes(new Expression(packer.getBuffer()));
+		}
 	}
 
 	//--------------------------------------------------
@@ -89,6 +132,27 @@ public abstract class Exp {
 	public static Exp keyExists() {
 		return new Cmd(KEY_EXISTS);
 	}
+
+	public static Exp loopVarString(LoopVarPart part) {
+		return new Var(Type.STRING.code, part.id);
+	}
+
+	public static Exp loopVarInt(LoopVarPart part) {
+		return new Var(Type.INT.code, part.id);
+	}
+
+	public static Exp loopVarFloat(LoopVarPart part) {
+		return new Var(Type.FLOAT.code, part.id);
+	}
+
+	public static Exp loopVarList(LoopVarPart part)	{
+		return new Var(Type.LIST.code, part.id);
+	}
+
+	public static Exp loopVarMap(LoopVarPart part)	{
+		return new Var(Type.MAP.code, part.id);
+	}
+
 
 	//--------------------------------------------------
 	// Record Bin
@@ -1227,11 +1291,12 @@ public abstract class Exp {
 	private static final int KEY = 80;
 	private static final int BIN = 81;
 	private static final int BIN_TYPE = 82;
+	private static final int VAR_BUILTIN = 122;
 	private static final int COND = 123;
 	private static final int VAR = 124;
 	private static final int LET = 125;
 	private static final int QUOTED = 126;
-	private static final int CALL = 127;
+	public static final int CALL = 127;
 	public static final int MODIFY = 0x40;
 	private static final long NANOS_PER_MILLIS = 1000000L;
 
@@ -1535,6 +1600,24 @@ public abstract class Exp {
 		@Override
 		public void pack(Packer packer) {
 			packer.packWildcard();
+		}
+	}
+
+	private static final class Var extends Exp {
+		private final int type;
+		private final int varId;
+
+		private Var(int type, int varId) {
+			this.type = type;
+			this.varId = varId;
+		}
+
+		@Override
+		public void pack(Packer packer) {
+			packer.packArrayBegin(3);
+			packer.packInt(Exp.VAR_BUILTIN);
+			packer.packInt(type);
+			packer.packInt(varId);
 		}
 	}
 
