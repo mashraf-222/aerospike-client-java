@@ -1,7 +1,6 @@
 package com.aerospike.client.exp;
 
 import com.aerospike.client.cdt.CTX;
-import com.aerospike.client.operation.SelectFlags;
 import com.aerospike.client.util.Packer;
 
 public class CDTExp {
