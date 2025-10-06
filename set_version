@@ -9,14 +9,16 @@ function update_version() {
   POMS=("client/deploy-resources/gnu_pom.xml" "client/deploy-resources/bouncycastle_pom.xml")
 
   for PUBLIC_POM in "${POMS[@]}"; do
+    # Detecting host type. `sed` on bsd and linux are not the same
     if [[ "$(uname)" == "Darwin" ]]; then
       sed -i "" "s#<revision>[^<]*</revision>#<revision>${VERSION}</revision>#g" "$PARENT_POM"
-      sed -i "" "1,/<version>[0-9]\+\.[0-9]\+\.[0-9]\+\(-[A-Za-z0-9]\+\([._-][A-Za-z0-9]\+\)*\)\?<\/version>/ s#<version>[^<]*</version>#<version>${VERSION}</version>#" "$PUBLIC_POM"
+      sed -i "" "1,/<version>[^<]*<\/version>/ s#<version>[^<]*</version>#<version>${VERSION}</version>#" "$PUBLIC_POM"
     else
       sed -i "s#<revision>[^<]*</revision>#<revision>${VERSION}</revision>#g" "$PARENT_POM"
-      sed -i "0,/<version>[0-9]\+\.[0-9]\+\.[0-9]\+\(-[A-Za-z0-9]\+\([._-][A-Za-z0-9]\+\)*\)\?<\/version>/ s//<version>${VERSION}<\/version>/" "$PUBLIC_POM"
+      sed -i "0,/<version>[^<]*<\/version>/ s//<version>${VERSION}<\/version>/" "$PUBLIC_POM"
     fi
   done
+
 }
 
 function main() {
