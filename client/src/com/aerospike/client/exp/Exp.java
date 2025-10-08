@@ -138,7 +138,7 @@ public abstract class Exp {
 	 * Requires server version 8.1.1
 	 *
 	 * <pre>{@code
-	 * Exp.loopVarInt(LoopVarPart.MAP_KEY)
+	 * Exp.loopVarString(LoopVarPart.MAP_KEY)
 	 * }</pre>
 	 * @param part
 	 * @return
