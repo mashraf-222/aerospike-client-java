@@ -42,7 +42,7 @@ public class CDTExp {
      * @param ctx
      * @return
      */
-    public static Exp cdtSelect(Exp.Type returnType, int flags, Exp bin, CTX... ctx) {
+    public static Exp selectByPath(Exp.Type returnType, int flags, Exp bin, CTX... ctx) {
         byte[] bytes = packCdtSelect(Type.SELECT, flags, ctx);
 
         return new Exp.Module(bin, bytes, returnType.code, MODULE);
@@ -57,7 +57,7 @@ public class CDTExp {
      * @param ctx
      * @return
      */
-    public static Exp cdtModify(Exp.Type returnType, int flags, Exp modifyExp, Exp bin, CTX... ctx) {
+    public static Exp modifyByPath(Exp.Type returnType, int flags, Exp modifyExp, Exp bin, CTX... ctx) {
         byte[] bytes = packCdtModify(Type.SELECT, flags | 4, modifyExp, ctx);
 
         return new Exp.Module(bin, bytes, returnType.code, MODULE | MODIFY);
