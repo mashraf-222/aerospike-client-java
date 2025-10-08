@@ -156,7 +156,7 @@ public class TestCDTExp extends TestSync {
         );
         
         Expression applyExp = Exp.build(
-            CDTExp.cdtModify(
+            CDTExp.modifyByPath(
                 Exp.Type.MAP,                     // Return type: map
                 0,                                // Flags
                 modifyExp,                        // Modify expression
