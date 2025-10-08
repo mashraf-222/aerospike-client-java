@@ -97,7 +97,7 @@ public class TestCDTOperate extends TestSync {
             Exp.eq(Exp.loopVarString(LoopVarPart.MAP_KEY), Exp.val("title"))
         );
         
-        Operation selectOp = CDTOperation.cdtSelect(BIN_NAME, LoopVarPart.VALUE.id, ctx1, ctx2, ctx3);
+        Operation selectOp = CDTOperation.selectByPath(BIN_NAME, LoopVarPart.VALUE.id, ctx1, ctx2, ctx3);
 
         Record result = client.operate(null, rkey, selectOp);
         assertTrue("CDT select operation should succeed", result != null);
@@ -159,7 +159,7 @@ public class TestCDTOperate extends TestSync {
             )
         );
         
-        Operation applyOp = CDTOperation.cdtApply(BIN_NAME, 0, modifyExp, bookKey, allChildren, priceKey);
+        Operation applyOp = CDTOperation.modifyByPath(BIN_NAME, 0, modifyExp, bookKey, allChildren, priceKey);
         
         Record result = client.operate(null, rkey, applyOp);
         assertTrue("CDT apply operation should succeed", result != null);
