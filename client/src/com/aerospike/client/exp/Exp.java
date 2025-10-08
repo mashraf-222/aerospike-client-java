@@ -1177,22 +1177,72 @@ public abstract class Exp {
 		return new CmdStr(VAR, name);
 	}
 
+	/**
+	 * Create expression that references a built-in variable.
+	 * Requires server version 8.1.1
+	 *
+	 * <pre>{@code
+	 * Exp.loopVarInt(LoopVarPart.MAP_KEY)
+	 * }</pre>
+	 * @param part
+	 * @return
+	 */
 	public static Exp loopVarString(LoopVarPart part) {
 		return new Var(Type.STRING.code, part.id);
 	}
 
+	/**
+	 * Create expression that references a built-in variable.
+	 * Requires server version 8.1.1
+	 * 
+	 * <pre>{@code
+	 * Exp.loopVarInt(LoopVarPart.MAP_KEY)
+	 * }</pre>
+	 * @param part
+	 * @return
+	 */
 	public static Exp loopVarInt(LoopVarPart part) {
 		return new Var(Type.INT.code, part.id);
 	}
-	
+
+	/**
+	 * Create expression that references a built-in variable.
+	 * Requires server version 8.1.1
+	 * 
+	 * <pre>{@code
+	 * Exp.loopVarFloat(LoopVarPart.MAP_KEY)
+	 * }</pre>
+	 * @param part
+	 * @return
+	 */
 	public static Exp loopVarFloat(LoopVarPart part) {
 		return new Var(Type.FLOAT.code, part.id);
 	}
 
+	/**
+	 * Create expression that references a built-in variable.
+	 * Requires server version 8.1.1
+	 * 
+	 * <pre>{@code
+	 * Exp.loopVarList(LoopVarPart.MAP_KEY)
+	 * }</pre>
+	 * @param part
+	 * @return
+	 */
 	public static Exp loopVarList(LoopVarPart part)	{
 		return new Var(Type.LIST.code, part.id);
 	}
 
+	/**
+	 * Create expression that references a built-in variable.
+	 * Requires server version 8.1.1
+	 * 
+	 * <pre>{@code
+	 * Exp.loopVarMap(LoopVarPart.MAP_KEY)
+	 * }</pre>
+	 * @param part
+	 * @return
+	 */
 	public static Exp loopVarMap(LoopVarPart part)	{
 		return new Var(Type.MAP.code, part.id);
 	}

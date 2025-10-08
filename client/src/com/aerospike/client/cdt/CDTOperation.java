@@ -42,7 +42,7 @@ public class CDTOperation {
      * @param flags			select flags
      * @param ctx			optional path to nested CDT. If not defined, the top-level CDT is used.
      */
-    public static Operation cdtSelect(String binName, int flags, CTX... ctx) {
+    public static Operation selectByPath(String binName, int flags, CTX... ctx) {
         if (ctx == null) {
             return null;
         }
@@ -60,7 +60,7 @@ public class CDTOperation {
      * @param modifyExp		modify expression
      * @param ctx			optional path to nested CDT. If not defined, the top-level CDT is used.
      */
-    public static Operation cdtApply(String binName, int flags, Expression modifyExp, CTX... ctx) {
+    public static Operation modifyByPath(String binName, int flags, Expression modifyExp, CTX... ctx) {
         if (ctx == null) {
             return null;
         }

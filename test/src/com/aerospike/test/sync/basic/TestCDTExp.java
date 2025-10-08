@@ -86,7 +86,7 @@ public class TestCDTExp extends TestSync {
         CTX priceKey = CTX.mapKey(Value.get("price"));
         
         Expression selectExp = Exp.build(
-            CDTExp.cdtSelect(
+            CDTExp.selectByPath(
                 Exp.Type.LIST,                    // Return type: list
                 LoopVarPart.VALUE.id,            // AS_CDT_SELECT_LEAF_MAP_VALUE equivalent
                 Exp.mapBin("res1"),              // Source bin
