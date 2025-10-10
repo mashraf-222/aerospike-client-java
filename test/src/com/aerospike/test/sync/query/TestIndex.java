@@ -60,9 +60,9 @@ public class TestIndex extends TestSync {
 
 		// Ensure all nodes have dropped the index.
 		Node[] nodes = client.getNodes();
-		String cmd = IndexTask.buildStatusCommand(args.namespace, indexName);
 
 		for (Node node : nodes) {
+			String cmd = IndexTask.buildStatusCommand(args.namespace, indexName, node.serverVersion);
 			String response = Info.request(node, cmd);
 			int code = Info.parseResultCode(response);
 

@@ -96,7 +96,7 @@ public class Node implements Closeable {
 	protected boolean rebalanceChanged;
 	protected volatile boolean performLogin;
 	protected volatile boolean active;
-	private final Version version;
+	public final Version serverVersion;
 
 	/**
 	 * Initialize server node with connection parameters.
@@ -113,7 +113,7 @@ public class Node implements Closeable {
 		this.sessionToken = nv.sessionToken;
 		this.sessionExpiration = nv.sessionExpiration;
 		this.features = nv.features;
-		this.version = nv.version;
+		this.serverVersion = nv.serverVersion;
 		this.connsOpened = new AtomicInteger(1);
 		this.connsClosed = new AtomicInteger(0);
 		this.errorRateCount = new AtomicInteger(0);
@@ -1300,8 +1300,8 @@ public class Node implements Closeable {
 	/**
 	 * Return this node's build version
 	 */
-	public Version getVersion() {
-		return version;
+	public Version getServerVersion() {
+		return serverVersion;
 	}
 
 	/**
