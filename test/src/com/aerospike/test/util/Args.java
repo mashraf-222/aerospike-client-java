@@ -40,6 +40,7 @@ import com.aerospike.client.policy.ClientPolicy;
 import com.aerospike.client.policy.Policy;
 import com.aerospike.client.policy.TlsPolicy;
 import com.aerospike.client.util.Util;
+import com.aerospike.client.util.Version;
 
 public class Args {
 	public static Args Instance = new Args();
@@ -259,7 +260,7 @@ public class Args {
 		}
 
 		Node node = client.getNodes()[0];
-		String editionFilter = "edition";
+		String editionFilter = node.getServerVersion().isGreaterOrEqual(Version.SERVER_VERSION_8_1) ? "release" : "edition";
 		String namespaceFilter = "namespace/" + namespace;
 		Map<String,String> map = Info.request(null, node, editionFilter, namespaceFilter);
 

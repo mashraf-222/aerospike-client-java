@@ -74,7 +74,7 @@ public class ExecuteTask extends Task {
 		String module = (scan) ? "scan" : "query";
 
 		for (Node node : nodes) {
-			Version serverVersion = node.getVersion();
+			Version serverVersion = node.getServerVersion();
 			String cmd1 = serverVersion.isGreaterOrEqual(Version.SERVER_VERSION_8_1) ? "query-show:id=" + tid : "query-show:trid=" + tid;
 			String cmd2 = serverVersion.isGreaterOrEqual(Version.SERVER_VERSION_8_1) ? module + "-show:id=" + tid : module + "-show:trid=" + tid;
 			String cmd3 = serverVersion.isGreaterOrEqual(Version.SERVER_VERSION_8_1) ? "jobs:module=" + module + ";cmd=get-job;id=" + tid : "jobs:module=" + module + ";cmd=get-job;trid=" + tid;

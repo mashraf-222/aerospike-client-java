@@ -114,6 +114,10 @@ public class ClientPolicy {
 	 * (no reap) if minConnsPerNode is greater than zero.  Reaping connections can defeat the purpose
 	 * of keeping connections in reserve for a future burst of activity.
 	 * <p>
+	 * <p>
+	 * Servers 8.1+ have deprecated proto-fd-idle-ms. When proto-fd-idle-ms is ultimately removed,
+     * the server will stop automatically reaping based on socket idle timeouts.
+	 * <p>
 	 * Default: 0
 	 */
 	public int minConnsPerNode;
@@ -187,6 +191,10 @@ public class ClientPolicy {
 	 * when maxSocketIdle is zero.  Idle connections will still be trimmed down from peak
 	 * connections to min connections (minConnsPerNode and asyncMinConnsPerNode) using a
 	 * hard-coded 55 second limit in the cluster tend thread.
+	 * <p>
+	 * <p>
+	 * Servers 8.1+ have deprecated proto-fd-idle-ms. When proto-fd-idle-ms is ultimately removed,
+     * the server will stop automatically reaping based on socket idle timeouts.
 	 * <p>
 	 * Default: 0
 	 */
