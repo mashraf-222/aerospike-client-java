@@ -34,33 +34,7 @@ public class ServerInfo extends Example {
 	@Override
 	public void runExample(IAerospikeClient client, Parameters params) throws Exception {
 		Node node = client.getNodes()[0];
-		GetServerConfig(node, params);
-		console.write("");
 		GetNamespaceConfig(node, params);
-	}
-
-	/**
-	 * Query server configuration and cluster status.
-	 */
-	private void GetServerConfig(Node node, Parameters params) throws Exception {
-		console.write("Server Configuration");
-		Map<String,String> map = Info.request(null, node);
-
-		if (map == null) {
-			throw new Exception(String.format("Failed to get server info: host=%s port=%d",
-				params.host, params.port));
-		}
-
-		for (Map.Entry<String,String> entry : map.entrySet()) {
-			String key = entry.getKey();
-
-			if (key.equals("statistics") || key.equals("query-stat")) {
-				LogNameValueTokens(entry.getValue());
-			}
-			else {
-				console.write(key + '=' + entry.getValue());
-			}
-		}
 	}
 
 	/**

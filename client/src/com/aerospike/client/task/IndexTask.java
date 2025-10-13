@@ -53,11 +53,11 @@ public final class IndexTask extends Task {
 		Node[] nodes = cluster.validateNodes();
 
 		for (Node node : nodes) {
-			Version currentServerVersion = node.getVersion();
+			Version currentServerVersion = node.getServerVersion();
 			if (isCreate) {
 				// Check index status.
 				if (statusCommand == null) {
-					statusCommand = IndexTask.buildStatusCommand(namespace, indexName);
+					statusCommand = IndexTask.buildStatusCommand(namespace, indexName, node.getServerVersion());
 				}
 
 				String response = Info.request(policy, node, statusCommand);
@@ -84,8 +84,10 @@ public final class IndexTask extends Task {
 		return Task.COMPLETE;
 	}
 
-	public static String buildStatusCommand(String namespace, String indexName) {
-		return "sindex/" + namespace + '/' + indexName;
+	public static String buildStatusCommand(String namespace, String indexName, Version serverVersion) {
+		return serverVersion.isGreaterOrEqual(Version.SERVER_VERSION_8_1) ? 
+			"sindex-stat:namespace=" + namespace + ";indexname=" + indexName : 
+			"sindex/" + namespace + "/" + indexName;
 	}
 
 	public static String buildExistsCommand(String namespace, String indexName, Version currentServerVersion) {

@@ -20,7 +20,6 @@ import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import com.aerospike.client.ResultCode;
 import com.aerospike.client.util.Version;
@@ -34,29 +33,7 @@ public class TestServerInfo extends TestSync {
 	@Test
 	public void serverInfo() {
 		Node node = client.getNodes()[0];
-		GetServerConfig(node);
 		GetNamespaceConfig(node);
-	}
-
-	/**
-	 * Query server configuration and cluster status.
-	 */
-	private void GetServerConfig(Node node) {
-		Map<String,String> map = Info.request(null, node);
-		assertNotNull(map);
-
-		for (Map.Entry<String,String> entry : map.entrySet()) {
-			String key = entry.getKey();
-
-			if (key.equals("statistics") || key.equals("query-stat")) {
-				LogNameValueTokens(entry.getValue());
-			}
-			else {
-				if (! (key.equals("services-alumni") || key.equals("services") || key.equals("dcs") || key.equals("build_ee_sha"))) {
-					assertNotNull(entry.getValue());
-				}
-			}
-		}
 	}
 
 	/**

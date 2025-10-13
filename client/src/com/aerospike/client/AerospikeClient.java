@@ -5334,7 +5334,7 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		Expression exp
 	) {
 		StringBuilder sb = new StringBuilder(1024);
-		Version currentServerVersion = node.getVersion();
+		Version currentServerVersion = node.getServerVersion();
 		String createIndexCommand = currentServerVersion.isGreaterOrEqual(Version.SERVER_VERSION_8_1) ? "sindex-create:namespace=": "sindex-create:ns=";
 
 		sb.append(createIndexCommand);
@@ -5348,40 +5348,52 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 		sb.append(";indexname=");
 		sb.append(indexName);
 
-		if (ctx != null && ctx.length > 0) {
-			byte[] bytes = Pack.pack(ctx);
-			String base64 = Crypto.encodeBase64(bytes);
-
-			sb.append(";context=");
-			sb.append(base64);
-		}
-
 		if (exp != null && exp.size() > 0) {
 			String base64 = exp.getBase64();
 
 			sb.append(";exp=");
 			sb.append(base64);
-		}
 
-		if (indexCollectionType != IndexCollectionType.DEFAULT) {
-			sb.append(";indextype=");
-			sb.append(indexCollectionType);
-		}
+			if (indexCollectionType != IndexCollectionType.DEFAULT) {
+				sb.append(";indextype=");
+				sb.append(indexCollectionType);
+			}
 
-		if (binName != null) {
-			sb.append(";indexdata=");
-			sb.append(binName);
-			sb.append(",");
-		} else {
 			sb.append(";type=");
+			sb.append(indexType);
+		} else {
+			if (ctx != null && ctx.length > 0) {
+				byte[] bytes = Pack.pack(ctx);
+				String base64 = Crypto.encodeBase64(bytes);
+
+				sb.append(";context=");
+				sb.append(base64);
+			}
+
+			if (indexCollectionType != IndexCollectionType.DEFAULT) {
+				sb.append(";indextype=");
+				sb.append(indexCollectionType);
+			}
+
+			if (node.getServerVersion().isGreaterOrEqual(Version.SERVER_VERSION_8_1)) {
+				sb.append(";bin=");
+				sb.append(binName);
+				sb.append(";type=");
+				sb.append(indexType);
+			} else {
+				sb.append(";indexdata=");
+				sb.append(binName);
+				sb.append(',');
+				sb.append(indexType);
+			}
 		}
-		sb.append(indexType);
+
 		return sb.toString();
 	}
 
 	private String buildDropIndexInfoCommand(Node node, String namespace, String setName, String indexName) {
 		StringBuilder sb = new StringBuilder(500);
-		Version currentServerVersion = node.getVersion();
+		Version currentServerVersion = node.getServerVersion();
 		String deleteIndexCommand = currentServerVersion.isGreaterOrEqual(Version.SERVER_VERSION_8_1) ? "sindex-delete:namespace=": "sindex-delete:ns=";
 
 		sb.append(deleteIndexCommand);
