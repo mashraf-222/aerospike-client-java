@@ -96,7 +96,7 @@ public class TestQueryRPS extends TestSync {
 		String taskId = Long.toUnsignedString(id);
 		String module = (stmt.getFilter() == null) ? "scan" : "query";
 		String command;
-		Version serverVersion = n.getVersion();
+		Version serverVersion = n.getServerVersion();
 
 		String cmd1 = serverVersion.isGreaterOrEqual(Version.SERVER_VERSION_8_1) ? "query-show:id=" + taskId : "query-show:trid=" + taskId;
 		String cmd2 = serverVersion.isGreaterOrEqual(Version.SERVER_VERSION_8_1) ? module + "-show:id=" + taskId : module + "-show:trid=" + taskId;

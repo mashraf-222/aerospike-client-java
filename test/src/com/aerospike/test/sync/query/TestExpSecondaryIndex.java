@@ -70,7 +70,7 @@ public class TestExpSecondaryIndex extends TestSync {
 
 	@BeforeClass
 	public static void setup() {
-		Version serverVersion = client.getCluster().getRandomNode().getVersion();
+		Version serverVersion = client.getCluster().getRandomNode().getServerVersion();
 		boolean condition = serverVersion.isGreaterOrEqual(8, 1, 0, 0);
 		Assume.assumeTrue("SI Expression tests skipped because the server does not support this feature", condition);
 	}

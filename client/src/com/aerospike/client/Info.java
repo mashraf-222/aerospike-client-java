@@ -125,6 +125,7 @@ public class Info {
 	 * @param policy	info command configuration parameters, pass in null for defaults
 	 * @param node		server node
 	 */
+	@Deprecated(since="8.1.0")
 	public static Map<String,String> request(InfoPolicy policy, Node node) throws AerospikeException {
 		int timeout = (policy == null) ? DEFAULT_TIMEOUT : policy.timeout;
 		Connection conn = node.getConnection(timeout);
