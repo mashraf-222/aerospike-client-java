@@ -57,6 +57,7 @@ public class TestCdtExp extends TestSync {
     
     @BeforeClass
     public static void checkServerVersion() {
+        // Skip tests for server version < 8.1.1
         Version serverVersion = client.getCluster().getRandomNode().getServerVersion();
         boolean condition = serverVersion.isGreaterOrEqual(8, 1, 1, 0);
         Assume.assumeTrue("Tests skipped for server version < 8.1.1", condition);
