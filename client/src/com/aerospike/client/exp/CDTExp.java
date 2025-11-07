@@ -19,13 +19,25 @@ package com.aerospike.client.exp;
 import com.aerospike.client.cdt.CTX;
 import com.aerospike.client.util.Packer;
 
-public class CDTExp {
+public class CdtExp {
+    /**
+     * The module identifier for CDT expressions.
+     */
 	private static final int MODULE = 0;
+
+    /**
+     * The modify flag for CDT expressions.
+     */
 	public static final int MODIFY = 0x40;
 
+    /**
+     * The type of CDT expression.
+     */
     enum Type {
-        SELECT(0xfe),
-        MODIFY(0xff);
+        /**
+         * The identifier for SELECT CDT expressions.
+         */
+        SELECT(0xfe);
 
         int value;
 

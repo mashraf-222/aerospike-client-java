@@ -22,7 +22,7 @@ import com.aerospike.client.command.ParticleType;
 import com.aerospike.client.util.Packer;
 import com.aerospike.client.exp.Expression;
 
-public class CDTOperation {
+public class CdtOperation {
     enum Type {
         SELECT(0xfe),
         MODIFY(0xff);
@@ -69,7 +69,7 @@ public class CDTOperation {
         return new Operation(Operation.Type.CDT_MODIFY, binName, Value.get(packedBytes, ParticleType.BLOB));
     }
 	
-	private static byte[] packCdtSelect(int flags, CDTOperation.Type type, CTX... ctx) {
+	private static byte[] packCdtSelect(int flags, CdtOperation.Type type, CTX... ctx) {
         Packer packer = new Packer();
 
         for (int i = 0; i < 2; i++) {
@@ -95,7 +95,7 @@ public class CDTOperation {
         return packer.getBuffer();
 	}
 
-	private static byte[] packCdtApply(int flags, CDTOperation.Type type, Expression modifyExp, CTX... ctx) {
+	private static byte[] packCdtApply(int flags, CdtOperation.Type type, Expression modifyExp, CTX... ctx) {
         Packer packer = new Packer();
 
         for (int i = 0; i < 2; i++) {

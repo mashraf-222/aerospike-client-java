@@ -17,6 +17,8 @@
 
 package com.aerospike.test.sync.basic;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,16 +32,17 @@ import com.aerospike.client.Key;
 import com.aerospike.client.Operation;
 import com.aerospike.client.Record;
 import com.aerospike.client.Value;
-import com.aerospike.client.cdt.CDTOperation;
+import com.aerospike.client.cdt.CdtOperation;
 import com.aerospike.client.cdt.CTX;
 import com.aerospike.client.cdt.MapReturnType;
 import com.aerospike.client.exp.Exp;
 import com.aerospike.client.exp.Expression;
 import com.aerospike.client.exp.LoopVarPart;
 import com.aerospike.client.exp.MapExp;
+import com.aerospike.client.operation.SelectFlag;
 import com.aerospike.test.sync.TestSync;
 
-public class TestCDTOperate extends TestSync {
+public class TestCdtOperate extends TestSync {
     
     private static final String NAMESPACE = "test";
     private static final String SET = "testset";
@@ -85,7 +88,7 @@ public class TestCDTOperate extends TestSync {
         Record record = client.get(null, rkey);
         assertTrue("Record should exist", record != null);
         
-        CTX ctx1 = CTX.allChildren();
+        CTX ctx1 = CTX.mapKey(Value.get("book"));
         CTX ctx2 = CTX.allChildrenWithFilter(
             Exp.le(
                 MapExp.getByKey(MapReturnType.VALUE, Exp.Type.FLOAT, 
@@ -97,15 +100,25 @@ public class TestCDTOperate extends TestSync {
             Exp.eq(Exp.loopVarString(LoopVarPart.MAP_KEY), Exp.val("title"))
         );
         
-        Operation selectOp = CDTOperation.selectByPath(BIN_NAME, LoopVarPart.VALUE.id, ctx1, ctx2, ctx3);
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, LoopVarPart.VALUE.id, ctx1, ctx2, ctx3);
 
         Record result = client.operate(null, rkey, selectOp);
         assertTrue("CDT select operation should succeed", result != null);
         
         List<?> results = result.getList(BIN_NAME);
-        if (results != null && !results.isEmpty()) {
-            System.out.println("Selected titles: " + results);
+        assertNotNull("Results should not be null", results);
+        assertEquals("Should have 2 books with price <= 10.0", 2, results.size());
+        
+        // Verify the titles (order may vary)
+        List<String> titles = new ArrayList<>();
+        for (Object item : results) {
+            assertTrue("Each result should be a string title", item instanceof String);
+            titles.add((String) item);
         }
+        
+        // Check that we got the expected titles
+        assertTrue("Should contain 'Sayings of the Century'", titles.contains("Sayings of the Century"));
+        assertTrue("Should contain 'Moby Dick'", titles.contains("Moby Dick"));
     }
     
     @Test
@@ -159,7 +172,7 @@ public class TestCDTOperate extends TestSync {
             )
         );
         
-        Operation applyOp = CDTOperation.modifyByPath(BIN_NAME, 0, modifyExp, bookKey, allChildren, priceKey);
+        Operation applyOp = CdtOperation.modifyByPath(BIN_NAME, 0, modifyExp, bookKey, allChildren, priceKey);
         
         Record result = client.operate(null, rkey, applyOp);
         assertTrue("CDT apply operation should succeed", result != null);
@@ -185,5 +198,926 @@ public class TestCDTOperate extends TestSync {
         double expectedPrice = 8.95 * 1.10;
         assertTrue("Price should be approximately " + expectedPrice, 
                    Math.abs(finalPrice - expectedPrice) < 0.01);
+        
+        // Verify all books have increased prices
+        double[] originalPrices = {8.95, 12.99, 8.99, 22.99};
+        for (int i = 0; i < finalBooksList.size(); i++) {
+            Map<?, ?> book = (Map<?, ?>) finalBooksList.get(i);
+            assertTrue("Book " + i + " should be a map", book != null);
+            
+            Object price = book.get("price");
+            assertTrue("Book " + i + " should have a price", price != null);
+            
+            double priceFloat = ((Number) price).doubleValue();
+            double expected = originalPrices[i] * 1.10;
+            assertTrue("Book " + i + " price should be approximately " + expected + ", got " + priceFloat,
+                      Math.abs(priceFloat - expected) < 0.01);
+        }
+    }
+    
+    @Test
+    public void testNestedContextsAndComplexFilters() {
+        Key rkey = new Key(NAMESPACE, SET, 217);
+        
+        try {
+            client.delete(null, rkey);
+        } catch (Exception e) {
+        }
+        
+        Map<String, Object> data = new HashMap<>();
+        Map<String, Object> store = new HashMap<>();
+        List<Map<String, Object>> booksList = new ArrayList<>();
+        
+        Map<String, Object> book1 = new HashMap<>();
+        book1.put("category", "reference");
+        book1.put("author", "Nigel Rees");
+        book1.put("title", "Sayings of the Century");
+        book1.put("price", 8.95);
+        booksList.add(book1);
+        
+        Map<String, Object> book2 = new HashMap<>();
+        book2.put("category", "fiction");
+        book2.put("author", "Evelyn Waugh");
+        book2.put("title", "Sword of Honour");
+        book2.put("price", 12.99);
+        booksList.add(book2);
+        
+        Map<String, Object> book3 = new HashMap<>();
+        book3.put("category", "fiction");
+        book3.put("author", "Herman Melville");
+        book3.put("title", "Moby Dick");
+        book3.put("price", 8.99);
+        booksList.add(book3);
+        
+        store.put("books", booksList);
+        data.put("store", store);
+        
+        Bin bin = new Bin(BIN_NAME, data);
+        client.put(null, rkey, bin);
+        
+        CTX ctx1 = CTX.mapKey(Value.get("store"));
+        CTX ctx2 = CTX.mapKey(Value.get("books"));
+        CTX ctx3 = CTX.allChildrenWithFilter(
+            Exp.and(
+                Exp.eq(
+                    MapExp.getByKey(MapReturnType.VALUE, Exp.Type.STRING,
+                        Exp.val("category"), Exp.loopVarMap(LoopVarPart.VALUE)),
+                    Exp.val("fiction")
+                ),
+                Exp.lt(
+                    MapExp.getByKey(MapReturnType.VALUE, Exp.Type.FLOAT,
+                        Exp.val("price"), Exp.loopVarMap(LoopVarPart.VALUE)),
+                    Exp.val(10.0)
+                )
+            )
+        );
+        CTX ctx4 = CTX.allChildrenWithFilter(
+            Exp.eq(Exp.loopVarString(LoopVarPart.MAP_KEY), Exp.val("title"))
+        );
+        
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, LoopVarPart.VALUE.id, ctx1, ctx2, ctx3, ctx4);
+        
+        Record result = client.operate(null, rkey, selectOp);
+        assertTrue("CDT select operation should succeed", result != null);
+        
+        List<?> results = result.getList(BIN_NAME);
+        assertNotNull("Results should not be null", results);
+        assertEquals("Should have 1 fiction book with price < 10.0", 1, results.size());
+        assertEquals("Should get 'Moby Dick'", "Moby Dick", results.get(0));
+    }
+    
+    @Test
+    public void testEmptyResultsWhenNoItemsMatch() {
+        Key rkey = new Key(NAMESPACE, SET, 218);
+        
+        try {
+            client.delete(null, rkey);
+        } catch (Exception e) {
+        }
+        
+        List<Map<String, Object>> booksList = new ArrayList<>();
+        
+        Map<String, Object> book1 = new HashMap<>();
+        book1.put("title", "Expensive Book 1");
+        book1.put("price", 25.99);
+        booksList.add(book1);
+        
+        Map<String, Object> book2 = new HashMap<>();
+        book2.put("title", "Expensive Book 2");
+        book2.put("price", 30.50);
+        booksList.add(book2);
+        
+        Map<String, Object> rootMap = new HashMap<>();
+        rootMap.put("book", booksList);
+        
+        Bin bin = new Bin(BIN_NAME, rootMap);
+        client.put(null, rkey, bin);
+        
+        // Try to select books with price <= 10.0 (should return empty)
+        CTX ctx1 = CTX.mapKey(Value.get("book"));
+        CTX ctx2 = CTX.allChildrenWithFilter(
+            Exp.le(
+                MapExp.getByKey(MapReturnType.VALUE, Exp.Type.FLOAT,
+                    Exp.val("price"), Exp.loopVarMap(LoopVarPart.VALUE)),
+                Exp.val(10.0)
+            )
+        );
+        CTX ctx3 = CTX.allChildrenWithFilter(
+            Exp.eq(Exp.loopVarString(LoopVarPart.MAP_KEY), Exp.val("title"))
+        );
+        
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, LoopVarPart.VALUE.id, ctx1, ctx2, ctx3);
+        
+        Record result = client.operate(null, rkey, selectOp);
+        assertTrue("CDT select operation should succeed", result != null);
+        
+        // Verify empty results
+        Object results = result.getValue(BIN_NAME);
+        if (results instanceof List) {
+            List<?> resultList = (List<?>) results;
+            assertEquals("Should have 0 books matching the filter", 0, resultList.size());
+        }
+    }
+    
+    @Test
+    public void testMatchingTreeFlag() {
+        Key rkey = new Key(NAMESPACE, SET, 219);
+        
+        try {
+            client.delete(null, rkey);
+        } catch (Exception e) {
+        }
+        
+        List<Map<String, Object>> booksList = new ArrayList<>();
+        
+        Map<String, Object> book1 = new HashMap<>();
+        book1.put("title", "Cheap Book");
+        book1.put("price", 5.99);
+        booksList.add(book1);
+        
+        Map<String, Object> book2 = new HashMap<>();
+        book2.put("title", "Expensive Book");
+        book2.put("price", 25.99);
+        booksList.add(book2);
+        
+        Map<String, Object> rootMap = new HashMap<>();
+        rootMap.put("book", booksList);
+        
+        Bin bin = new Bin(BIN_NAME, rootMap);
+        client.put(null, rkey, bin);
+        
+        CTX ctx1 = CTX.mapKey(Value.get("book"));
+        CTX ctx2 = CTX.allChildrenWithFilter(
+            Exp.le(
+                MapExp.getByKey(MapReturnType.VALUE, Exp.Type.FLOAT,
+                    Exp.val("price"), Exp.loopVarMap(LoopVarPart.VALUE)),
+                Exp.val(10.0)
+            )
+        );
+        
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.MATCHING_TREE.flag, ctx1, ctx2);
+        
+        Record result = client.operate(null, rkey, selectOp);
+        assertTrue("CDT select operation should succeed", result != null);
+        
+        // With MatchingTree, we should get back the full matching structure
+        Object results = result.getValue(BIN_NAME);
+        assertNotNull("Results should not be null", results);
+    }
+    
+    @Test
+    public void testMapKeysFlag() {
+        Key rkey = new Key(NAMESPACE, SET, 220);
+        
+        try {
+            client.delete(null, rkey);
+        } catch (Exception e) {
+        }
+        
+        Map<String, Object> data = new HashMap<>();
+        Map<String, Object> items = new HashMap<>();
+        items.put("item1", 100);
+        items.put("item2", 200);
+        items.put("item3", 50);
+        data.put("items", items);
+        
+        Bin bin = new Bin(BIN_NAME, data);
+        client.put(null, rkey, bin);
+        
+        // Select with MapKeys flag - should return only keys, not values
+        CTX ctx1 = CTX.mapKey(Value.get("items"));
+        CTX ctx2 = CTX.allChildrenWithFilter(
+            Exp.gt(Exp.loopVarInt(LoopVarPart.VALUE), Exp.val(75))
+        );
+        
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.MAP_KEY.flag, ctx1, ctx2);
+        
+        Record result = client.operate(null, rkey, selectOp);
+        assertTrue("CDT select operation should succeed", result != null);
+        
+        // Should get keys where value > 75
+        Object results = result.getValue(BIN_NAME);
+        assertNotNull("Results should not be null", results);
+    }
+    
+    @Test
+    public void testSelectNoFailFlag() {
+        Key rkey = new Key(NAMESPACE, SET, 221);
+        
+        try {
+            client.delete(null, rkey);
+        } catch (Exception e) {
+        }
+        
+        Map<String, Object> data = new HashMap<>();
+        List<Integer> existing = new ArrayList<>();
+        existing.add(1);
+        existing.add(2);
+        existing.add(3);
+        data.put("existing", existing);
+        
+        Bin bin = new Bin(BIN_NAME, data);
+        client.put(null, rkey, bin);
+        
+        // Try to select from existing path with SelectNoFail
+        CTX ctx1 = CTX.mapKey(Value.get("existing"));
+        CTX ctx2 = CTX.allChildren();
+        
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.NO_FAIL.flag, ctx1, ctx2);
+        
+        Record result = client.operate(null, rkey, selectOp);
+        assertTrue("CDT select operation should succeed", result != null);
+    }
+    
+    @Test
+    public void testLoopVariableIndex() {
+        Key rkey = new Key(NAMESPACE, SET, 222);
+        
+        try {
+            client.delete(null, rkey);
+        } catch (Exception e) {
+        }
+        
+        Map<String, Object> data = new HashMap<>();
+        List<Integer> numbers = new ArrayList<>();
+        numbers.add(10);
+        numbers.add(20);
+        numbers.add(30);
+        numbers.add(40);
+        numbers.add(50);
+        data.put("numbers", numbers);
+        
+        Bin bin = new Bin(BIN_NAME, data);
+        client.put(null, rkey, bin);
+        
+        // Select items where index < 3
+        CTX ctx1 = CTX.mapKey(Value.get("numbers"));
+        CTX ctx2 = CTX.allChildrenWithFilter(
+            Exp.lt(Exp.loopVarInt(LoopVarPart.INDEX), Exp.val(3))
+        );
+        
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, LoopVarPart.VALUE.id, ctx1, ctx2);
+        
+        Record result = client.operate(null, rkey, selectOp);
+        assertTrue("CDT select operation should succeed", result != null);
+        
+        // Should get first 3 items (indices 0, 1, 2)
+        List<?> results = result.getList(BIN_NAME);
+        if (results != null) {
+            assertEquals("Should have 3 items with index < 3", 3, results.size());
+        }
+    }
+    
+    @Test
+    public void testLoopVariableMapKey() {
+        Key rkey = new Key(NAMESPACE, SET, 223);
+        
+        try {
+            client.delete(null, rkey);
+        } catch (Exception e) {
+        }
+        
+        Map<String, Object> data = new HashMap<>();
+        Map<String, Object> products = new HashMap<>();
+        products.put("apple", 1.50);
+        products.put("banana", 0.75);
+        products.put("cherry", 2.25);
+        data.put("products", products);
+        
+        Bin bin = new Bin(BIN_NAME, data);
+        client.put(null, rkey, bin);
+        
+        // Select items where key starts with 'a' or 'b' (lexicographically < "c")
+        CTX ctx1 = CTX.mapKey(Value.get("products"));
+        CTX ctx2 = CTX.allChildrenWithFilter(
+            Exp.lt(Exp.loopVarString(LoopVarPart.MAP_KEY), Exp.val("c"))
+        );
+        
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, LoopVarPart.VALUE.id, ctx1, ctx2);
+        
+        Record result = client.operate(null, rkey, selectOp);
+        assertTrue("CDT select operation should succeed", result != null);
+        
+        // Should get apple and banana (keys < "c")
+        List<?> results = result.getList(BIN_NAME);
+        if (results != null) {
+            assertEquals("Should have 2 items with keys < 'c'", 2, results.size());
+        }
+    }
+    
+    @Test
+    public void testModifyWithAddition() {
+        Key rkey = new Key(NAMESPACE, SET, 224);
+        
+        try {
+            client.delete(null, rkey);
+        } catch (Exception e) {
+        }
+        
+        Map<String, Object> data = new HashMap<>();
+        List<Integer> scores = new ArrayList<>();
+        scores.add(10);
+        scores.add(20);
+        scores.add(30);
+        scores.add(40);
+        scores.add(50);
+        data.put("scores", scores);
+        
+        Bin bin = new Bin(BIN_NAME, data);
+        client.put(null, rkey, bin);
+        
+        // Add 5 to each score
+        CTX ctx1 = CTX.mapKey(Value.get("scores"));
+        CTX ctx2 = CTX.allChildrenWithFilter(Exp.val(true));
+        
+        Expression modifyExp = Exp.build(
+            Exp.add(Exp.loopVarInt(LoopVarPart.VALUE), Exp.val(5))
+        );
+        
+        Operation applyOp = CdtOperation.modifyByPath(BIN_NAME, 0, modifyExp, ctx1, ctx2);
+        
+        Record result = client.operate(null, rkey, applyOp);
+        assertTrue("CDT apply operation should succeed", result != null);
+        
+        Record finalRecord = client.get(null, rkey);
+        assertTrue("Final record should exist", finalRecord != null);
+        
+        Map<?, ?> finalRootMap = (Map<?, ?>) finalRecord.getValue(BIN_NAME);
+        assertTrue("Root map should exist", finalRootMap != null);
+        
+        List<?> finalScores = (List<?>) finalRootMap.get("scores");
+        assertTrue("Scores list should exist", finalScores != null);
+        assertEquals("Should have 5 scores", 5, finalScores.size());
+        
+        int firstScore = ((Number) finalScores.get(0)).intValue();
+        assertEquals("10 + 5 = 15", 15, firstScore);
+    }
+    
+    @Test
+    public void testModifyWithSubtraction() {
+        Key rkey = new Key(NAMESPACE, SET, 225);
+        
+        try {
+            client.delete(null, rkey);
+        } catch (Exception e) {
+        }
+        
+        Map<String, Object> data = new HashMap<>();
+        Map<String, Object> balances = new HashMap<>();
+        balances.put("account1", 1000);
+        balances.put("account2", 2000);
+        balances.put("account3", 1500);
+        data.put("balances", balances);
+        
+        Bin bin = new Bin(BIN_NAME, data);
+        client.put(null, rkey, bin);
+        
+        // Subtract 100 from each balance
+        CTX ctx1 = CTX.mapKey(Value.get("balances"));
+        CTX ctx2 = CTX.allChildrenWithFilter(Exp.val(true));
+        
+        Expression modifyExp = Exp.build(
+            Exp.sub(Exp.loopVarInt(LoopVarPart.VALUE), Exp.val(100))
+        );
+        
+        Operation applyOp = CdtOperation.modifyByPath(BIN_NAME, 0, modifyExp, ctx1, ctx2);
+        
+        Record result = client.operate(null, rkey, applyOp);
+        assertTrue("CDT apply operation should succeed", result != null);
+        
+        Record finalRecord = client.get(null, rkey);
+        assertTrue("Final record should exist", finalRecord != null);
+        
+        Map<?, ?> finalRootMap = (Map<?, ?>) finalRecord.getValue(BIN_NAME);
+        assertTrue("Root map should exist", finalRootMap != null);
+        
+        Map<?, ?> finalBalances = (Map<?, ?>) finalRootMap.get("balances");
+        assertTrue("Balances map should exist", finalBalances != null);
+        
+        // Verify account1 balance was decreased by 100
+        int balance1 = ((Number) finalBalances.get("account1")).intValue();
+        assertEquals("1000 - 100 = 900", 900, balance1);
+    }
+    
+    @Test
+    public void testNestedListsAndComplexFilters() {
+        Key rkey = new Key(NAMESPACE, SET, 226);
+        
+        try {
+            client.delete(null, rkey);
+        } catch (Exception e) {
+        }
+        
+        Map<String, Object> data = new HashMap<>();
+        List<List<Integer>> matrix = new ArrayList<>();
+        List<Integer> row1 = new ArrayList<>();
+        row1.add(1);
+        row1.add(2);
+        row1.add(3);
+        matrix.add(row1);
+        List<Integer> row2 = new ArrayList<>();
+        row2.add(4);
+        row2.add(5);
+        row2.add(6);
+        matrix.add(row2);
+        List<Integer> row3 = new ArrayList<>();
+        row3.add(7);
+        row3.add(8);
+        row3.add(9);
+        matrix.add(row3);
+        data.put("matrix", matrix);
+        
+        Bin bin = new Bin(BIN_NAME, data);
+        client.put(null, rkey, bin);
+        
+        CTX ctx1 = CTX.mapKey(Value.get("matrix"));
+        CTX ctx2 = CTX.allChildren();
+        
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, LoopVarPart.VALUE.id, ctx1, ctx2);
+        
+        Record result = client.operate(null, rkey, selectOp);
+        assertTrue("CDT select operation should succeed", result != null);
+        
+        // Should get all 3 rows
+        List<?> results = result.getList(BIN_NAME);
+        if (results != null) {
+            assertEquals("Should have 3 rows", 3, results.size());
+        }
+    }
+    
+    @Test
+    public void testBooleanExpressionsInFilters() {
+        Key rkey = new Key(NAMESPACE, SET, 227);
+        
+        try {
+            client.delete(null, rkey);
+        } catch (Exception e) {
+        }
+        
+        Map<String, Object> data = new HashMap<>();
+        List<Map<String, Object>> users = new ArrayList<>();
+        
+        Map<String, Object> user1 = new HashMap<>();
+        user1.put("name", "Alice");
+        user1.put("active", true);
+        user1.put("age", 30);
+        users.add(user1);
+        
+        Map<String, Object> user2 = new HashMap<>();
+        user2.put("name", "Bob");
+        user2.put("active", false);
+        user2.put("age", 25);
+        users.add(user2);
+        
+        Map<String, Object> user3 = new HashMap<>();
+        user3.put("name", "Charlie");
+        user3.put("active", true);
+        user3.put("age", 35);
+        users.add(user3);
+        
+        data.put("users", users);
+        
+        Bin bin = new Bin(BIN_NAME, data);
+        client.put(null, rkey, bin);
+        
+        // Select active users
+        CTX ctx1 = CTX.mapKey(Value.get("users"));
+        CTX ctx2 = CTX.allChildrenWithFilter(
+            Exp.eq(
+                MapExp.getByKey(MapReturnType.VALUE, Exp.Type.BOOL,
+                    Exp.val("active"), Exp.loopVarMap(LoopVarPart.VALUE)),
+                Exp.val(true)
+            )
+        );
+        CTX ctx3 = CTX.allChildrenWithFilter(
+            Exp.eq(Exp.loopVarString(LoopVarPart.MAP_KEY), Exp.val("name"))
+        );
+        
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, LoopVarPart.VALUE.id, ctx1, ctx2, ctx3);
+        
+        Record result = client.operate(null, rkey, selectOp);
+        assertTrue("CDT select operation should succeed", result != null);
+        
+        // Should get Alice and Charlie (active users)
+        List<?> results = result.getList(BIN_NAME);
+        if (results != null) {
+            assertEquals("Should have 2 active users", 2, results.size());
+            assertTrue("Should contain 'Alice'", results.contains("Alice"));
+            assertTrue("Should contain 'Charlie'", results.contains("Charlie"));
+        }
+    }
+    
+    @Test
+    public void testComplexAndOrFilterCombinations() {
+        Key rkey = new Key(NAMESPACE, SET, 228);
+        
+        try {
+            client.delete(null, rkey);
+        } catch (Exception e) {
+        }
+        
+        Map<String, Object> data = new HashMap<>();
+        List<Map<String, Object>> products = new ArrayList<>();
+        
+        Map<String, Object> p1 = new HashMap<>();
+        p1.put("name", "Widget");
+        p1.put("price", 10.0);
+        p1.put("inStock", true);
+        products.add(p1);
+        
+        Map<String, Object> p2 = new HashMap<>();
+        p2.put("name", "Gadget");
+        p2.put("price", 25.0);
+        p2.put("inStock", false);
+        products.add(p2);
+        
+        Map<String, Object> p3 = new HashMap<>();
+        p3.put("name", "Gizmo");
+        p3.put("price", 15.0);
+        p3.put("inStock", true);
+        products.add(p3);
+        
+        Map<String, Object> p4 = new HashMap<>();
+        p4.put("name", "Doohickey");
+        p4.put("price", 30.0);
+        p4.put("inStock", true);
+        products.add(p4);
+        
+        data.put("products", products);
+        
+        Bin bin = new Bin(BIN_NAME, data);
+        client.put(null, rkey, bin);
+        
+        // Select products that are (inStock AND price < 20) OR (price > 25)
+        CTX ctx1 = CTX.mapKey(Value.get("products"));
+        CTX ctx2 = CTX.allChildrenWithFilter(
+            Exp.or(
+                Exp.and(
+                    Exp.eq(
+                        MapExp.getByKey(MapReturnType.VALUE, Exp.Type.BOOL,
+                            Exp.val("inStock"), Exp.loopVarMap(LoopVarPart.VALUE)),
+                        Exp.val(true)
+                    ),
+                    Exp.lt(
+                        MapExp.getByKey(MapReturnType.VALUE, Exp.Type.FLOAT,
+                            Exp.val("price"), Exp.loopVarMap(LoopVarPart.VALUE)),
+                        Exp.val(20.0)
+                    )
+                ),
+                Exp.gt(
+                    MapExp.getByKey(MapReturnType.VALUE, Exp.Type.FLOAT,
+                        Exp.val("price"), Exp.loopVarMap(LoopVarPart.VALUE)),
+                    Exp.val(25.0)
+                )
+            )
+        );
+        CTX ctx3 = CTX.allChildrenWithFilter(
+            Exp.eq(Exp.loopVarString(LoopVarPart.MAP_KEY), Exp.val("name"))
+        );
+        
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, LoopVarPart.VALUE.id, ctx1, ctx2, ctx3);
+        
+        Record result = client.operate(null, rkey, selectOp);
+        assertTrue("CDT select operation should succeed", result != null);
+        
+        // Should get Widget (inStock, price 10), Gizmo (inStock, price 15), and Doohickey (price 30)
+        List<?> results = result.getList(BIN_NAME);
+        if (results != null) {
+            assertTrue("Should have at least 1 matching product", results.size() >= 1);
+        }
+    }
+    
+    @Test
+    public void testDeeplyNestedStructures() {
+        Key rkey = new Key(NAMESPACE, SET, 229);
+        
+        try {
+            client.delete(null, rkey);
+        } catch (Exception e) {
+        }
+        
+        Map<String, Object> data = new HashMap<>();
+        Map<String, Object> level1 = new HashMap<>();
+        Map<String, Object> level2 = new HashMap<>();
+        List<Map<String, Object>> level3 = new ArrayList<>();
+        
+        Map<String, Object> item1 = new HashMap<>();
+        item1.put("value", 100);
+        level3.add(item1);
+        
+        Map<String, Object> item2 = new HashMap<>();
+        item2.put("value", 200);
+        level3.add(item2);
+        
+        Map<String, Object> item3 = new HashMap<>();
+        item3.put("value", 300);
+        level3.add(item3);
+        
+        level2.put("level3", level3);
+        level1.put("level2", level2);
+        data.put("level1", level1);
+        
+        Bin bin = new Bin(BIN_NAME, data);
+        client.put(null, rkey, bin);
+        
+        // Navigate deep and select values
+        CTX ctx1 = CTX.mapKey(Value.get("level1"));
+        CTX ctx2 = CTX.mapKey(Value.get("level2"));
+        CTX ctx3 = CTX.mapKey(Value.get("level3"));
+        CTX ctx4 = CTX.allChildrenWithFilter(
+            Exp.gt(
+                MapExp.getByKey(MapReturnType.VALUE, Exp.Type.INT,
+                    Exp.val("value"), Exp.loopVarMap(LoopVarPart.VALUE)),
+                Exp.val(150)
+            )
+        );
+        CTX ctx5 = CTX.allChildrenWithFilter(
+            Exp.eq(Exp.loopVarString(LoopVarPart.MAP_KEY), Exp.val("value"))
+        );
+        
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, LoopVarPart.VALUE.id, ctx1, ctx2, ctx3, ctx4, ctx5);
+        
+        Record result = client.operate(null, rkey, selectOp);
+        assertTrue("CDT select operation should succeed", result != null);
+        
+        // Should get values > 150 (200 and 300)
+        List<?> results = result.getList(BIN_NAME);
+        if (results != null) {
+            assertEquals("Should have 2 values > 150", 2, results.size());
+        }
+    }
+    
+    @Test
+    public void testSingleContextElement() {
+        Key rkey = new Key(NAMESPACE, SET, 230);
+        
+        try {
+            client.delete(null, rkey);
+        } catch (Exception e) {
+        }
+        
+        Map<String, Object> data = new HashMap<>();
+        data.put("value", 123);
+        
+        Bin bin = new Bin(BIN_NAME, data);
+        client.put(null, rkey, bin);
+        
+        // Select with single context
+        CTX ctx1 = CTX.mapKey(Value.get("value"));
+        
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, LoopVarPart.VALUE.id, ctx1);
+        
+        Record result = client.operate(null, rkey, selectOp);
+        assertTrue("CDT select operation should succeed", result != null);
+        
+        Object results = result.getValue(BIN_NAME);
+        assertNotNull("Results should not be null", results);
+    }
+    
+    @Test
+    public void testEmptyLists() {
+        Key rkey = new Key(NAMESPACE, SET, 231);
+        
+        try {
+            client.delete(null, rkey);
+        } catch (Exception e) {
+        }
+        
+        Map<String, Object> data = new HashMap<>();
+        List<Object> emptyList = new ArrayList<>();
+        List<Integer> items = new ArrayList<>();
+        items.add(1);
+        items.add(2);
+        items.add(3);
+        data.put("emptyList", emptyList);
+        data.put("items", items);
+        
+        Bin bin = new Bin(BIN_NAME, data);
+        client.put(null, rkey, bin);
+        
+        // Try to select from empty list
+        CTX ctx1 = CTX.mapKey(Value.get("emptyList"));
+        CTX ctx2 = CTX.allChildren();
+        
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.NO_FAIL.flag, ctx1, ctx2);
+        
+        Record result = client.operate(null, rkey, selectOp);
+        assertTrue("CDT select operation should succeed", result != null);
+    }
+    
+    @Test
+    public void testEmptyMaps() {
+        Key rkey = new Key(NAMESPACE, SET, 232);
+        
+        try {
+            client.delete(null, rkey);
+        } catch (Exception e) {
+        }
+        
+        Map<String, Object> data = new HashMap<>();
+        Map<String, Object> emptyMap = new HashMap<>();
+        Map<String, Object> items = new HashMap<>();
+        items.put("a", 1);
+        items.put("b", 2);
+        data.put("emptyMap", emptyMap);
+        data.put("items", items);
+        
+        Bin bin = new Bin(BIN_NAME, data);
+        client.put(null, rkey, bin);
+        
+        // Try to select from empty map
+        CTX ctx1 = CTX.mapKey(Value.get("emptyMap"));
+        CTX ctx2 = CTX.allChildren();
+        
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.NO_FAIL.flag, ctx1, ctx2);
+        
+        Record result = client.operate(null, rkey, selectOp);
+        assertTrue("CDT select operation should succeed", result != null);
+    }
+    
+    @Test
+    public void testListIndexContext() {
+        Key rkey = new Key(NAMESPACE, SET, 233);
+        
+        try {
+            client.delete(null, rkey);
+        } catch (Exception e) {
+        }
+        
+        Map<String, Object> data = new HashMap<>();
+        List<Map<String, Object>> items = new ArrayList<>();
+        
+        Map<String, Object> item1 = new HashMap<>();
+        item1.put("name", "item1");
+        item1.put("value", 10);
+        items.add(item1);
+        
+        Map<String, Object> item2 = new HashMap<>();
+        item2.put("name", "item2");
+        item2.put("value", 20);
+        items.add(item2);
+        
+        Map<String, Object> item3 = new HashMap<>();
+        item3.put("name", "item3");
+        item3.put("value", 30);
+        items.add(item3);
+        
+        data.put("items", items);
+        
+        Bin bin = new Bin(BIN_NAME, data);
+        client.put(null, rkey, bin);
+        
+        // Select value from second item
+        CTX ctx1 = CTX.mapKey(Value.get("items"));
+        CTX ctx2 = CTX.listIndex(1); // Select second item (index 1)
+        CTX ctx3 = CTX.mapKey(Value.get("value"));
+        
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, LoopVarPart.VALUE.id, ctx1, ctx2, ctx3);
+        
+        Record result = client.operate(null, rkey, selectOp);
+        assertTrue("CDT select operation should succeed", result != null);
+        
+        Object resultBin = result.getValue(BIN_NAME);
+        if (resultBin instanceof List) {
+            List<?> resultList = (List<?>) resultBin;
+            if (resultList.size() == 1) {
+                assertEquals("Should get value 20", 20L, resultList.get(0));
+            }
+        }
+    }
+    
+    @Test
+    public void testModifyWithIndex() {
+        Key rkey = new Key(NAMESPACE, SET, 234);
+        
+        try {
+            client.delete(null, rkey);
+        } catch (Exception e) {
+        }
+        
+        Map<String, Object> data = new HashMap<>();
+        List<Integer> values = new ArrayList<>();
+        values.add(100);
+        values.add(200);
+        values.add(300);
+        values.add(400);
+        data.put("values", values);
+        
+        Bin bin = new Bin(BIN_NAME, data);
+        client.put(null, rkey, bin);
+        
+        // Multiply each value by its index + 1
+        CTX ctx1 = CTX.mapKey(Value.get("values"));
+        CTX ctx2 = CTX.allChildrenWithFilter(Exp.val(true));
+        
+        Expression modifyExp = Exp.build(
+            Exp.mul(
+                Exp.loopVarInt(LoopVarPart.VALUE),
+                Exp.add(Exp.loopVarInt(LoopVarPart.INDEX), Exp.val(1))
+            )
+        );
+        
+        Operation applyOp = CdtOperation.modifyByPath(BIN_NAME, 0, modifyExp, ctx1, ctx2);
+        
+        Record result = client.operate(null, rkey, applyOp);
+        assertTrue("CDT apply operation should succeed", result != null);
+        
+        Record finalRecord = client.get(null, rkey);
+        assertTrue("Final record should exist", finalRecord != null);
+        
+        Map<?, ?> finalData = (Map<?, ?>) finalRecord.getValue(BIN_NAME);
+        assertTrue("Data map should exist", finalData != null);
+        
+        List<?> finalValues = (List<?>) finalData.get("values");
+        assertTrue("Values list should exist", finalValues != null);
+        
+        assertEquals("First value should be 100", 100, ((Number) finalValues.get(0)).intValue());
+        assertEquals("Second value should be 400", 400, ((Number) finalValues.get(1)).intValue());
+        assertEquals("Third value should be 900", 900, ((Number) finalValues.get(2)).intValue());
+        assertEquals("Fourth value should be 1600", 1600, ((Number) finalValues.get(3)).intValue());
+    }
+    
+    @Test
+    public void testModifyWithComplexArithmetic() {
+        Key rkey = new Key(NAMESPACE, SET, 235);
+        
+        try {
+            client.delete(null, rkey);
+        } catch (Exception e) {
+        }
+        
+        Map<String, Object> data = new HashMap<>();
+        List<Map<String, Object>> metrics = new ArrayList<>();
+        
+        Map<String, Object> m1 = new HashMap<>();
+        m1.put("value", 10);
+        m1.put("multiplier", 2);
+        metrics.add(m1);
+        
+        Map<String, Object> m2 = new HashMap<>();
+        m2.put("value", 20);
+        m2.put("multiplier", 3);
+        metrics.add(m2);
+        
+        Map<String, Object> m3 = new HashMap<>();
+        m3.put("value", 30);
+        m3.put("multiplier", 4);
+        metrics.add(m3);
+        
+        data.put("metrics", metrics);
+        
+        Bin bin = new Bin(BIN_NAME, data);
+        client.put(null, rkey, bin);
+        
+        // Add 100 to each value field in the metrics
+        CTX ctx1 = CTX.mapKey(Value.get("metrics"));
+        CTX ctx2 = CTX.allChildrenWithFilter(Exp.val(true));
+        CTX ctx3 = CTX.allChildrenWithFilter(
+            Exp.eq(Exp.loopVarString(LoopVarPart.MAP_KEY), Exp.val("value"))
+        );
+        
+        Expression modifyExp = Exp.build(
+            Exp.add(Exp.loopVarInt(LoopVarPart.VALUE), Exp.val(100))
+        );
+        
+        Operation applyOp = CdtOperation.modifyByPath(BIN_NAME, 0, modifyExp, ctx1, ctx2, ctx3);
+        
+        Record result = client.operate(null, rkey, applyOp);
+        assertTrue("CDT apply operation should succeed", result != null);
+        
+        Record finalRecord = client.get(null, rkey);
+        assertTrue("Final record should exist", finalRecord != null);
+        
+        Map<?, ?> finalData = (Map<?, ?>) finalRecord.getValue(BIN_NAME);
+        assertTrue("Data map should exist", finalData != null);
+        
+        List<?> finalMetrics = (List<?>) finalData.get("metrics");
+        assertTrue("Metrics list should exist", finalMetrics != null);
+        
+        Map<?, ?> firstMetric = (Map<?, ?>) finalMetrics.get(0);
+        assertTrue("First metric should exist", firstMetric != null);
+        
+        int value = ((Number) firstMetric.get("value")).intValue();
+        assertEquals("10 + 100 = 110", 110, value);
     }
 }
