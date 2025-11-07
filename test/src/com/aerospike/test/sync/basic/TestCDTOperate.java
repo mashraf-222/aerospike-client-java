@@ -25,6 +25,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.BeforeClass;
+import org.junit.Assume;
 import org.junit.Test;
 
 import com.aerospike.client.Bin;
@@ -41,6 +43,7 @@ import com.aerospike.client.exp.LoopVarPart;
 import com.aerospike.client.exp.MapExp;
 import com.aerospike.client.operation.ModifyFlag;
 import com.aerospike.client.operation.SelectFlag;
+import com.aerospike.client.util.Version;
 import com.aerospike.test.sync.TestSync;
 
 public class TestCdtOperate extends TestSync {
@@ -48,6 +51,13 @@ public class TestCdtOperate extends TestSync {
     private static final String NAMESPACE = "test";
     private static final String SET = "testset";
     private static final String BIN_NAME = "testbin";
+    
+    @BeforeClass
+    public static void checkServerVersion() {
+        Version serverVersion = client.getCluster().getRandomNode().getServerVersion();
+        boolean condition = serverVersion.isGreaterOrEqual(8, 1, 1, 0);
+        Assume.assumeTrue("Tests skipped for server version < 8.1.1", condition);
+    }
     
     @Test
     public void testCDTOperateWithExpressions() {
