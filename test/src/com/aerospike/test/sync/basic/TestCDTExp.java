@@ -702,7 +702,7 @@ public class TestCdtExp extends TestSync {
         
         Exp modifyExp = Exp.mul(
             Exp.loopVarInt(LoopVarPart.VALUE),
-            Exp.val(1.1)
+            Exp.val(2)
         );
         
         Expression applyExp = Exp.build(
@@ -735,11 +735,10 @@ public class TestCdtExp extends TestSync {
         assertNotNull("Sales department should exist", salesDept);
         
         Object revenueObj = salesDept.get("revenue");
-        double revenueFloat = ((Number) revenueObj).doubleValue();
+        long revenueInt = ((Number) revenueObj).longValue();
         
-        double expectedRevenue = 100000 * 1.1;
-        assertTrue("Revenue should be approximately " + expectedRevenue,
-                   Math.abs(revenueFloat - expectedRevenue) < 1.0);
+        long expectedRevenue = 100000 * 2;
+        assertTrue("Revenue should be " + expectedRevenue + " but was " + revenueInt, revenueInt == expectedRevenue);
     }
     
     @Test
