@@ -1184,8 +1184,6 @@ public abstract class Exp {
 	 * <pre>{@code
 	 * Exp.loopVarString(LoopVarPart.MAP_KEY)
 	 * }</pre>
-	 * @param part
-	 * @return
 	 */
 	public static Exp loopVarString(LoopVarPart part) {
 		return new Var(Type.STRING.code, part.id);
@@ -1198,8 +1196,6 @@ public abstract class Exp {
 	 * <pre>{@code
 	 * Exp.loopVarInt(LoopVarPart.MAP_KEY)
 	 * }</pre>
-	 * @param part
-	 * @return
 	 */
 	public static Exp loopVarInt(LoopVarPart part) {
 		return new Var(Type.INT.code, part.id);
@@ -1212,8 +1208,6 @@ public abstract class Exp {
 	 * <pre>{@code
 	 * Exp.loopVarFloat(LoopVarPart.MAP_KEY)
 	 * }</pre>
-	 * @param part
-	 * @return
 	 */
 	public static Exp loopVarFloat(LoopVarPart part) {
 		return new Var(Type.FLOAT.code, part.id);
@@ -1226,8 +1220,6 @@ public abstract class Exp {
 	 * <pre>{@code
 	 * Exp.loopVarList(LoopVarPart.MAP_KEY)
 	 * }</pre>
-	 * @param part
-	 * @return
 	 */
 	public static Exp loopVarList(LoopVarPart part)	{
 		return new Var(Type.LIST.code, part.id);
@@ -1240,11 +1232,21 @@ public abstract class Exp {
 	 * <pre>{@code
 	 * Exp.loopVarMap(LoopVarPart.MAP_KEY)
 	 * }</pre>
-	 * @param part
-	 * @return
 	 */
 	public static Exp loopVarMap(LoopVarPart part)	{
 		return new Var(Type.MAP.code, part.id);
+	}
+
+	/**
+     * Creates a result remove expression.
+     * Requires server version 8.1.1+.
+	 *
+	 * <pre>{@code
+	 * Exp.resultRemove()
+	 * }</pre>
+	 */
+	public static Exp resultRemove() {
+		return new Cmd(RESULT_REMOVE);
 	}
 
 	//--------------------------------------------------
@@ -1341,6 +1343,7 @@ public abstract class Exp {
 	private static final int KEY = 80;
 	private static final int BIN = 81;
 	private static final int BIN_TYPE = 82;
+	private static final int RESULT_REMOVE = 100;
 	private static final int VAR_BUILTIN = 122;
 	private static final int COND = 123;
 	private static final int VAR = 124;
