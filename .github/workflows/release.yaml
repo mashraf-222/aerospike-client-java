@@ -126,7 +126,7 @@ jobs:
           ls -la target
           mkdir ${{ github.workspace }}/local_repo
 
-          mvn \
+          mvn deploy:deploy-file \
             -DpomFile=deploy-resources/${{ inputs.crypto-type }}_pom.xml \
             -DrepositoryId=local \
             -Durl=file://${{ github.workspace }}/local_repo \
