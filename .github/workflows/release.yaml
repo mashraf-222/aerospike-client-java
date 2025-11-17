@@ -58,11 +58,6 @@ jobs:
           fetch-depth: 0
           ref: ${{ inputs.ref }}
 
-      - name: Gpg debug step
-        shell: bash
-        run: |
-          gpg --version
-
       # Java plugin will setup gpg but we are not using maven to deploy do JFrog.
       # - jf mvn clean install on publish does not publish POM we would like to publish
       - name: Setup Java
@@ -170,6 +165,12 @@ jobs:
     needs: [build, sign-artifacts]
     runs-on: ${{ vars.BUILD_CONTAINER_DISTRO_VERSION }}
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.ref }}
+
       - name: Download signed artifacts
         uses: actions/download-artifact@v4
         with:
