@@ -6,30 +6,50 @@ on:
   workflow_call:
     inputs:
       ref:
+        description: Branch to release from
         type: string
         required: true
       java-version:
+        description: Java version to release
         type: string
         required: true
       crypto-type:
+        description: Crypto type to release
         type: string
         required: true
       is-snapshot:
+        description: Is snapshot build
         type: string
         required: true
+      gh-retention-days:
+        description: GitHub artifact retention days
+        type: number
+        required: false
+        default: 1
     secrets:
-      GPG_JAVA_CLIENT_PRIVATE_KEY:
-        required: true
-      GPG_JAVA_CLIENT_PASS:
-        required: true
       JFROG_OIDC_PROVIDER:
+        description: JFrog OIDC provider
         required: true
       JFROG_OIDC_AUDIENCE:
+        description: JFrog OIDC audience
+        required: true
+      GPG_SECRET_KEY:
+        description: GPG secret key
+        required: true
+      GPG_PUBLIC_KEY:
+        description: GPG public key
+        required: true
+      GPG_PASS:
+        description: GPG pass
         required: true
 
 jobs:
   build:
     runs-on: ${{ vars.BUILD_CONTAINER_DISTRO_VERSION }}
+    outputs:
+      gh-artifact-name: ${{ steps.build-info.outputs.gh-artifact-name }}
+      artifact-id: ${{ steps.get-artifact-id.outputs.artifact-id }}
+      artifact-version: ${{ steps.get-artifact-version.outputs.artifact-version }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -47,10 +67,8 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          distribution: "semeru"
+          distribution: ${{ vars.JAVA_PROVIDER }}
           java-version: ${{ inputs.java-version }}
-          gpg-private-key: ${{ secrets.GPG_JAVA_CLIENT_PRIVATE_KEY }}
-          gpg-passphrase: GPG_PASS
 
       - name: Get release or snapshot-version
         id: get-release-version
@@ -107,7 +125,7 @@ jobs:
           ls -la target
           mkdir ${{ github.workspace }}/local_repo
 
-          mvn gpg:sign-and-deploy-file \
+          mvn \
             -DpomFile=deploy-resources/${{ inputs.crypto-type }}_pom.xml \
             -DrepositoryId=local \
             -Durl=file://${{ github.workspace }}/local_repo \
@@ -118,18 +136,50 @@ jobs:
             -Dfiles=target/aerospike-client${{ inputs.crypto-type == 'bouncycastle' && '-bc' || '' }}-jdk${{ inputs.java-version == '1.8' && '8' || inputs.java-version }}-${{ steps.get-artifact-version.outputs.artifact-version }}-jar-with-dependencies.jar,target/aerospike-client${{ inputs.crypto-type == 'bouncycastle' && '-bc' || '' }}-jdk${{ inputs.java-version == '1.8' && '8' || inputs.java-version }}-${{ steps.get-artifact-version.outputs.artifact-version }}-sources.jar,target/aerospike-client${{ inputs.crypto-type == 'bouncycastle' && '-bc' || '' }}-jdk${{ inputs.java-version == '1.8' && '8' || inputs.java-version }}-${{ steps.get-artifact-version.outputs.artifact-version }}-javadoc.jar \
             -Dclassifiers=jar-with-dependencies,sources,javadoc \
             -Dtypes=jar,jar,jar \
-            -P gpg -P ${{ inputs.crypto-type }}
+            -P ${{ inputs.crypto-type }}
 
           ls -laR ${{ github.workspace }}/local_repo
-        env:
-          GPG_PASS: ${{ secrets.GPG_JAVA_CLIENT_PASS }}
 
-      # Publishing release to JFrog
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v5
+        with:
+          name: ${{ steps.get-artifact-id.outputs.artifact-id }}
+          path: ${{ github.workspace }}/local_repo
+          retention-days: ${{ inputs.gh-retention-days }}
+
+      - name: Set Build Info Outputs
+        id: build-info
+        run: |
+          echo "gh-artifact-name=${{ steps.get-artifact-id.outputs.artifact-id }}" >> $GITHUB_OUTPUT
+
+  sign-artifacts:
+    needs: build
+    uses: aerospike/shared-workflows/.github/workflows/reusable_sign-artifacts.yaml@37581d0437fe0b76315dafc402882c875789b1af
+    with:
+      gh-retention-days: 1
+      gh-artifact-name: packaged-artifacts
+      # gh-workflows-ref: v2.0.2 # Use specific shared-workflows version
+    secrets:
+      gpg-private-key: ${{ secrets.GPG_SECRET_KEY }}
+      gpg-public-key: ${{ secrets.GPG_PUBLIC_KEY }}
+      gpg-key-pass: ${{ secrets.GPG_PASS }}
+
+  publish-to-jfrog:
+    needs: [build, sign-artifacts]
+    runs-on: ${{ vars.BUILD_CONTAINER_DISTRO_VERSION }}
+    steps:
+      - name: Download signed artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.sign-artifacts.outputs.gh-artifact-name }}
+          path: ${{ github.workspace }}/local_repo
+          merge-multiple: true
+
       - name: Publish to JFrog
         uses: ./.github/actions/publish-to-jfrog
         with:
           oidc-provider: ${{ secrets.JFROG_OIDC_PROVIDER }}
           oidc-audience: ${{ secrets.JFROG_OIDC_AUDIENCE }}
-          artifact-id: ${{ steps.get-artifact-id.outputs.artifact-id }}
-          artifact-version: ${{ steps.get-artifact-version.outputs.artifact-version }}
+          artifact-id: ${{ needs.build.outputs.artifact-id }}
+          artifact-version: ${{ needs.build.outputs.artifact-version }}
           package-install-location: ${{ github.workspace }}/local_repo
