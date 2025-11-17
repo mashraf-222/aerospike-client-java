@@ -51,6 +51,7 @@ jobs:
       gh-artifact-name: ${{ steps.build-info.outputs.gh-artifact-name }}
       artifact-id: ${{ steps.get-artifact-id.outputs.artifact-id }}
       artifact-version: ${{ steps.get-artifact-version.outputs.artifact-version }}
+      group-id: ${{ steps.get-group-id.outputs.group-id }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -111,6 +112,12 @@ jobs:
         working-directory: client
         run: |
           echo artifact-version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout) >> $GITHUB_OUTPUT
+
+      - name: Get group ID
+        id: get-group-id
+        working-directory: client
+        run: |
+          echo group-id=$(mvn help:evaluate -Dexpression=project.groupId -q -DforceStdout) >> $GITHUB_OUTPUT
 
       # Running deploy/install from using custom pom. This is needed since we need to stage/assemble a public facing release. The public facing release will NOT
       # have the same pom as the pom that is used for builds and tests.
@@ -192,4 +199,4 @@ jobs:
           oidc-audience: ${{ secrets.JFROG_OIDC_AUDIENCE }}
           artifact-id: ${{ needs.build.outputs.artifact-id }}
           artifact-version: ${{ needs.build.outputs.artifact-version }}
-          package-install-location: ${{ github.workspace }}/local_repo
+          package-install-location: ${{ github.workspace }}/local_repo/unsigned-artifacts
