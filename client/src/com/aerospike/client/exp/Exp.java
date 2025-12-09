@@ -133,77 +133,6 @@ public abstract class Exp {
 		return new Cmd(KEY_EXISTS);
 	}
 
-	/**
-	 * Create expression that references a built-in variable.
-	 * Requires server version 8.1.1
-	 *
-	 * <pre>{@code
-	 * Exp.loopVarString(LoopVarPart.MAP_KEY)
-	 * }</pre>
-	 * @param part
-	 * @return
-	 */
-	public static Exp loopVarString(LoopVarPart part) {
-		return new Var(Type.STRING.code, part.id);
-	}
-
-	/**
-	 * Create expression that references a built-in variable.
-	 * Requires server version 8.1.1
-	 *
-	 * <pre>{@code
-	 * Exp.loopVarInt(LoopVarPart.MAP_KEY)
-	 * }</pre>
-	 * @param part
-	 * @return
-	 */
-	public static Exp loopVarInt(LoopVarPart part) {
-		return new Var(Type.INT.code, part.id);
-	}
-
-	/**
-	 * Create expression that references a built-in variable.
-	 * Requires server version 8.1.1
-	 *
-	 * <pre>{@code
-	 * Exp.loopVarFloat(LoopVarPart.MAP_KEY)
-	 * }</pre>
-	 * @param part
-	 * @return
-	 */
-	public static Exp loopVarFloat(LoopVarPart part) {
-		return new Var(Type.FLOAT.code, part.id);
-	}
-
-	/**
-	 * Create expression that references a built-in variable.
-	 * Requires server version 8.1.1
-	 *
-	 * <pre>{@code
-	 * Exp.loopVarList(LoopVarPart.MAP_KEY)
-	 * }</pre>
-	 * @param part
-	 * @return
-	 */
-	public static Exp loopVarList(LoopVarPart part)	{
-		return new Var(Type.LIST.code, part.id);
-	}
-
-	/**
-	 * Create expression that references a built-in variable.
-	 * Requires server version 8.1.1
-	 *
-	 * <pre>{@code
-	 * Exp.loopVarMap(LoopVarPart.MAP_KEY)
-	 * }</pre>
-	 * @param part
-	 * @return
-	 */
-	public static Exp loopVarMap(LoopVarPart part)	{
-		return new Var(Type.MAP.code, part.id);
-	}
-
-
 	//--------------------------------------------------
 	// Record Bin
 	//--------------------------------------------------
@@ -211,6 +140,7 @@ public abstract class Exp {
 	/**
 	 * Create bin expression of specified type.
 	 *
+
 	 * <pre>{@code
 	 * // String bin "a" == "views"
 	 * Exp.eq(Exp.bin("a", Type.STRING), Exp.val("views"))
@@ -1247,6 +1177,78 @@ public abstract class Exp {
 		return new CmdStr(VAR, name);
 	}
 
+	/**
+	 * Create expression that references a built-in variable.
+	 * Requires server version 8.1.1
+	 *
+	 * <pre>{@code
+	 * Exp.loopVarString(LoopVarPart.MAP_KEY)
+	 * }</pre>
+	 */
+	public static Exp loopVarString(LoopVarPart part) {
+		return new Var(Type.STRING.code, part.id);
+	}
+
+	/**
+	 * Create expression that references a built-in variable.
+	 * Requires server version 8.1.1
+	 * 
+	 * <pre>{@code
+	 * Exp.loopVarInt(LoopVarPart.MAP_KEY)
+	 * }</pre>
+	 */
+	public static Exp loopVarInt(LoopVarPart part) {
+		return new Var(Type.INT.code, part.id);
+	}
+
+	/**
+	 * Create expression that references a built-in variable.
+	 * Requires server version 8.1.1
+	 * 
+	 * <pre>{@code
+	 * Exp.loopVarFloat(LoopVarPart.MAP_KEY)
+	 * }</pre>
+	 */
+	public static Exp loopVarFloat(LoopVarPart part) {
+		return new Var(Type.FLOAT.code, part.id);
+	}
+
+	/**
+	 * Create expression that references a built-in variable.
+	 * Requires server version 8.1.1
+	 * 
+	 * <pre>{@code
+	 * Exp.loopVarList(LoopVarPart.MAP_KEY)
+	 * }</pre>
+	 */
+	public static Exp loopVarList(LoopVarPart part)	{
+		return new Var(Type.LIST.code, part.id);
+	}
+
+	/**
+	 * Create expression that references a built-in variable.
+	 * Requires server version 8.1.1
+	 * 
+	 * <pre>{@code
+	 * Exp.loopVarMap(LoopVarPart.MAP_KEY)
+	 * }</pre>
+	 */
+	public static Exp loopVarMap(LoopVarPart part)	{
+		return new Var(Type.MAP.code, part.id);
+	}
+
+	/**
+     * Creates a result remove expression.
+     * Requires server version 8.1.1+.
+	 *
+	 * <pre>{@code
+	 * Exp.resultRemove()
+	 * }</pre>
+	 */
+	public static Exp resultRemove() {
+		return new Cmd(RESULT_REMOVE);
+	}
+
 	//--------------------------------------------------
 	// Miscellaneous
 	//--------------------------------------------------
@@ -1341,6 +1343,7 @@ public abstract class Exp {
 	private static final int KEY = 80;
 	private static final int BIN = 81;
 	private static final int BIN_TYPE = 82;
+	private static final int RESULT_REMOVE = 100;
 	private static final int VAR_BUILTIN = 122;
 	private static final int COND = 123;
 	private static final int VAR = 124;
@@ -1671,12 +1674,10 @@ public abstract class Exp {
 		}
 	}
 
-	private static final class ExpBytes extends Exp
-	{
+	private static final class ExpBytes extends Exp {
 		private final byte[] bytes;
 
-		private ExpBytes(Expression e)
-		{
+		private ExpBytes(Expression e) {
 			this.bytes = e.getBytes();
 		}
 
