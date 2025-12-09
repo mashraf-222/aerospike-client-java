@@ -1547,4 +1547,214 @@ public class TestCdtOperate extends TestSync {
         assertTrue("Engineering list should exist", finalEngList != null);
         assertEquals("Should keep Alice only", 1, finalEngList.size());
     }
+    
+    @Test
+    public void testOperateWithNoOperations() {
+        Key rkey = new Key(NAMESPACE, SET, 244);
+       
+        // Make sure the record does not exist
+        try {
+            client.delete(null, rkey);
+        } catch (Exception e) {
+        }
+        
+        Map<String, Object> data = new HashMap<>();
+        data.put("value", 123);
+        
+        Bin bin = new Bin(BIN_NAME, data);
+        client.put(null, rkey, bin);
+        
+        Record record = client.get(null, rkey);
+        assertTrue("Record should exist", record != null);
+        
+        try {
+            client.operate(null, rkey);
+            assertTrue("Should throw AerospikeException with PARAMETER_ERROR", false);
+        } catch (com.aerospike.client.AerospikeException e) {
+            assertEquals("Should be PARAMETER_ERROR", com.aerospike.client.ResultCode.PARAMETER_ERROR, e.getResultCode());
+        }
+    }
+    
+    @Test
+    public void testSelectByPathWithNullContext() {
+        Key rkey = new Key(NAMESPACE, SET, 245);
+        
+        try {
+            client.delete(null, rkey);
+        } catch (Exception e) {
+        }
+        
+        List<Integer> numbers = new ArrayList<>();
+        numbers.add(10);
+        numbers.add(20);
+        numbers.add(30);
+        
+        Bin bin = new Bin(BIN_NAME, numbers);
+        client.put(null, rkey, bin);
+        
+        Record record = client.get(null, rkey);
+        assertTrue("Record should exist", record != null);
+        
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE, (CTX[])null);
+        
+        try {
+            client.operate(null, rkey, selectOp);
+            assertTrue("Should throw AerospikeException with PARAMETER_ERROR", false);
+        } catch (com.aerospike.client.AerospikeException e) {
+            assertEquals("Should be PARAMETER_ERROR", com.aerospike.client.ResultCode.PARAMETER_ERROR, e.getResultCode());
+        }
+    }
+    
+    @Test
+    public void testSelectByPathWithNoContexts() {
+        Key rkey = new Key(NAMESPACE, SET, 246);
+        
+        try {
+            client.delete(null, rkey);
+        } catch (Exception e) {
+        }
+        
+        List<Integer> numbers = new ArrayList<>();
+        numbers.add(10);
+        numbers.add(20);
+        numbers.add(30);
+        
+        Bin bin = new Bin(BIN_NAME, numbers);
+        client.put(null, rkey, bin);
+        
+        Record record = client.get(null, rkey);
+        assertTrue("Record should exist", record != null);
+        
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE);
+        
+        try {
+            client.operate(null, rkey, selectOp);
+            assertTrue("Should throw AerospikeException with PARAMETER_ERROR", false);
+        } catch (com.aerospike.client.AerospikeException e) {
+            assertEquals("Should be PARAMETER_ERROR", com.aerospike.client.ResultCode.PARAMETER_ERROR, e.getResultCode());
+        }
+    }
+    
+    @Test
+    public void testSelectByPathWithEmptyContextArray() {
+        Key rkey = new Key(NAMESPACE, SET, 247);
+        
+        try {
+            client.delete(null, rkey);
+        } catch (Exception e) {
+        }
+        
+        Map<String, Object> data = new HashMap<>();
+        data.put("value1", 100);
+        data.put("value2", 200);
+        data.put("value3", 300);
+        
+        Bin bin = new Bin(BIN_NAME, data);
+        client.put(null, rkey, bin);
+        
+        Record record = client.get(null, rkey);
+        assertTrue("Record should exist", record != null);
+        
+        CTX[] emptyCtx = new CTX[0];
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE, emptyCtx);
+        
+        try {
+            client.operate(null, rkey, selectOp);
+            assertTrue("Should throw AerospikeException with PARAMETER_ERROR", false);
+        } catch (com.aerospike.client.AerospikeException e) {
+            assertEquals("Should be PARAMETER_ERROR", com.aerospike.client.ResultCode.PARAMETER_ERROR, e.getResultCode());
+        }
+    }
+    
+    @Test
+    public void testModifyByPathWithNullContext() {
+        Key rkey = new Key(NAMESPACE, SET, 248);
+        
+        try {
+            client.delete(null, rkey);
+        } catch (Exception e) {
+        }
+        
+        List<Integer> numbers = new ArrayList<>();
+        numbers.add(10);
+        numbers.add(20);
+        numbers.add(30);
+        
+        Bin bin = new Bin(BIN_NAME, numbers);
+        client.put(null, rkey, bin);
+        
+        Record record = client.get(null, rkey);
+        assertTrue("Record should exist", record != null);
+        
+        Expression modifyExp = Exp.build(Exp.val(100));
+        Operation modifyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT, modifyExp, (CTX[])null);
+        
+        try {
+            client.operate(null, rkey, modifyOp);
+            assertTrue("Should throw AerospikeException with PARAMETER_ERROR", false);
+        } catch (com.aerospike.client.AerospikeException e) {
+            assertEquals("Should be PARAMETER_ERROR", com.aerospike.client.ResultCode.PARAMETER_ERROR, e.getResultCode());
+        }
+    }
+    
+    @Test
+    public void testModifyByPathWithNoContexts() {
+        Key rkey = new Key(NAMESPACE, SET, 249);
+        
+        try {
+            client.delete(null, rkey);
+        } catch (Exception e) {
+        }
+        
+        List<Integer> numbers = new ArrayList<>();
+        numbers.add(10);
+        numbers.add(20);
+        numbers.add(30);
+        
+        Bin bin = new Bin(BIN_NAME, numbers);
+        client.put(null, rkey, bin);
+        
+        Record record = client.get(null, rkey);
+        assertTrue("Record should exist", record != null);
+        
+        Expression modifyExp = Exp.build(Exp.val(100));
+        Operation modifyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT, modifyExp);
+        
+        try {
+            client.operate(null, rkey, modifyOp);
+            assertTrue("Should throw AerospikeException with PARAMETER_ERROR", false);
+        } catch (com.aerospike.client.AerospikeException e) {
+            assertEquals("Should be PARAMETER_ERROR", com.aerospike.client.ResultCode.PARAMETER_ERROR, e.getResultCode());
+        }
+    }
+    
+    @Test
+    public void testModifyByPathWithEmptyContextArray() {
+        Key rkey = new Key(NAMESPACE, SET, 250);
+        
+        try {
+            client.delete(null, rkey);
+        } catch (Exception e) {
+        }
+        
+        Map<String, Object> data = new HashMap<>();
+        data.put("count", 50);
+        
+        Bin bin = new Bin(BIN_NAME, data);
+        client.put(null, rkey, bin);
+        
+        Record record = client.get(null, rkey);
+        assertTrue("Record should exist", record != null);
+        
+        CTX[] emptyCtx = new CTX[0];
+        Expression modifyExp = Exp.build(Exp.val(200));
+        Operation modifyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT, modifyExp, emptyCtx);
+        
+        try {
+            client.operate(null, rkey, modifyOp);
+            assertTrue("Should throw AerospikeException with PARAMETER_ERROR", false);
+        } catch (com.aerospike.client.AerospikeException e) {
+            assertEquals("Should be PARAMETER_ERROR", com.aerospike.client.ResultCode.PARAMETER_ERROR, e.getResultCode());
+        }
+    }
 }

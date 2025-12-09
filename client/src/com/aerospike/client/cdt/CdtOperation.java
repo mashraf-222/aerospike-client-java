@@ -21,42 +21,45 @@ import com.aerospike.client.Value;
 import com.aerospike.client.command.ParticleType;
 import com.aerospike.client.operation.ModifyFlag;
 import com.aerospike.client.operation.SelectFlag;
+import com.aerospike.client.util.Pack;
 import com.aerospike.client.util.Packer;
 import com.aerospike.client.exp.Expression;
 
 public class CdtOperation {	
     /**
      * Create CDT select operation with context.
-     * Equivalent to as_operations_cdt_select in C client.
      *
      * @param binName		bin name
      * @param flags			select flags
-     * @param ctx			optional path to nested CDT. If not defined, the top-level CDT is used.
+     * @param ctx			optional path to nested CDT
      */
     public static Operation selectByPath(String binName, SelectFlag flags, CTX... ctx) {
-        if (ctx == null) {
-            return null;
+        byte[] packedBytes;
+        if (ctx == null || ctx.length == 0) { 
+            packedBytes = Pack.pack(CDT.Type.SELECT.value, flags.flag);
+        } else {
+            packedBytes = packCdtSelect(flags, CDT.Type.SELECT, ctx);
         }
 
-        byte[] packedBytes = packCdtSelect(flags, CDT.Type.SELECT, ctx);
         return new Operation(Operation.Type.CDT_READ, binName, Value.get(packedBytes, ParticleType.BLOB));
     }
 
     /**
      * Create CDT apply operation with context and modify expression.
-     * Equivalent to as_operations_cdt_apply in C client.
      *
      * @param binName		bin name
      * @param flags			select flags
      * @param modifyExp		modify expression
-     * @param ctx			optional path to nested CDT. If not defined, the top-level CDT is used.
+     * @param ctx			optional path to nested CDT
      */
     public static Operation modifyByPath(String binName, ModifyFlag flags, Expression modifyExp, CTX... ctx) {
-        if (ctx == null) {
-            return null;
+        byte[] packedBytes;
+        if (ctx == null || ctx.length == 0) { 
+            packedBytes = Pack.pack(CDT.Type.SELECT.value, flags.flag, modifyExp);
+        } else {
+            packedBytes = packCdtModify(flags, CDT.Type.SELECT, modifyExp, ctx);
         }
 
-        byte[] packedBytes = packCdtModify(flags, CDT.Type.SELECT, modifyExp, ctx);
         return new Operation(Operation.Type.CDT_MODIFY, binName, Value.get(packedBytes, ParticleType.BLOB));
     }
 	

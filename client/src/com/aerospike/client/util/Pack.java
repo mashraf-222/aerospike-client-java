@@ -21,6 +21,7 @@ import java.util.List;
 import com.aerospike.client.Value;
 import com.aerospike.client.cdt.CTX;
 import com.aerospike.client.exp.Exp;
+import com.aerospike.client.exp.Expression;
 
 public final class Pack {
 	public static byte[] pack(int command, CTX... ctx) {
@@ -575,6 +576,16 @@ public final class Pack {
 		v2.pack(packer);
 		v3.pack(packer);
 		v4.pack(packer);
+
+		return packer.getBuffer();
+	}
+
+	public static byte[] pack(int command, int v1, Expression expression) {
+		Packer packer = new Packer();
+		packer.packArrayBegin(3);
+		packer.packInt(command);
+		packer.packInt(v1);
+		packer.packByteArray(expression.getBytes(), 0, expression.getBytes().length);
 
 		return packer.getBuffer();
 	}
