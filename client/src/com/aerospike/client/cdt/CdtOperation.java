@@ -19,8 +19,6 @@ package com.aerospike.client.cdt;
 import com.aerospike.client.Operation;
 import com.aerospike.client.Value;
 import com.aerospike.client.command.ParticleType;
-import com.aerospike.client.operation.ModifyFlag;
-import com.aerospike.client.operation.SelectFlag;
 import com.aerospike.client.util.Pack;
 import com.aerospike.client.util.Packer;
 import com.aerospike.client.exp.Expression;
@@ -33,10 +31,10 @@ public class CdtOperation {
      * @param flags			select flags
      * @param ctx			optional path to nested CDT
      */
-    public static Operation selectByPath(String binName, SelectFlag flags, CTX... ctx) {
+    public static Operation selectByPath(String binName, int flags, CTX... ctx) {
         byte[] packedBytes;
         if (ctx == null || ctx.length == 0) { 
-            packedBytes = Pack.pack(CDT.Type.SELECT.value, flags.flag);
+            packedBytes = Pack.pack(CDT.Type.SELECT.value, flags);
         } else {
             packedBytes = packCdtSelect(flags, CDT.Type.SELECT, ctx);
         }
@@ -52,10 +50,10 @@ public class CdtOperation {
      * @param modifyExp		modify expression
      * @param ctx			optional path to nested CDT
      */
-    public static Operation modifyByPath(String binName, ModifyFlag flags, Expression modifyExp, CTX... ctx) {
+    public static Operation modifyByPath(String binName, int flags, Expression modifyExp, CTX... ctx) {
         byte[] packedBytes;
         if (ctx == null || ctx.length == 0) { 
-            packedBytes = Pack.pack(CDT.Type.SELECT.value, flags.flag, modifyExp);
+            packedBytes = Pack.pack(CDT.Type.SELECT.value, flags, modifyExp);
         } else {
             packedBytes = packCdtModify(flags, CDT.Type.SELECT, modifyExp, ctx);
         }
@@ -63,7 +61,7 @@ public class CdtOperation {
         return new Operation(Operation.Type.CDT_MODIFY, binName, Value.get(packedBytes, ParticleType.BLOB));
     }
 	
-	private static byte[] packCdtSelect(SelectFlag flags, CDT.Type typeSelect, CTX... ctx) {
+	private static byte[] packCdtSelect(int flags, CDT.Type typeSelect, CTX... ctx) {
         Packer packer = new Packer();
 
         for (int i = 0; i < 2; i++) {
@@ -79,7 +77,7 @@ public class CdtOperation {
                     packer.packByteArray(c.exp.getBytes(), 0, c.exp.getBytes().length);
             }
 
-            packer.packInt(flags.flag);
+            packer.packInt(flags);
 
             if (i == 0) {
                 packer.createBuffer();
@@ -89,7 +87,7 @@ public class CdtOperation {
         return packer.getBuffer();
 	}
 
-	private static byte[] packCdtModify(ModifyFlag modifyFlag, CDT.Type type, Expression modifyExp, CTX... ctx) {
+	private static byte[] packCdtModify(int modifyFlag, CDT.Type type, Expression modifyExp, CTX... ctx) {
         Packer packer = new Packer();
 
         for (int i = 0; i < 2; i++) {
@@ -105,7 +103,7 @@ public class CdtOperation {
                     packer.packByteArray(c.exp.getBytes(), 0, c.exp.getBytes().length);
             }
 
-            packer.packInt(modifyFlag.flag | 4);
+            packer.packInt(modifyFlag | 4);
             packer.packByteArray(modifyExp.getBytes(), 0, modifyExp.getBytes().length);
 
             if (i == 0) {

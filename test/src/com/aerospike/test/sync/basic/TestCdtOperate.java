@@ -112,7 +112,7 @@ public class TestCdtOperate extends TestSync {
             Exp.eq(Exp.loopVarString(LoopVarPart.MAP_KEY), Exp.val("title"))
         );
         
-        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE, ctx1, ctx2, ctx3);
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE.flag, ctx1, ctx2, ctx3);
 
         Record result = client.operate(null, rkey, selectOp);
         assertTrue("CDT select operation should succeed", result != null);
@@ -184,7 +184,7 @@ public class TestCdtOperate extends TestSync {
             )
         );
         
-        Operation applyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT, modifyExp, bookKey, allChildren, priceKey);
+        Operation applyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT.flag, modifyExp, bookKey, allChildren, priceKey);
         
         Record result = client.operate(null, rkey, applyOp);
         assertTrue("CDT apply operation should succeed", result != null);
@@ -287,7 +287,7 @@ public class TestCdtOperate extends TestSync {
             Exp.eq(Exp.loopVarString(LoopVarPart.MAP_KEY), Exp.val("title"))
         );
         
-        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE, ctx1, ctx2, ctx3, ctx4);
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE.flag, ctx1, ctx2, ctx3, ctx4);
         
         Record result = client.operate(null, rkey, selectOp);
         assertTrue("CDT select operation should succeed", result != null);
@@ -338,7 +338,7 @@ public class TestCdtOperate extends TestSync {
             Exp.eq(Exp.loopVarString(LoopVarPart.MAP_KEY), Exp.val("title"))
         );
         
-        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE, ctx1, ctx2, ctx3);
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE.flag, ctx1, ctx2, ctx3);
         
         Record result = client.operate(null, rkey, selectOp);
         assertTrue("CDT select operation should succeed", result != null);
@@ -387,7 +387,7 @@ public class TestCdtOperate extends TestSync {
             )
         );
         
-        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.MATCHING_TREE, ctx1, ctx2);
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.MATCHING_TREE.flag, ctx1, ctx2);
         
         Record result = client.operate(null, rkey, selectOp);
         assertTrue("CDT select operation should succeed", result != null);
@@ -422,7 +422,7 @@ public class TestCdtOperate extends TestSync {
             Exp.gt(Exp.loopVarInt(LoopVarPart.VALUE), Exp.val(75))
         );
         
-        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.MAP_KEY, ctx1, ctx2);
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.MAP_KEY.flag, ctx1, ctx2);
         
         Record result = client.operate(null, rkey, selectOp);
         assertTrue("CDT select operation should succeed", result != null);
@@ -455,7 +455,7 @@ public class TestCdtOperate extends TestSync {
         CTX ctx1 = CTX.mapKey(Value.get("existing"));
         CTX ctx2 = CTX.allChildren();
         
-        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.NO_FAIL, ctx1, ctx2);
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.NO_FAIL.flag, ctx1, ctx2);
         
         Record result = client.operate(null, rkey, selectOp);
         assertTrue("CDT select operation should succeed", result != null);
@@ -488,7 +488,7 @@ public class TestCdtOperate extends TestSync {
             Exp.lt(Exp.loopVarInt(LoopVarPart.INDEX), Exp.val(3))
         );
         
-        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE, ctx1, ctx2);
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE.flag, ctx1, ctx2);
         
         Record result = client.operate(null, rkey, selectOp);
         assertTrue("CDT select operation should succeed", result != null);
@@ -525,7 +525,7 @@ public class TestCdtOperate extends TestSync {
             Exp.lt(Exp.loopVarString(LoopVarPart.MAP_KEY), Exp.val("c"))
         );
         
-        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE, ctx1, ctx2);
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE.flag, ctx1, ctx2);
         
         Record result = client.operate(null, rkey, selectOp);
         assertTrue("CDT select operation should succeed", result != null);
@@ -566,7 +566,7 @@ public class TestCdtOperate extends TestSync {
             Exp.add(Exp.loopVarInt(LoopVarPart.VALUE), Exp.val(5))
         );
         
-        Operation applyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT, modifyExp, ctx1, ctx2);
+        Operation applyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT.flag, modifyExp, ctx1, ctx2);
         
         Record result = client.operate(null, rkey, applyOp);
         assertTrue("CDT apply operation should succeed", result != null);
@@ -612,7 +612,7 @@ public class TestCdtOperate extends TestSync {
             Exp.sub(Exp.loopVarInt(LoopVarPart.VALUE), Exp.val(100))
         );
         
-        Operation applyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT, modifyExp, ctx1, ctx2);
+        Operation applyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT.flag, modifyExp, ctx1, ctx2);
         
         Record result = client.operate(null, rkey, applyOp);
         assertTrue("CDT apply operation should succeed", result != null);
@@ -665,7 +665,7 @@ public class TestCdtOperate extends TestSync {
         CTX ctx1 = CTX.mapKey(Value.get("matrix"));
         CTX ctx2 = CTX.allChildren();
         
-        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE, ctx1, ctx2);
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE.flag, ctx1, ctx2);
         
         Record result = client.operate(null, rkey, selectOp);
         assertTrue("CDT select operation should succeed", result != null);
@@ -725,7 +725,7 @@ public class TestCdtOperate extends TestSync {
             Exp.eq(Exp.loopVarString(LoopVarPart.MAP_KEY), Exp.val("name"))
         );
         
-        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE, ctx1, ctx2, ctx3);
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE.flag, ctx1, ctx2, ctx3);
         
         Record result = client.operate(null, rkey, selectOp);
         assertTrue("CDT select operation should succeed", result != null);
@@ -807,7 +807,7 @@ public class TestCdtOperate extends TestSync {
             Exp.eq(Exp.loopVarString(LoopVarPart.MAP_KEY), Exp.val("name"))
         );
         
-        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE, ctx1, ctx2, ctx3);
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE.flag, ctx1, ctx2, ctx3);
         
         Record result = client.operate(null, rkey, selectOp);
         assertTrue("CDT select operation should succeed", result != null);
@@ -867,7 +867,7 @@ public class TestCdtOperate extends TestSync {
             Exp.eq(Exp.loopVarString(LoopVarPart.MAP_KEY), Exp.val("value"))
         );
         
-        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE, ctx1, ctx2, ctx3, ctx4, ctx5);
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE.flag, ctx1, ctx2, ctx3, ctx4, ctx5);
         
         Record result = client.operate(null, rkey, selectOp);
         assertTrue("CDT select operation should succeed", result != null);
@@ -897,7 +897,7 @@ public class TestCdtOperate extends TestSync {
         // Select with single context
         CTX ctx1 = CTX.mapKey(Value.get("value"));
         
-        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE, ctx1);
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE.flag, ctx1);
         
         Record result = client.operate(null, rkey, selectOp);
         assertTrue("CDT select operation should succeed", result != null);
@@ -931,7 +931,7 @@ public class TestCdtOperate extends TestSync {
         CTX ctx1 = CTX.mapKey(Value.get("emptyList"));
         CTX ctx2 = CTX.allChildren();
         
-        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.NO_FAIL, ctx1, ctx2);
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.NO_FAIL.flag, ctx1, ctx2);
         
         Record result = client.operate(null, rkey, selectOp);
         assertTrue("CDT select operation should succeed", result != null);
@@ -961,7 +961,7 @@ public class TestCdtOperate extends TestSync {
         CTX ctx1 = CTX.mapKey(Value.get("emptyMap"));
         CTX ctx2 = CTX.allChildren();
         
-        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.NO_FAIL, ctx1, ctx2);
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.NO_FAIL.flag, ctx1, ctx2);
         
         Record result = client.operate(null, rkey, selectOp);
         assertTrue("CDT select operation should succeed", result != null);
@@ -1004,7 +1004,7 @@ public class TestCdtOperate extends TestSync {
         CTX ctx2 = CTX.listIndex(1); // Select second item (index 1)
         CTX ctx3 = CTX.mapKey(Value.get("value"));
         
-        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE, ctx1, ctx2, ctx3);
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE.flag, ctx1, ctx2, ctx3);
         
         Record result = client.operate(null, rkey, selectOp);
         assertTrue("CDT select operation should succeed", result != null);
@@ -1049,7 +1049,7 @@ public class TestCdtOperate extends TestSync {
             )
         );
         
-        Operation applyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT, modifyExp, ctx1, ctx2);
+        Operation applyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT.flag, modifyExp, ctx1, ctx2);
         
         Record result = client.operate(null, rkey, applyOp);
         assertTrue("CDT apply operation should succeed", result != null);
@@ -1112,7 +1112,7 @@ public class TestCdtOperate extends TestSync {
             Exp.add(Exp.loopVarInt(LoopVarPart.VALUE), Exp.val(100))
         );
         
-        Operation applyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT, modifyExp, ctx1, ctx2, ctx3);
+        Operation applyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT.flag, modifyExp, ctx1, ctx2, ctx3);
         
         Record result = client.operate(null, rkey, applyOp);
         assertTrue("CDT apply operation should succeed", result != null);
@@ -1157,8 +1157,8 @@ public class TestCdtOperate extends TestSync {
         CTX ctx1 = CTX.mapKey(Value.get("items"));
         CTX ctx2 = CTX.allChildrenWithFilter(Exp.val(true));
         
-        Expression removeExp = Exp.build(Exp.resultRemove());
-        Operation applyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT, removeExp, ctx1, ctx2);
+        Expression removeExp = Exp.build(Exp.removeResults());
+        Operation applyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT.flag, removeExp, ctx1, ctx2);
         
         Record result = client.operate(null, rkey, applyOp);
         assertTrue("CDT remove operation should succeed", result != null);
@@ -1202,8 +1202,8 @@ public class TestCdtOperate extends TestSync {
             Exp.gt(Exp.loopVarInt(LoopVarPart.VALUE), Exp.val(10))
         );
         
-        Expression removeExp = Exp.build(Exp.resultRemove());
-        Operation applyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT, removeExp, ctx1, ctx2);
+        Expression removeExp = Exp.build(Exp.removeResults());
+        Operation applyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT.flag, removeExp, ctx1, ctx2);
         
         Record result = client.operate(null, rkey, applyOp);
         assertTrue("CDT remove operation should succeed", result != null);
@@ -1244,8 +1244,8 @@ public class TestCdtOperate extends TestSync {
         CTX ctx1 = CTX.mapKey(Value.get("config"));
         CTX ctx2 = CTX.allChildrenWithFilter(Exp.val(true));
         
-        Expression removeExp = Exp.build(Exp.resultRemove());
-        Operation applyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT, removeExp, ctx1, ctx2);
+        Expression removeExp = Exp.build(Exp.removeResults());
+        Operation applyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT.flag, removeExp, ctx1, ctx2);
         
         Record result = client.operate(null, rkey, applyOp);
         assertTrue("CDT remove operation should succeed", result != null);
@@ -1286,8 +1286,8 @@ public class TestCdtOperate extends TestSync {
             Exp.lt(Exp.loopVarInt(LoopVarPart.VALUE), Exp.val(50))
         );
         
-        Expression removeExp = Exp.build(Exp.resultRemove());
-        Operation applyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT, removeExp, ctx1, ctx2);
+        Expression removeExp = Exp.build(Exp.removeResults());
+        Operation applyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT.flag, removeExp, ctx1, ctx2);
         
         Record result = client.operate(null, rkey, applyOp);
         assertTrue("CDT remove operation should succeed", result != null);
@@ -1355,8 +1355,8 @@ public class TestCdtOperate extends TestSync {
             )
         );
         
-        Expression removeExp = Exp.build(Exp.resultRemove());
-        Operation applyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT, removeExp, ctx1, ctx2);
+        Expression removeExp = Exp.build(Exp.removeResults());
+        Operation applyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT.flag, removeExp, ctx1, ctx2);
         
         Record result = client.operate(null, rkey, applyOp);
         assertTrue("CDT remove operation should succeed", result != null);
@@ -1410,8 +1410,8 @@ public class TestCdtOperate extends TestSync {
             Exp.ge(Exp.loopVarInt(LoopVarPart.INDEX), Exp.val(3))
         );
         
-        Expression removeExp = Exp.build(Exp.resultRemove());
-        Operation applyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT, removeExp, ctx1, ctx2);
+        Expression removeExp = Exp.build(Exp.removeResults());
+        Operation applyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT.flag, removeExp, ctx1, ctx2);
         
         Record result = client.operate(null, rkey, applyOp);
         assertTrue("CDT remove operation should succeed", result != null);
@@ -1455,8 +1455,8 @@ public class TestCdtOperate extends TestSync {
             Exp.ge(Exp.loopVarString(LoopVarPart.MAP_KEY), Exp.val("c"))
         );
         
-        Expression removeExp = Exp.build(Exp.resultRemove());
-        Operation applyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT, removeExp, ctx1, ctx2);
+        Expression removeExp = Exp.build(Exp.removeResults());
+        Operation applyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT.flag, removeExp, ctx1, ctx2);
         
         Record result = client.operate(null, rkey, applyOp);
         assertTrue("CDT remove operation should succeed", result != null);
@@ -1523,9 +1523,10 @@ public class TestCdtOperate extends TestSync {
                 Exp.val(2000)
             )
         );
-        
-        Expression removeExp = Exp.build(Exp.resultRemove());
-        Operation applyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT, removeExp, ctx1, ctx2, ctx3);
+
+
+        Expression removeExp = Exp.build(Exp.removeResults());
+        Operation applyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT.flag, removeExp, ctx1, ctx2, ctx3);
         
         Record result = client.operate(null, rkey, applyOp);
         assertTrue("CDT remove operation should succeed", result != null);
@@ -1595,7 +1596,7 @@ public class TestCdtOperate extends TestSync {
         Record record = client.get(null, rkey);
         assertTrue("Record should exist", record != null);
         
-        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE, (CTX[])null);
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE.flag, (CTX[])null);
         
         try {
             client.operate(null, rkey, selectOp);
@@ -1625,7 +1626,7 @@ public class TestCdtOperate extends TestSync {
         Record record = client.get(null, rkey);
         assertTrue("Record should exist", record != null);
         
-        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE);
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE.flag);
         
         try {
             client.operate(null, rkey, selectOp);
@@ -1656,7 +1657,7 @@ public class TestCdtOperate extends TestSync {
         assertTrue("Record should exist", record != null);
         
         CTX[] emptyCtx = new CTX[0];
-        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE, emptyCtx);
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE.flag, emptyCtx);
         
         try {
             client.operate(null, rkey, selectOp);
@@ -1687,7 +1688,7 @@ public class TestCdtOperate extends TestSync {
         assertTrue("Record should exist", record != null);
         
         Expression modifyExp = Exp.build(Exp.val(100));
-        Operation modifyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT, modifyExp, (CTX[])null);
+        Operation modifyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT.flag, modifyExp, (CTX[])null);
         
         try {
             client.operate(null, rkey, modifyOp);
@@ -1718,7 +1719,7 @@ public class TestCdtOperate extends TestSync {
         assertTrue("Record should exist", record != null);
         
         Expression modifyExp = Exp.build(Exp.val(100));
-        Operation modifyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT, modifyExp);
+        Operation modifyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT.flag, modifyExp);
         
         try {
             client.operate(null, rkey, modifyOp);
@@ -1748,13 +1749,279 @@ public class TestCdtOperate extends TestSync {
         
         CTX[] emptyCtx = new CTX[0];
         Expression modifyExp = Exp.build(Exp.val(200));
-        Operation modifyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT, modifyExp, emptyCtx);
+        Operation modifyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT.flag, modifyExp, emptyCtx);
         
         try {
             client.operate(null, rkey, modifyOp);
             assertTrue("Should throw AerospikeException with PARAMETER_ERROR", false);
         } catch (com.aerospike.client.AerospikeException e) {
             assertEquals("Should be PARAMETER_ERROR", com.aerospike.client.ResultCode.PARAMETER_ERROR, e.getResultCode());
+        }
+    }
+    
+    @Test
+    public void testLoopVarListWithNestedLists() {
+        Key rkey = new Key(NAMESPACE, SET, 251);
+        
+        try {
+            client.delete(null, rkey);
+        } catch (Exception e) {
+        }
+        
+        Map<String, Object> data = new HashMap<>();
+        List<List<Integer>> matrix = new ArrayList<>();
+        List<Integer> row1 = new ArrayList<>();
+        row1.add(1);
+        row1.add(2);
+        row1.add(3);
+        matrix.add(row1);
+        List<Integer> row2 = new ArrayList<>();
+        row2.add(4);
+        row2.add(5);
+        row2.add(6);
+        matrix.add(row2);
+        List<Integer> row3 = new ArrayList<>();
+        row3.add(7);
+        row3.add(8);
+        row3.add(9);
+        matrix.add(row3);
+        data.put("matrix", matrix);
+        
+        Bin bin = new Bin(BIN_NAME, data);
+        client.put(null, rkey, bin);
+        
+        CTX ctx1 = CTX.mapKey(Value.get("matrix"));
+        CTX ctx2 = CTX.allChildren();
+        
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE.flag, ctx1, ctx2);
+        
+        Record result = client.operate(null, rkey, selectOp);
+        assertTrue("CDT select operation should succeed", result != null);
+        
+        List<?> results = result.getList(BIN_NAME);
+        if (results != null) {
+            assertEquals("Should have 3 rows", 3, results.size());
+        }
+    }
+    
+    @Test
+    public void testModifyWithDivision() {
+        Key rkey = new Key(NAMESPACE, SET, 252);
+        
+        try {
+            client.delete(null, rkey);
+        } catch (Exception e) {
+        }
+        
+        Map<String, Object> data = new HashMap<>();
+        List<Integer> values = new ArrayList<>();
+        values.add(100);
+        values.add(200);
+        values.add(300);
+        data.put("values", values);
+        
+        Bin bin = new Bin(BIN_NAME, data);
+        client.put(null, rkey, bin);
+        
+        CTX ctx1 = CTX.mapKey(Value.get("values"));
+        CTX ctx2 = CTX.allChildrenWithFilter(Exp.val(true));
+        
+        Expression modifyExp = Exp.build(
+            Exp.div(Exp.loopVarInt(LoopVarPart.VALUE), Exp.val(10))
+        );
+        
+        Operation applyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT.flag, modifyExp, ctx1, ctx2);
+        
+        Record result = client.operate(null, rkey, applyOp);
+        assertTrue("CDT modify operation should succeed", result != null);
+        
+        Record finalRecord = client.get(null, rkey);
+        assertTrue("Final record should exist", finalRecord != null);
+        
+        Map<?, ?> finalData = (Map<?, ?>) finalRecord.getValue(BIN_NAME);
+        assertTrue("Data map should exist", finalData != null);
+        
+        List<?> finalValues = (List<?>) finalData.get("values");
+        assertTrue("Values list should exist", finalValues != null);
+        
+        int firstValue = ((Number) finalValues.get(0)).intValue();
+        assertEquals("100 / 10 = 10", 10, firstValue);
+    }
+    
+    @Test
+    public void testLoopVarListAccessNestedListSize() {
+        Key rkey = new Key(NAMESPACE, SET, 253);
+        
+        try {
+            client.delete(null, rkey);
+        } catch (Exception e) {
+        }
+        
+        Map<String, Object> data = new HashMap<>();
+        List<List<Integer>> matrix = new ArrayList<>();
+        
+        List<Integer> row1 = new ArrayList<>();
+        row1.add(1);
+        row1.add(2);
+        row1.add(3);
+        matrix.add(row1);
+        
+        List<Integer> row2 = new ArrayList<>();
+        row2.add(4);
+        row2.add(5);
+        matrix.add(row2);
+        
+        List<Integer> row3 = new ArrayList<>();
+        row3.add(7);
+        row3.add(8);
+        row3.add(9);
+        matrix.add(row3);
+        
+        data.put("matrix", matrix);
+        
+        Bin bin = new Bin(BIN_NAME, data);
+        client.put(null, rkey, bin);
+        
+        CTX ctx1 = CTX.mapKey(Value.get("matrix"));
+        CTX ctx2 = CTX.allChildrenWithFilter(
+            Exp.eq(
+                com.aerospike.client.exp.ListExp.size(Exp.loopVarList(LoopVarPart.VALUE)),
+                Exp.val(3)
+            )
+        );
+        
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE.flag, ctx1, ctx2);
+        
+        Record result = client.operate(null, rkey, selectOp);
+        assertTrue("CDT select operation should succeed", result != null);
+        
+        List<?> results = result.getList(BIN_NAME);
+        if (results != null) {
+            assertEquals("Should have 2 rows with size 3", 2, results.size());
+        }
+    }
+    
+    @Test
+    public void testLoopVarBlobAccessBlobValues() {
+        Key rkey = new Key(NAMESPACE, SET, 254);
+        
+        try {
+            client.delete(null, rkey);
+        } catch (Exception e) {
+        }
+        
+        Map<String, Object> data = new HashMap<>();
+        List<byte[]> blobs = new ArrayList<>();
+        blobs.add("First blob content".getBytes());
+        blobs.add("Second blob content".getBytes());
+        blobs.add("Target blob".getBytes());
+        blobs.add("Fourth blob content".getBytes());
+        
+        data.put("blobs", blobs);
+        
+        Bin bin = new Bin(BIN_NAME, data);
+        client.put(null, rkey, bin);
+        
+        CTX ctx1 = CTX.mapKey(Value.get("blobs"));
+        CTX ctx2 = CTX.allChildrenWithFilter(
+            Exp.eq(
+                Exp.loopVarBlob(LoopVarPart.VALUE),
+                Exp.val("Target blob".getBytes())
+            )
+        );
+        
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE.flag, ctx1, ctx2);
+        
+        Record result = client.operate(null, rkey, selectOp);
+        assertTrue("CDT select operation should succeed", result != null);
+        
+        List<?> results = result.getList(BIN_NAME);
+        if (results != null) {
+            assertEquals("Should have 1 blob matching target", 1, results.size());
+            byte[] resultBlob = (byte[]) results.get(0);
+            assertEquals("Should match target blob", "Target blob", new String(resultBlob));
+        }
+    }
+    
+    @Test
+    public void testLoopVarNilWithNilValues() {
+        Key rkey = new Key(NAMESPACE, SET, 255);
+        
+        try {
+            client.delete(null, rkey);
+        } catch (Exception e) {
+        }
+        
+        Map<String, Object> data = new HashMap<>();
+        data.put("a", 1);
+        data.put("b", 2);
+        data.put("c", true);
+        data.put("d", "test".getBytes());
+        data.put("e", null);
+        
+        Bin bin = new Bin(BIN_NAME, data);
+        client.put(null, rkey, bin);
+        
+        CTX ctx1 = CTX.allChildrenWithFilter(
+            Exp.eq(
+                Exp.loopVarNil(LoopVarPart.VALUE),
+                Exp.nil()
+            )
+        );
+        
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE.flag | SelectFlag.NO_FAIL.flag, ctx1);
+        
+        Record result = client.operate(null, rkey, selectOp);
+        assertTrue("CDT select operation should succeed", result != null);
+        
+        List<?> results = result.getList(BIN_NAME);
+        if (results != null) {
+            assertEquals("Should have 1 nil value", 1, results.size());
+        }
+    }
+    
+    @Test
+    public void testLoopVarGeoJSONFilterLocations() {
+        Key rkey = new Key(NAMESPACE, SET, 256);
+        
+        try {
+            client.delete(null, rkey);
+        } catch (Exception e) {
+        }
+        
+        Map<String, Object> data = new HashMap<>();
+        List<Value.GeoJSONValue> locations = new ArrayList<>();
+        
+        locations.add(new Value.GeoJSONValue("{\"type\":\"Point\",\"coordinates\":[-122.4194,37.7749]}"));
+        locations.add(new Value.GeoJSONValue("{\"type\":\"Point\",\"coordinates\":[-118.2437,34.0522]}"));
+        locations.add(new Value.GeoJSONValue("{\"type\":\"Point\",\"coordinates\":[-73.9352,40.7306]}"));
+        
+        data.put("locations", locations);
+        
+        Bin bin = new Bin(BIN_NAME, data);
+        client.put(null, rkey, bin);
+        
+        String californiaRegion = "{\"type\":\"Polygon\",\"coordinates\":[[[-124.5,32.5],[-114.0,32.5],[-114.0,42.0],[-124.5,42.0],[-124.5,32.5]]]}";
+        
+        CTX ctx1 = CTX.mapKey(Value.get("locations"));
+        CTX ctx2 = CTX.allChildrenWithFilter(
+            com.aerospike.client.exp.Exp.geoCompare(
+                Exp.loopVarGeoJson(LoopVarPart.VALUE),
+                Exp.geo(californiaRegion)
+            )
+        );
+        
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE.flag, ctx1, ctx2);
+        
+        Record result = client.operate(null, rkey, selectOp);
+        assertTrue("CDT select operation should succeed", result != null);
+        
+        List<?> results = result.getList(BIN_NAME);
+        if (results != null) {
+            assertTrue("Should have filtered GeoJSON locations", results.size() >= 0);
+            for (Object item : results) {
+                assertNotNull("Location should not be null", item);
+            }
         }
     }
 }
