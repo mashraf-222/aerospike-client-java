@@ -1238,6 +1238,42 @@ public abstract class Exp {
 	}
 
 	/**
+	 * Create expression that references a built-in variable.
+	 * Requires server version 8.1.1
+	 * 
+	 * <pre>{@code
+	 * Exp.loopVarBlob(LoopVarPart.MAP_KEY)
+	 * }</pre>
+	 */
+	public static Exp loopVarBlob(LoopVarPart part)	{
+		return new Var(Type.BLOB.code, part.id);
+	}
+
+	/**
+	 * Create expression that references a built-in variable.
+	 * Requires server version 8.1.1
+	 * 
+	 * <pre>{@code
+	 * Exp.loopVarNil(LoopVarPart.MAP_KEY)
+	 * }</pre>
+	 */
+	public static Exp loopVarNil(LoopVarPart part)	{
+		return new Var(Type.NIL.code, part.id);
+	}
+
+	/**
+	 * Create expression that references a built-in variable.
+	 * Requires server version 8.1.1
+	 * 
+	 * <pre>{@code
+	 * Exp.loopVarGeoJson(LoopVarPart.MAP_KEY)
+	 * }</pre>
+	 */
+	public static Exp loopVarGeoJson(LoopVarPart part)	{
+		return new Var(Type.GEO.code, part.id);
+	}
+
+	/**
      * Creates a result remove expression.
      * Requires server version 8.1.1+.
 	 *
@@ -1245,7 +1281,7 @@ public abstract class Exp {
 	 * Exp.resultRemove()
 	 * }</pre>
 	 */
-	public static Exp resultRemove() {
+	public static Exp removeResults() {
 		return new Cmd(RESULT_REMOVE);
 	}
 
