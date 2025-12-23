@@ -129,7 +129,7 @@ public class TestIndex extends TestSync {
 
 	@Test
 	public void allChildrenWithFilterBase() {
-		Exp filter1 = Exp.gt(Exp.loopVarMap(LoopVarPart.VALUE), Exp.val(10));
+		Exp filter1 = Exp.gt(Exp.mapLoopVar(LoopVarPart.VALUE), Exp.val(10));
 		CTX[] ctxOne = new CTX[] {
 			CTX.allChildrenWithFilter(filter1)
 		};
@@ -144,7 +144,7 @@ public class TestIndex extends TestSync {
 		assertEquals(expression.getBytes().length, restoredExpression.getBytes().length);
 
 		// Test 2: String key filter
-		Exp filterTwo = Exp.eq(Exp.loopVarMap(LoopVarPart.MAP_KEY), Exp.val("target_key"));
+		Exp filterTwo = Exp.eq(Exp.mapLoopVar(LoopVarPart.MAP_KEY), Exp.val("target_key"));
 		CTX[] contextTwo = new CTX[] {
 			CTX.allChildrenWithFilter(filterTwo)
 		};
@@ -161,8 +161,8 @@ public class TestIndex extends TestSync {
 
 		// Test 3: Complex filter with AND/OR operations
 		Exp filterThree = Exp.and(
-			Exp.gt(Exp.loopVarMap(LoopVarPart.VALUE), Exp.val(5)),
-			Exp.lt(Exp.loopVarMap(LoopVarPart.VALUE), Exp.val(50))
+			Exp.gt(Exp.mapLoopVar(LoopVarPart.VALUE), Exp.val(5)),
+			Exp.lt(Exp.mapLoopVar(LoopVarPart.VALUE), Exp.val(50))
 		);
 		CTX[] contextThree = new CTX[] {
 			CTX.allChildrenWithFilter(filterThree)
@@ -181,8 +181,8 @@ public class TestIndex extends TestSync {
 
 		// Test 4: Complex nested CTX with allChildrenWithFilter
 		Exp filterFour = Exp.or(
-			Exp.eq(Exp.loopVarMap(LoopVarPart.MAP_KEY), Exp.val("key1")),
-			Exp.eq(Exp.loopVarMap(LoopVarPart.MAP_KEY), Exp.val("key2"))
+			Exp.eq(Exp.mapLoopVar(LoopVarPart.MAP_KEY), Exp.val("key1")),
+			Exp.eq(Exp.mapLoopVar(LoopVarPart.MAP_KEY), Exp.val("key2"))
 		);
 		CTX[] contextFour = new CTX[] {
 			CTX.mapKey(Value.get("parent")),
@@ -222,7 +222,7 @@ public class TestIndex extends TestSync {
 			CTX.mapKey(Value.get("root")),
 			CTX.allChildren(),
 			CTX.listIndex(-1),
-			CTX.allChildrenWithFilter(Exp.gt(Exp.loopVarMap(LoopVarPart.VALUE), Exp.val(0))),
+			CTX.allChildrenWithFilter(Exp.gt(Exp.mapLoopVar(LoopVarPart.VALUE), Exp.val(0))),
 			CTX.mapValue(Value.get("test"))
 		};
 

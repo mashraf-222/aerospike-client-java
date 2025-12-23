@@ -41,6 +41,7 @@ import com.aerospike.client.exp.Exp;
 import com.aerospike.client.exp.Expression;
 import com.aerospike.client.exp.LoopVarPart;
 import com.aerospike.client.exp.MapExp;
+import com.aerospike.client.exp.ListExp;
 import com.aerospike.client.operation.ModifyFlag;
 import com.aerospike.client.operation.SelectFlag;
 import com.aerospike.client.util.Version;
@@ -104,12 +105,12 @@ public class TestCdtOperate extends TestSync {
         CTX ctx2 = CTX.allChildrenWithFilter(
             Exp.le(
                 MapExp.getByKey(MapReturnType.VALUE, Exp.Type.FLOAT, 
-                    Exp.val("price"), Exp.loopVarMap(LoopVarPart.VALUE)),
+                    Exp.val("price"), Exp.mapLoopVar(LoopVarPart.VALUE)),
                 Exp.val(10.0)
             )
         );
         CTX ctx3 = CTX.allChildrenWithFilter(
-            Exp.eq(Exp.loopVarString(LoopVarPart.MAP_KEY), Exp.val("title"))
+            Exp.eq(Exp.stringLoopVar(LoopVarPart.MAP_KEY), Exp.val("title"))
         );
         
         Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE.flag, ctx1, ctx2, ctx3);
@@ -179,7 +180,7 @@ public class TestCdtOperate extends TestSync {
         
         Expression modifyExp = Exp.build(
             Exp.mul(
-                Exp.loopVarFloat(LoopVarPart.VALUE),  // Current price value
+                Exp.floatLoopVar(LoopVarPart.VALUE),  // Current price value
                 Exp.val(1.10)                         // Multiply by 1.10
             )
         );
@@ -273,18 +274,18 @@ public class TestCdtOperate extends TestSync {
             Exp.and(
                 Exp.eq(
                     MapExp.getByKey(MapReturnType.VALUE, Exp.Type.STRING,
-                        Exp.val("category"), Exp.loopVarMap(LoopVarPart.VALUE)),
+                        Exp.val("category"), Exp.mapLoopVar(LoopVarPart.VALUE)),
                     Exp.val("fiction")
                 ),
                 Exp.lt(
                     MapExp.getByKey(MapReturnType.VALUE, Exp.Type.FLOAT,
-                        Exp.val("price"), Exp.loopVarMap(LoopVarPart.VALUE)),
+                        Exp.val("price"), Exp.mapLoopVar(LoopVarPart.VALUE)),
                     Exp.val(10.0)
                 )
             )
         );
         CTX ctx4 = CTX.allChildrenWithFilter(
-            Exp.eq(Exp.loopVarString(LoopVarPart.MAP_KEY), Exp.val("title"))
+            Exp.eq(Exp.stringLoopVar(LoopVarPart.MAP_KEY), Exp.val("title"))
         );
         
         Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE.flag, ctx1, ctx2, ctx3, ctx4);
@@ -330,12 +331,12 @@ public class TestCdtOperate extends TestSync {
         CTX ctx2 = CTX.allChildrenWithFilter(
             Exp.le(
                 MapExp.getByKey(MapReturnType.VALUE, Exp.Type.FLOAT,
-                    Exp.val("price"), Exp.loopVarMap(LoopVarPart.VALUE)),
+                    Exp.val("price"), Exp.mapLoopVar(LoopVarPart.VALUE)),
                 Exp.val(10.0)
             )
         );
         CTX ctx3 = CTX.allChildrenWithFilter(
-            Exp.eq(Exp.loopVarString(LoopVarPart.MAP_KEY), Exp.val("title"))
+            Exp.eq(Exp.stringLoopVar(LoopVarPart.MAP_KEY), Exp.val("title"))
         );
         
         Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE.flag, ctx1, ctx2, ctx3);
@@ -382,7 +383,7 @@ public class TestCdtOperate extends TestSync {
         CTX ctx2 = CTX.allChildrenWithFilter(
             Exp.le(
                 MapExp.getByKey(MapReturnType.VALUE, Exp.Type.FLOAT,
-                    Exp.val("price"), Exp.loopVarMap(LoopVarPart.VALUE)),
+                    Exp.val("price"), Exp.mapLoopVar(LoopVarPart.VALUE)),
                 Exp.val(10.0)
             )
         );
@@ -419,7 +420,7 @@ public class TestCdtOperate extends TestSync {
         // Select with MapKeys flag - should return only keys, not values
         CTX ctx1 = CTX.mapKey(Value.get("items"));
         CTX ctx2 = CTX.allChildrenWithFilter(
-            Exp.gt(Exp.loopVarInt(LoopVarPart.VALUE), Exp.val(75))
+            Exp.gt(Exp.intLoopVar(LoopVarPart.VALUE), Exp.val(75))
         );
         
         Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.MAP_KEY.flag, ctx1, ctx2);
@@ -485,7 +486,7 @@ public class TestCdtOperate extends TestSync {
         // Select items where index < 3
         CTX ctx1 = CTX.mapKey(Value.get("numbers"));
         CTX ctx2 = CTX.allChildrenWithFilter(
-            Exp.lt(Exp.loopVarInt(LoopVarPart.INDEX), Exp.val(3))
+            Exp.lt(Exp.intLoopVar(LoopVarPart.INDEX), Exp.val(3))
         );
         
         Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE.flag, ctx1, ctx2);
@@ -522,7 +523,7 @@ public class TestCdtOperate extends TestSync {
         // Select items where key starts with 'a' or 'b' (lexicographically < "c")
         CTX ctx1 = CTX.mapKey(Value.get("products"));
         CTX ctx2 = CTX.allChildrenWithFilter(
-            Exp.lt(Exp.loopVarString(LoopVarPart.MAP_KEY), Exp.val("c"))
+            Exp.lt(Exp.stringLoopVar(LoopVarPart.MAP_KEY), Exp.val("c"))
         );
         
         Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE.flag, ctx1, ctx2);
@@ -563,7 +564,7 @@ public class TestCdtOperate extends TestSync {
         CTX ctx2 = CTX.allChildrenWithFilter(Exp.val(true));
         
         Expression modifyExp = Exp.build(
-            Exp.add(Exp.loopVarInt(LoopVarPart.VALUE), Exp.val(5))
+            Exp.add(Exp.intLoopVar(LoopVarPart.VALUE), Exp.val(5))
         );
         
         Operation applyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT.flag, modifyExp, ctx1, ctx2);
@@ -609,7 +610,7 @@ public class TestCdtOperate extends TestSync {
         CTX ctx2 = CTX.allChildrenWithFilter(Exp.val(true));
         
         Expression modifyExp = Exp.build(
-            Exp.sub(Exp.loopVarInt(LoopVarPart.VALUE), Exp.val(100))
+            Exp.sub(Exp.intLoopVar(LoopVarPart.VALUE), Exp.val(100))
         );
         
         Operation applyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT.flag, modifyExp, ctx1, ctx2);
@@ -717,12 +718,12 @@ public class TestCdtOperate extends TestSync {
         CTX ctx2 = CTX.allChildrenWithFilter(
             Exp.eq(
                 MapExp.getByKey(MapReturnType.VALUE, Exp.Type.BOOL,
-                    Exp.val("active"), Exp.loopVarMap(LoopVarPart.VALUE)),
+                    Exp.val("active"), Exp.mapLoopVar(LoopVarPart.VALUE)),
                 Exp.val(true)
             )
         );
         CTX ctx3 = CTX.allChildrenWithFilter(
-            Exp.eq(Exp.loopVarString(LoopVarPart.MAP_KEY), Exp.val("name"))
+            Exp.eq(Exp.stringLoopVar(LoopVarPart.MAP_KEY), Exp.val("name"))
         );
         
         Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE.flag, ctx1, ctx2, ctx3);
@@ -787,24 +788,24 @@ public class TestCdtOperate extends TestSync {
                 Exp.and(
                     Exp.eq(
                         MapExp.getByKey(MapReturnType.VALUE, Exp.Type.BOOL,
-                            Exp.val("inStock"), Exp.loopVarMap(LoopVarPart.VALUE)),
+                            Exp.val("inStock"), Exp.mapLoopVar(LoopVarPart.VALUE)),
                         Exp.val(true)
                     ),
                     Exp.lt(
                         MapExp.getByKey(MapReturnType.VALUE, Exp.Type.FLOAT,
-                            Exp.val("price"), Exp.loopVarMap(LoopVarPart.VALUE)),
+                            Exp.val("price"), Exp.mapLoopVar(LoopVarPart.VALUE)),
                         Exp.val(20.0)
                     )
                 ),
                 Exp.gt(
                     MapExp.getByKey(MapReturnType.VALUE, Exp.Type.FLOAT,
-                        Exp.val("price"), Exp.loopVarMap(LoopVarPart.VALUE)),
+                        Exp.val("price"), Exp.mapLoopVar(LoopVarPart.VALUE)),
                     Exp.val(25.0)
                 )
             )
         );
         CTX ctx3 = CTX.allChildrenWithFilter(
-            Exp.eq(Exp.loopVarString(LoopVarPart.MAP_KEY), Exp.val("name"))
+            Exp.eq(Exp.stringLoopVar(LoopVarPart.MAP_KEY), Exp.val("name"))
         );
         
         Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE.flag, ctx1, ctx2, ctx3);
@@ -859,12 +860,12 @@ public class TestCdtOperate extends TestSync {
         CTX ctx4 = CTX.allChildrenWithFilter(
             Exp.gt(
                 MapExp.getByKey(MapReturnType.VALUE, Exp.Type.INT,
-                    Exp.val("value"), Exp.loopVarMap(LoopVarPart.VALUE)),
+                    Exp.val("value"), Exp.mapLoopVar(LoopVarPart.VALUE)),
                 Exp.val(150)
             )
         );
         CTX ctx5 = CTX.allChildrenWithFilter(
-            Exp.eq(Exp.loopVarString(LoopVarPart.MAP_KEY), Exp.val("value"))
+            Exp.eq(Exp.stringLoopVar(LoopVarPart.MAP_KEY), Exp.val("value"))
         );
         
         Operation selectOp = CdtOperation.selectByPath(BIN_NAME, SelectFlag.VALUE.flag, ctx1, ctx2, ctx3, ctx4, ctx5);
@@ -1044,8 +1045,8 @@ public class TestCdtOperate extends TestSync {
         
         Expression modifyExp = Exp.build(
             Exp.mul(
-                Exp.loopVarInt(LoopVarPart.VALUE),
-                Exp.add(Exp.loopVarInt(LoopVarPart.INDEX), Exp.val(1))
+                Exp.intLoopVar(LoopVarPart.VALUE),
+                Exp.add(Exp.intLoopVar(LoopVarPart.INDEX), Exp.val(1))
             )
         );
         
@@ -1105,11 +1106,11 @@ public class TestCdtOperate extends TestSync {
         CTX ctx1 = CTX.mapKey(Value.get("metrics"));
         CTX ctx2 = CTX.allChildrenWithFilter(Exp.val(true));
         CTX ctx3 = CTX.allChildrenWithFilter(
-            Exp.eq(Exp.loopVarString(LoopVarPart.MAP_KEY), Exp.val("value"))
+            Exp.eq(Exp.stringLoopVar(LoopVarPart.MAP_KEY), Exp.val("value"))
         );
         
         Expression modifyExp = Exp.build(
-            Exp.add(Exp.loopVarInt(LoopVarPart.VALUE), Exp.val(100))
+            Exp.add(Exp.intLoopVar(LoopVarPart.VALUE), Exp.val(100))
         );
         
         Operation applyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT.flag, modifyExp, ctx1, ctx2, ctx3);
@@ -1199,7 +1200,7 @@ public class TestCdtOperate extends TestSync {
         
         CTX ctx1 = CTX.mapKey(Value.get("numbers"));
         CTX ctx2 = CTX.allChildrenWithFilter(
-            Exp.gt(Exp.loopVarInt(LoopVarPart.VALUE), Exp.val(10))
+            Exp.gt(Exp.intLoopVar(LoopVarPart.VALUE), Exp.val(10))
         );
         
         Expression removeExp = Exp.build(Exp.removeResults());
@@ -1283,7 +1284,7 @@ public class TestCdtOperate extends TestSync {
         
         CTX ctx1 = CTX.mapKey(Value.get("scores"));
         CTX ctx2 = CTX.allChildrenWithFilter(
-            Exp.lt(Exp.loopVarInt(LoopVarPart.VALUE), Exp.val(50))
+            Exp.lt(Exp.intLoopVar(LoopVarPart.VALUE), Exp.val(50))
         );
         
         Expression removeExp = Exp.build(Exp.removeResults());
@@ -1350,7 +1351,7 @@ public class TestCdtOperate extends TestSync {
         CTX ctx2 = CTX.allChildrenWithFilter(
             Exp.le(
                 MapExp.getByKey(MapReturnType.VALUE, Exp.Type.FLOAT,
-                    Exp.val("price"), Exp.loopVarMap(LoopVarPart.VALUE)),
+                    Exp.val("price"), Exp.mapLoopVar(LoopVarPart.VALUE)),
                 Exp.val(10.0)
             )
         );
@@ -1407,7 +1408,7 @@ public class TestCdtOperate extends TestSync {
         
         CTX ctx1 = CTX.mapKey(Value.get("values"));
         CTX ctx2 = CTX.allChildrenWithFilter(
-            Exp.ge(Exp.loopVarInt(LoopVarPart.INDEX), Exp.val(3))
+            Exp.ge(Exp.intLoopVar(LoopVarPart.INDEX), Exp.val(3))
         );
         
         Expression removeExp = Exp.build(Exp.removeResults());
@@ -1452,7 +1453,7 @@ public class TestCdtOperate extends TestSync {
         
         CTX ctx1 = CTX.mapKey(Value.get("inventory"));
         CTX ctx2 = CTX.allChildrenWithFilter(
-            Exp.ge(Exp.loopVarString(LoopVarPart.MAP_KEY), Exp.val("c"))
+            Exp.ge(Exp.stringLoopVar(LoopVarPart.MAP_KEY), Exp.val("c"))
         );
         
         Expression removeExp = Exp.build(Exp.removeResults());
@@ -1519,7 +1520,7 @@ public class TestCdtOperate extends TestSync {
         CTX ctx3 = CTX.allChildrenWithFilter(
             Exp.lt(
                 MapExp.getByKey(MapReturnType.VALUE, Exp.Type.INT,
-                    Exp.val("sales"), Exp.loopVarMap(LoopVarPart.VALUE)),
+                    Exp.val("sales"), Exp.mapLoopVar(LoopVarPart.VALUE)),
                 Exp.val(2000)
             )
         );
@@ -1827,7 +1828,7 @@ public class TestCdtOperate extends TestSync {
         CTX ctx2 = CTX.allChildrenWithFilter(Exp.val(true));
         
         Expression modifyExp = Exp.build(
-            Exp.div(Exp.loopVarInt(LoopVarPart.VALUE), Exp.val(10))
+            Exp.div(Exp.intLoopVar(LoopVarPart.VALUE), Exp.val(10))
         );
         
         Operation applyOp = CdtOperation.modifyByPath(BIN_NAME, ModifyFlag.DEFAULT.flag, modifyExp, ctx1, ctx2);
@@ -1885,7 +1886,7 @@ public class TestCdtOperate extends TestSync {
         CTX ctx1 = CTX.mapKey(Value.get("matrix"));
         CTX ctx2 = CTX.allChildrenWithFilter(
             Exp.eq(
-                com.aerospike.client.exp.ListExp.size(Exp.loopVarList(LoopVarPart.VALUE)),
+                ListExp.size(Exp.listLoopVar(LoopVarPart.VALUE)),
                 Exp.val(3)
             )
         );
@@ -1925,7 +1926,7 @@ public class TestCdtOperate extends TestSync {
         CTX ctx1 = CTX.mapKey(Value.get("blobs"));
         CTX ctx2 = CTX.allChildrenWithFilter(
             Exp.eq(
-                Exp.loopVarBlob(LoopVarPart.VALUE),
+                Exp.blobLoopVar(LoopVarPart.VALUE),
                 Exp.val("Target blob".getBytes())
             )
         );
@@ -1964,7 +1965,7 @@ public class TestCdtOperate extends TestSync {
         
         CTX ctx1 = CTX.allChildrenWithFilter(
             Exp.eq(
-                Exp.loopVarNil(LoopVarPart.VALUE),
+                Exp.nilLoopVar(LoopVarPart.VALUE),
                 Exp.nil()
             )
         );
@@ -2006,7 +2007,7 @@ public class TestCdtOperate extends TestSync {
         CTX ctx1 = CTX.mapKey(Value.get("locations"));
         CTX ctx2 = CTX.allChildrenWithFilter(
             com.aerospike.client.exp.Exp.geoCompare(
-                Exp.loopVarGeoJson(LoopVarPart.VALUE),
+                Exp.geoJsonLoopVar(LoopVarPart.VALUE),
                 Exp.geo(californiaRegion)
             )
         );
