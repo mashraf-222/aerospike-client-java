@@ -1185,7 +1185,7 @@ public abstract class Exp {
 	 * Exp.loopVarString(LoopVarPart.MAP_KEY)
 	 * }</pre>
 	 */
-	public static Exp loopVarString(LoopVarPart part) {
+	public static Exp stringLoopVar(LoopVarPart part) {
 		return new Var(Type.STRING.code, part.id);
 	}
 
@@ -1197,7 +1197,7 @@ public abstract class Exp {
 	 * Exp.loopVarInt(LoopVarPart.MAP_KEY)
 	 * }</pre>
 	 */
-	public static Exp loopVarInt(LoopVarPart part) {
+	public static Exp intLoopVar(LoopVarPart part) {
 		return new Var(Type.INT.code, part.id);
 	}
 
@@ -1209,7 +1209,7 @@ public abstract class Exp {
 	 * Exp.loopVarFloat(LoopVarPart.MAP_KEY)
 	 * }</pre>
 	 */
-	public static Exp loopVarFloat(LoopVarPart part) {
+	public static Exp floatLoopVar(LoopVarPart part) {
 		return new Var(Type.FLOAT.code, part.id);
 	}
 
@@ -1221,7 +1221,7 @@ public abstract class Exp {
 	 * Exp.loopVarList(LoopVarPart.MAP_KEY)
 	 * }</pre>
 	 */
-	public static Exp loopVarList(LoopVarPart part)	{
+	public static Exp listLoopVar(LoopVarPart part)	{
 		return new Var(Type.LIST.code, part.id);
 	}
 
@@ -1233,7 +1233,7 @@ public abstract class Exp {
 	 * Exp.loopVarMap(LoopVarPart.MAP_KEY)
 	 * }</pre>
 	 */
-	public static Exp loopVarMap(LoopVarPart part)	{
+	public static Exp mapLoopVar(LoopVarPart part)	{
 		return new Var(Type.MAP.code, part.id);
 	}
 
@@ -1245,7 +1245,7 @@ public abstract class Exp {
 	 * Exp.loopVarBlob(LoopVarPart.MAP_KEY)
 	 * }</pre>
 	 */
-	public static Exp loopVarBlob(LoopVarPart part)	{
+	public static Exp blobLoopVar(LoopVarPart part)	{
 		return new Var(Type.BLOB.code, part.id);
 	}
 
@@ -1257,7 +1257,7 @@ public abstract class Exp {
 	 * Exp.loopVarNil(LoopVarPart.MAP_KEY)
 	 * }</pre>
 	 */
-	public static Exp loopVarNil(LoopVarPart part)	{
+	public static Exp nilLoopVar(LoopVarPart part)	{
 		return new Var(Type.NIL.code, part.id);
 	}
 
@@ -1269,7 +1269,7 @@ public abstract class Exp {
 	 * Exp.loopVarGeoJson(LoopVarPart.MAP_KEY)
 	 * }</pre>
 	 */
-	public static Exp loopVarGeoJson(LoopVarPart part)	{
+	public static Exp geoJsonLoopVar(LoopVarPart part)	{
 		return new Var(Type.GEO.code, part.id);
 	}
 

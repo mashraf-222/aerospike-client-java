@@ -170,7 +170,7 @@ public class TestCdtExp extends TestSync {
         CTX priceKey = CTX.mapKey(Value.get("price"));
         
         Exp modifyExp = Exp.mul(
-            Exp.loopVarFloat(LoopVarPart.VALUE),  // Current price value
+            Exp.floatLoopVar(LoopVarPart.VALUE),  // Current price value
             Exp.val(1.50)                         // Multiply by 1.50
         );
         
@@ -253,14 +253,14 @@ public class TestCdtExp extends TestSync {
                     MapReturnType.VALUE,
                     Exp.Type.FLOAT,
                     Exp.val("price"),
-                    Exp.loopVarMap(LoopVarPart.VALUE)
+                    Exp.mapLoopVar(LoopVarPart.VALUE)
                 ),
                 Exp.val(10.0)
             )
         );
         CTX ctx3 = CTX.allChildrenWithFilter(
             Exp.eq(
-                Exp.loopVarString(LoopVarPart.MAP_KEY),
+                Exp.stringLoopVar(LoopVarPart.MAP_KEY),
                 Exp.val("title")
             )
         );
@@ -367,7 +367,7 @@ public class TestCdtExp extends TestSync {
         CTX ctx3 = CTX.mapKey(Value.get("price"));
         
         Exp modifyExp = Exp.add(
-            Exp.loopVarFloat(LoopVarPart.VALUE),
+            Exp.floatLoopVar(LoopVarPart.VALUE),
             Exp.val(5.0)
         );
         
@@ -430,7 +430,7 @@ public class TestCdtExp extends TestSync {
         CTX ctx2 = CTX.allChildren();
         
         Exp modifyExp = Exp.sub(
-            Exp.loopVarInt(LoopVarPart.VALUE),
+            Exp.intLoopVar(LoopVarPart.VALUE),
             Exp.val(100)
         );
         
@@ -570,7 +570,7 @@ public class TestCdtExp extends TestSync {
         CTX modifyCtx3 = CTX.mapKey(Value.get("value"));
         
         Exp modifyExp = Exp.mul(
-            Exp.loopVarInt(LoopVarPart.VALUE),
+            Exp.intLoopVar(LoopVarPart.VALUE),
             Exp.val(2)
         );
         
@@ -706,13 +706,13 @@ public class TestCdtExp extends TestSync {
         CTX ctx2 = CTX.allChildrenWithFilter(Exp.val(true));
         CTX ctx3 = CTX.allChildrenWithFilter(
             Exp.eq(
-                Exp.loopVarString(LoopVarPart.MAP_KEY),
+                Exp.stringLoopVar(LoopVarPart.MAP_KEY),
                 Exp.val("revenue")
             )
         );
         
         Exp modifyExp = Exp.mul(
-            Exp.loopVarInt(LoopVarPart.VALUE),
+            Exp.intLoopVar(LoopVarPart.VALUE),
             Exp.val(2)
         );
         
@@ -820,7 +820,7 @@ public class TestCdtExp extends TestSync {
         CTX ctx2 = CTX.allChildren();
         
         Exp modifyExp = Exp.div(
-            Exp.loopVarInt(LoopVarPart.VALUE),
+            Exp.intLoopVar(LoopVarPart.VALUE),
             Exp.val(10)
         );
         
@@ -943,14 +943,14 @@ public class TestCdtExp extends TestSync {
                     MapReturnType.VALUE,
                     Exp.Type.BOOL,
                     Exp.val("active"),
-                    Exp.loopVarMap(LoopVarPart.VALUE)
+                    Exp.mapLoopVar(LoopVarPart.VALUE)
                 ),
                 Exp.val(true)
             )
         );
         CTX ctx3 = CTX.allChildrenWithFilter(
             Exp.eq(
-                Exp.loopVarString(LoopVarPart.MAP_KEY),
+                Exp.stringLoopVar(LoopVarPart.MAP_KEY),
                 Exp.val("name")
             )
         );
@@ -1049,7 +1049,7 @@ public class TestCdtExp extends TestSync {
         
         // Modify values (double them)
         Exp modifyExp = Exp.mul(
-            Exp.loopVarInt(LoopVarPart.VALUE),
+            Exp.intLoopVar(LoopVarPart.VALUE),
             Exp.val(2)
         );
         
