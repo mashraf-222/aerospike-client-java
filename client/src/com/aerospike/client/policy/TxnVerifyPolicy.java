@@ -116,6 +116,12 @@ public class TxnVerifyPolicy extends BatchPolicy {
 				Log.info("Set TxnVerifyPolicy.sleepBetweenRetries = " + this.sleepBetweenRetries);
 			}
 		}
+		if (dynTVC.sleepMultiplier != null && this.sleepMultiplier != dynTVC.sleepMultiplier.value) {
+			this.sleepMultiplier = dynTVC.sleepMultiplier.value;
+			if (logUpdate) {
+				Log.info("Set TxnVerifyPolicy.sleepMultiplier = " + this.sleepMultiplier);
+			}
+		}
 		if (dynTVC.socketTimeout != null && this.socketTimeout != dynTVC.socketTimeout.value) {
 			this.socketTimeout = dynTVC.socketTimeout.value;
 			if (logUpdate) {

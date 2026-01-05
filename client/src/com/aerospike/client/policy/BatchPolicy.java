@@ -244,6 +244,14 @@ public class BatchPolicy extends Policy {
 				Log.info("Set" + preText + " BatchPolicy.sleepBetweenRetries = " + this.sleepBetweenRetries);
 			}
 		}
+
+		if (dynBRC.sleepMultiplier != null && this.sleepMultiplier != dynBRC.sleepMultiplier.value) {
+			this.sleepMultiplier = dynBRC.sleepMultiplier.value;
+			if (logUpdate) {
+				Log.info("Set" + preText + " BatchPolicy.sleepMultiplier = " + this.sleepMultiplier);
+			}
+		}
+
 		if (dynBRC.socketTimeout != null && this.socketTimeout != dynBRC.socketTimeout.value) {
 			this.socketTimeout = dynBRC.socketTimeout.value;
 			if (logUpdate) {
@@ -340,6 +348,9 @@ public class BatchPolicy extends Policy {
 		}
 		if (dynBWC.sleepBetweenRetries != null && this.sleepBetweenRetries != dynBWC.sleepBetweenRetries.value) {
 			this.sleepBetweenRetries = dynBWC.sleepBetweenRetries.value;
+		}
+		if (dynBWC.sleepMultiplier != null && this.sleepMultiplier != dynBWC.sleepMultiplier.value) {
+			this.sleepMultiplier = dynBWC.sleepMultiplier.value;
 		}
 		if (dynBWC.socketTimeout != null && this.socketTimeout != dynBWC.socketTimeout.value) {
 			this.socketTimeout = dynBWC.socketTimeout.value;
