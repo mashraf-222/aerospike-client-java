@@ -773,7 +773,7 @@ public class AdminCommand {
 				}
 
 				list.add(role);
-				}
+			}
 			return 0;
 		}
 
