@@ -732,7 +732,12 @@ public class AdminCommand {
 						break;
 
 					case PRIVILEGES:
+						int startOffset = super.dataOffset;
 						parsePrivileges(role);
+						int bytesRead = super.dataOffset - startOffset;
+						if (bytesRead < len) {
+							super.dataOffset += len - bytesRead;
+						}
 						break;
 
 					case WHITELIST:
@@ -768,7 +773,7 @@ public class AdminCommand {
 				}
 
 				list.add(role);
-			}
+				}
 			return 0;
 		}
 

@@ -77,7 +77,23 @@ public enum PrivilegeCode {
 	 * User can truncate data only.
 	 * Requires server version 6.0+
 	 */
-	TRUNCATE(14, Role.Truncate);
+	TRUNCATE(14, Role.Truncate),
+
+	/**
+	 * User can perform data masking administration actions.
+	 * Global scope only.
+	 */
+	MASKING_ADMIN(15, Role.MaskingAdmin),
+
+	/**
+	 * User can read masked data only.
+	 */
+	READ_MASKED(16, Role.ReadMasked),
+
+	/**
+	 * User can write masked data only.
+	 */
+	WRITE_MASKED(17, Role.WriteMasked);
 
 	/**
 	 * Privilege code ID used in wire protocol.
@@ -94,7 +110,7 @@ public enum PrivilegeCode {
 	 * Can privilege be scoped with namespace and set.
 	 */
 	public boolean canScope() {
-		return id >= 10;
+		return id >= 10 && id != 15; // MaskingAdmin (15) is global only
 	}
 
 	/**
@@ -131,6 +147,15 @@ public enum PrivilegeCode {
 
 		case 14:
 			return TRUNCATE;
+
+		case 15:
+			return MASKING_ADMIN;
+
+		case 16:
+			return READ_MASKED;
+
+		case 17:
+			return WRITE_MASKED;
 
 		default:
 			throw new AerospikeException("Invalid privilege code: " + id);
