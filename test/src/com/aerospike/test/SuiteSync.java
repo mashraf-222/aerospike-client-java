@@ -46,6 +46,7 @@ import com.aerospike.test.sync.basic.TestOperateHll;
 import com.aerospike.test.sync.basic.TestOperateList;
 import com.aerospike.test.sync.basic.TestOperateMap;
 import com.aerospike.test.sync.basic.TestPutGet;
+import com.aerospike.test.sync.basic.TestQueryRoles;
 import com.aerospike.test.sync.basic.TestReplace;
 import com.aerospike.test.sync.basic.TestScan;
 import com.aerospike.test.sync.basic.TestServerInfo;
@@ -92,6 +93,7 @@ import com.aerospike.test.util.Args;
 	TestOperateList.class,
 	TestOperateMap.class,
 	TestPutGet.class,
+	TestQueryRoles.class,
 	TestReplace.class,
 	TestScan.class,
 	TestServerInfo.class,
