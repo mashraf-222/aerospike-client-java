@@ -21,6 +21,27 @@ import com.aerospike.client.util.Pack;
 import com.aerospike.client.util.Packer;
 
 public abstract class CDT {
+
+    enum Type {
+        /**
+         * Opcode used encode a CDT select and apply operation.
+         * If flag bit 2 is clear, the operation will be interpreted as a select
+         * operation; otherwise, as an apply operation.
+         */
+        SELECT(0xfe),
+
+		/**
+ 		 * Opcode used to encode the calling of a virtual operation.
+		 */
+		CONTEXT_EVAL(0xff);
+
+        final int value;
+
+        Type(int value) {
+            this.value = value;
+        }
+    }
+
 	protected static byte[] packRangeOperation(int command, int returnType, Value begin, Value end, CTX[] ctx) {
 		Packer packer = new Packer();
 		Pack.init(packer, ctx);
