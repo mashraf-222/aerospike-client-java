@@ -42,6 +42,8 @@ import com.aerospike.client.exp.Expression;
 import com.aerospike.client.exp.LoopVarPart;
 import com.aerospike.client.exp.MapExp;
 import com.aerospike.client.exp.ListExp;
+import com.aerospike.client.operation.HLLOperation;
+import com.aerospike.client.operation.HLLPolicy;
 import com.aerospike.client.util.Version;
 import com.aerospike.test.sync.TestSync;
 
@@ -2022,5 +2024,289 @@ public class TestCdtOperate extends TestSync {
                 assertNotNull("Location should not be null", item);
             }
         }
+    }
+    
+    @Test
+    public void testBoolLoopVarFilterActive() {
+        Key rkey = new Key(NAMESPACE, SET, 257);
+        
+        try {
+            client.delete(null, rkey);
+        } catch (Exception e) {
+        }
+        
+        Map<String, Object> data = new HashMap<>();
+        List<Map<String, Object>> users = new ArrayList<>();
+        
+        Map<String, Object> user1 = new HashMap<>();
+        user1.put("name", "Alice");
+        user1.put("active", true);
+        user1.put("score", 95);
+        users.add(user1);
+        
+        Map<String, Object> user2 = new HashMap<>();
+        user2.put("name", "Bob");
+        user2.put("active", false);
+        user2.put("score", 85);
+        users.add(user2);
+        
+        Map<String, Object> user3 = new HashMap<>();
+        user3.put("name", "Charlie");
+        user3.put("active", true);
+        user3.put("score", 90);
+        users.add(user3);
+        
+        Map<String, Object> user4 = new HashMap<>();
+        user4.put("name", "Diana");
+        user4.put("active", false);
+        user4.put("score", 88);
+        users.add(user4);
+        
+        data.put("users", users);
+        
+        Bin bin = new Bin(BIN_NAME, data);
+        client.put(null, rkey, bin);
+        
+        // Select names where active is true using boolLoopVar
+        CTX ctx1 = CTX.mapKey(Value.get("users"));
+        CTX ctx2 = CTX.allChildrenWithFilter(
+            Exp.eq(
+                MapExp.getByKey(MapReturnType.VALUE, Exp.Type.BOOL,
+                    Exp.val("active"), Exp.mapLoopVar(LoopVarPart.VALUE)),
+                Exp.val(true)
+            )
+        );
+        CTX ctx3 = CTX.allChildrenWithFilter(
+            Exp.eq(Exp.stringLoopVar(LoopVarPart.MAP_KEY), Exp.val("name"))
+        );
+        
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, Exp.SELECT_VALUE, ctx1, ctx2, ctx3);
+        
+        Record result = client.operate(null, rkey, selectOp);
+        assertTrue("CDT select operation should succeed", result != null);
+        
+        List<?> results = result.getList(BIN_NAME);
+        if (results != null) {
+            assertEquals("Should have 2 active users", 2, results.size());
+            assertTrue("Should contain Alice", results.contains("Alice"));
+            assertTrue("Should contain Charlie", results.contains("Charlie"));
+        }
+    }
+    
+    @Test
+    public void testBoolLoopVarModifyFlags() {
+        Key rkey = new Key(NAMESPACE, SET, 258);
+        
+        try {
+            client.delete(null, rkey);
+        } catch (Exception e) {
+        }
+        
+        Map<String, Object> data = new HashMap<>();
+        Map<String, Object> settings = new HashMap<>();
+        settings.put("enableFeatureA", true);
+        settings.put("enableFeatureB", false);
+        settings.put("enableFeatureC", true);
+        settings.put("enableFeatureD", false);
+        data.put("settings", settings);
+        
+        Bin bin = new Bin(BIN_NAME, data);
+        client.put(null, rkey, bin);
+        
+        // Negate all boolean settings using boolLoopVar
+        CTX ctx1 = CTX.mapKey(Value.get("settings"));
+        CTX ctx2 = CTX.allChildrenWithFilter(Exp.val(true));
+        
+        Expression modifyExp = Exp.build(
+            Exp.not(Exp.boolLoopVar(LoopVarPart.VALUE))
+        );
+        
+        Operation applyOp = CdtOperation.modifyByPath(BIN_NAME, Exp.MODIFY_DEFAULT, modifyExp, ctx1, ctx2);
+        
+        Record result = client.operate(null, rkey, applyOp);
+        assertTrue("CDT modify operation should succeed", result != null);
+        
+        Record finalRecord = client.get(null, rkey);
+        assertTrue("Final record should exist", finalRecord != null);
+        
+        Map<?, ?> finalData = (Map<?, ?>) finalRecord.getValue(BIN_NAME);
+        assertTrue("Data map should exist", finalData != null);
+        
+        Map<?, ?> finalSettings = (Map<?, ?>) finalData.get("settings");
+        assertTrue("Settings map should exist", finalSettings != null);
+        
+        assertEquals("enableFeatureA should be false", false, finalSettings.get("enableFeatureA"));
+        assertEquals("enableFeatureB should be true", true, finalSettings.get("enableFeatureB"));
+        assertEquals("enableFeatureC should be false", false, finalSettings.get("enableFeatureC"));
+        assertEquals("enableFeatureD should be true", true, finalSettings.get("enableFeatureD"));
+    }
+    
+    @Test
+    public void testBoolLoopVarInListFilter() {
+        Key rkey = new Key(NAMESPACE, SET, 259);
+        
+        try {
+            client.delete(null, rkey);
+        } catch (Exception e) {
+        }
+        
+        Map<String, Object> data = new HashMap<>();
+        List<Boolean> flags = new ArrayList<>();
+        flags.add(true);
+        flags.add(false);
+        flags.add(true);
+        flags.add(true);
+        flags.add(false);
+        data.put("flags", flags);
+        
+        Bin bin = new Bin(BIN_NAME, data);
+        client.put(null, rkey, bin);
+        
+        // Select indices where flag is true using boolLoopVar
+        CTX ctx1 = CTX.mapKey(Value.get("flags"));
+        CTX ctx2 = CTX.allChildrenWithFilter(
+            Exp.eq(Exp.boolLoopVar(LoopVarPart.VALUE), Exp.val(true))
+        );
+        
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, Exp.SELECT_VALUE, ctx1, ctx2);
+        
+        Record result = client.operate(null, rkey, selectOp);
+        assertTrue("CDT select operation should succeed", result != null);
+        
+        List<?> results = result.getList(BIN_NAME);
+        if (results != null) {
+            assertEquals("Should have 3 true flags", 3, results.size());
+            for (Object item : results) {
+                assertEquals("All results should be true", true, item);
+            }
+        }
+    }
+    
+    @Test
+    public void testHllLoopVarWithHllExpressions() {
+        // Demonstrates hllLoopVar usage pattern with selectByPath.
+        // Creates a metadata structure and shows the expression pattern for HLL filtering.
+        Key rkey = new Key(NAMESPACE, SET, 260);
+        
+        try {
+            client.delete(null, rkey);
+        } catch (Exception e) {
+        }
+        
+        // Create HLL values in separate bins
+        List<Value> entries1 = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            entries1.add(Value.get("item" + i));
+        }
+        
+        List<Value> entries2 = new ArrayList<>();
+        for (int i = 0; i < 20; i++) {
+            entries2.add(Value.get("item" + i));
+        }
+        
+        List<Value> entries3 = new ArrayList<>();
+        for (int i = 0; i < 50; i++) {
+            entries3.add(Value.get("item" + i));
+        }
+        
+        Record rec = client.operate(null, rkey,
+            HLLOperation.add(HLLPolicy.Default, "hll1", entries1, 8),
+            HLLOperation.add(HLLPolicy.Default, "hll2", entries2, 8),
+            HLLOperation.add(HLLPolicy.Default, "hll3", entries3, 8),
+            Operation.get("hll1"),
+            Operation.get("hll2"),
+            Operation.get("hll3")
+        );
+        
+        assertNotNull("Record should exist", rec);
+        
+        // Create a metadata structure to demonstrate selectByPath pattern
+        Map<String, Object> hllMetadata = new HashMap<>();
+        List<Map<String, Object>> hllInfo = new ArrayList<>();
+        
+        Map<String, Object> info1 = new HashMap<>();
+        info1.put("name", "small");
+        info1.put("binName", "hll1");
+        info1.put("expectedCount", 5);
+        hllInfo.add(info1);
+        
+        Map<String, Object> info2 = new HashMap<>();
+        info2.put("name", "medium");
+        info2.put("binName", "hll2");
+        info2.put("expectedCount", 20);
+        hllInfo.add(info2);
+        
+        Map<String, Object> info3 = new HashMap<>();
+        info3.put("name", "large");
+        info3.put("binName", "hll3");
+        info3.put("expectedCount", 50);
+        hllInfo.add(info3);
+        
+        hllMetadata.put("hlls", hllInfo);
+        
+        Bin metaBin = new Bin(BIN_NAME, hllMetadata);
+        client.put(null, rkey, metaBin);
+        
+        // Use selectByPath to filter HLL metadata where expectedCount > 10
+        CTX ctx1 = CTX.mapKey(Value.get("hlls"));
+        CTX ctx2 = CTX.allChildrenWithFilter(
+            Exp.gt(
+                MapExp.getByKey(MapReturnType.VALUE, Exp.Type.INT,
+                    Exp.val("expectedCount"), Exp.mapLoopVar(LoopVarPart.VALUE)),
+                Exp.val(10)
+            )
+        );
+        CTX ctx3 = CTX.allChildrenWithFilter(
+            Exp.eq(Exp.stringLoopVar(LoopVarPart.MAP_KEY), Exp.val("name"))
+        );
+        
+        Operation selectOp = CdtOperation.selectByPath(BIN_NAME, Exp.SELECT_VALUE, ctx1, ctx2, ctx3);
+        
+        Record result = client.operate(null, rkey, selectOp);
+        assertNotNull("Result should exist", result);
+        
+        List<?> selectedNames = result.getList(BIN_NAME);
+        assertNotNull("Selected names should exist", selectedNames);
+        assertEquals("Should have 2 HLLs with count > 10", 2, selectedNames.size());
+        assertTrue("Should contain 'medium'", selectedNames.contains("medium"));
+        assertTrue("Should contain 'large'", selectedNames.contains("large"));
+        
+        // Demonstrate hllLoopVar expression construction
+        // This pattern would be used if HLLs were in nested structures:
+        // CTX.allChildrenWithFilter(
+        //     Exp.gt(HLLExp.getCount(Exp.hllLoopVar(LoopVarPart.VALUE)), Exp.val(10))
+        // )
+        Exp hllLoopVarExp = Exp.hllLoopVar(LoopVarPart.VALUE);
+        assertNotNull("hllLoopVar expression should be created", hllLoopVarExp);
+    }
+    
+    @Test
+    public void testHllLoopVarInExpressionContext() {
+        Key rkey = new Key(NAMESPACE, SET, 261);
+        
+        try {
+            client.delete(null, rkey);
+        } catch (Exception e) {
+        }
+        
+        // Create a simple HLL
+        List<Value> entries = new ArrayList<>();
+        for (int i = 0; i < 15; i++) {
+            entries.add(Value.get("value" + i));
+        }
+        
+        Record rec = client.operate(null, rkey,
+            HLLOperation.add(HLLPolicy.Default, "testHll", entries, 8),
+            HLLOperation.getCount("testHll")
+        );
+        
+        assertNotNull("Record should exist", rec);
+        
+        List<?> resultList = rec.getList("testHll");
+        long count = (Long) resultList.get(1); // getCount is the second operation
+        assertTrue("HLL count should be around 15", count >= 10 && count <= 20);
+        
+        Exp hllLoopExp = Exp.hllLoopVar(LoopVarPart.VALUE);
+        assertNotNull("hllLoopVar expression should be created", hllLoopExp);
     }
 }

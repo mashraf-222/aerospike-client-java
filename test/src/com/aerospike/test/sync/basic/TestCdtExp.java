@@ -33,6 +33,7 @@ import org.junit.Test;
 import com.aerospike.client.AerospikeException;
 import com.aerospike.client.Bin;
 import com.aerospike.client.Key;
+import com.aerospike.client.Operation;
 import com.aerospike.client.Record;
 import com.aerospike.client.Value;
 import com.aerospike.client.cdt.CTX;
@@ -43,8 +44,11 @@ import com.aerospike.client.exp.ExpOperation;
 import com.aerospike.client.exp.ExpReadFlags;
 import com.aerospike.client.exp.ExpWriteFlags;
 import com.aerospike.client.exp.Expression;
+import com.aerospike.client.exp.HLLExp;
 import com.aerospike.client.exp.LoopVarPart;
 import com.aerospike.client.exp.MapExp;
+import com.aerospike.client.operation.HLLOperation;
+import com.aerospike.client.operation.HLLPolicy;
 import com.aerospike.client.util.Version;
 import com.aerospike.test.sync.TestSync;
 
@@ -1087,5 +1091,209 @@ public class TestCdtExp extends TestSync {
         
         int firstValue = ((Number) finalValues.get(0)).intValue();
         assertEquals("1 * 2 = 2", 2, firstValue);
+    }
+    
+    @Test
+    public void testBoolLoopVarSelect() {
+        Key key = new Key(NAMESPACE, SET, "boolLoopVarSelectKey");
+        
+        try {
+            client.delete(null, key);
+        } catch (Exception e) {
+        }
+        
+        Map<String, Object> data = new HashMap<>();
+        List<Map<String, Object>> items = new ArrayList<>();
+        
+        Map<String, Object> item1 = new HashMap<>();
+        item1.put("name", "Item1");
+        item1.put("active", true);
+        items.add(item1);
+        
+        Map<String, Object> item2 = new HashMap<>();
+        item2.put("name", "Item2");
+        item2.put("active", false);
+        items.add(item2);
+        
+        Map<String, Object> item3 = new HashMap<>();
+        item3.put("name", "Item3");
+        item3.put("active", true);
+        items.add(item3);
+        
+        data.put("items", items);
+        
+        Bin bin = new Bin("data", data);
+        client.put(null, key, bin);
+        
+        // Select names where active field is true using boolLoopVar
+        CTX ctx1 = CTX.mapKey(Value.get("items"));
+        CTX ctx2 = CTX.allChildrenWithFilter(
+            Exp.eq(
+                MapExp.getByKey(
+                    MapReturnType.VALUE,
+                    Exp.Type.BOOL,
+                    Exp.val("active"),
+                    Exp.mapLoopVar(LoopVarPart.VALUE)
+                ),
+                Exp.val(true)
+            )
+        );
+        CTX ctx3 = CTX.allChildrenWithFilter(
+            Exp.eq(
+                Exp.stringLoopVar(LoopVarPart.MAP_KEY),
+                Exp.val("name")
+            )
+        );
+        
+        Expression selectExp = Exp.build(
+            CdtExp.selectByPath(
+                Exp.Type.LIST,
+                Exp.SELECT_VALUE,
+                Exp.mapBin("data"),
+                ctx1, ctx2, ctx3
+            )
+        );
+        
+        Record result = client.operate(null, key,
+            ExpOperation.write("activeNames", selectExp, ExpWriteFlags.DEFAULT)
+        );
+        
+        assertTrue("Operation should succeed", result != null);
+        
+        Record finalRecord = client.get(null, key);
+        assertNotNull("Final record should exist", finalRecord);
+        
+        List<?> activeNames = finalRecord.getList("activeNames");
+        assertNotNull("Active names should exist", activeNames);
+        assertEquals("Should have 2 active items", 2, activeNames.size());
+        assertTrue("Should contain Item1", activeNames.contains("Item1"));
+        assertTrue("Should contain Item3", activeNames.contains("Item3"));
+    }
+    
+    @Test
+    public void testBoolLoopVarModify() {
+        Key key = new Key(NAMESPACE, SET, "boolLoopVarModifyKey");
+        
+        try {
+            client.delete(null, key);
+        } catch (Exception e) {
+        }
+        
+        Map<String, Object> data = new HashMap<>();
+        Map<String, Object> flags = new HashMap<>();
+        flags.put("flag1", true);
+        flags.put("flag2", false);
+        flags.put("flag3", true);
+        data.put("flags", flags);
+        
+        Bin bin = new Bin("data", data);
+        client.put(null, key, bin);
+        
+        // Negate all boolean flags using boolLoopVar
+        CTX ctx1 = CTX.mapKey(Value.get("flags"));
+        CTX ctx2 = CTX.allChildren();
+        
+        Exp modifyExp = Exp.not(Exp.boolLoopVar(LoopVarPart.VALUE));
+        
+        Expression applyExp = Exp.build(
+            CdtExp.modifyByPath(
+                Exp.Type.MAP,
+                Exp.MODIFY_DEFAULT,
+                modifyExp,
+                Exp.mapBin("data"),
+                ctx1, ctx2
+            )
+        );
+        
+        Record result = client.operate(null, key,
+            ExpOperation.write("data", applyExp, ExpWriteFlags.UPDATE_ONLY)
+        );
+        
+        assertTrue("Operation should succeed", result != null);
+        
+        Record finalRecord = client.get(null, key);
+        assertNotNull("Final record should exist", finalRecord);
+        
+        Map<?, ?> finalData = (Map<?, ?>) finalRecord.getValue("data");
+        assertNotNull("Data map should exist", finalData);
+        
+        Map<?, ?> finalFlags = (Map<?, ?>) finalData.get("flags");
+        assertNotNull("Flags map should exist", finalFlags);
+        
+        assertEquals("flag1 should be false", false, finalFlags.get("flag1"));
+        assertEquals("flag2 should be true", true, finalFlags.get("flag2"));
+        assertEquals("flag3 should be false", false, finalFlags.get("flag3"));
+    }
+    
+    @Test
+    public void testHllLoopVarWithHllBins() {
+        // Note: HLL operations on HLL items nested in lists/maps are not currently
+        // supported by the server. This test demonstrates hllLoopVar usage with
+        // HLL expressions in a filtering context.
+        Key key = new Key(NAMESPACE, SET, "hllLoopVarKey");
+        
+        try {
+            client.delete(null, key);
+        } catch (Exception e) {
+        }
+        
+        // Create HLL values with different counts in separate bins
+        List<Value> entries1 = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            entries1.add(Value.get("item" + i));
+        }
+        
+        List<Value> entries2 = new ArrayList<>();
+        for (int i = 0; i < 50; i++) {
+            entries2.add(Value.get("item" + i));
+        }
+        
+        List<Value> entries3 = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            entries3.add(Value.get("item" + i));
+        }
+        
+        // Create HLLs in separate bins and get them back
+        Record rec = client.operate(null, key,
+            HLLOperation.add(HLLPolicy.Default, "hll1", entries1, 8),
+            HLLOperation.add(HLLPolicy.Default, "hll2", entries2, 8),
+            HLLOperation.add(HLLPolicy.Default, "hll3", entries3, 8),
+            Operation.get("hll1"),
+            Operation.get("hll2"),
+            Operation.get("hll3")
+        );
+        
+        // Verify HLL bins were created
+        assertNotNull("Record should exist", rec);
+        
+        // Extract HLLValue objects for use in expressions
+        List<?> results1 = rec.getList("hll1");
+        Value.HLLValue hll1 = (Value.HLLValue) results1.get(1);
+        assertNotNull("HLL1 should exist", hll1);
+        
+        List<?> results2 = rec.getList("hll2");
+        Value.HLLValue hll2 = (Value.HLLValue) results2.get(1);
+        assertNotNull("HLL2 should exist", hll2);
+        
+        List<?> results3 = rec.getList("hll3");
+        Value.HLLValue hll3 = (Value.HLLValue) results3.get(1);
+        assertNotNull("HLL3 should exist", hll3);
+        
+        // Test that hllLoopVar can be used in expressions with HLL union operations
+        List<Value.HLLValue> hllList = new ArrayList<>();
+        hllList.add(hll1);
+        hllList.add(hll2);
+        
+        // Use expression to get HLL union count
+        Record checkRec = client.operate(null, key,
+            ExpOperation.read("unionCount", 
+                Exp.build(HLLExp.getUnionCount(Exp.val(hllList), Exp.hllBin("hll3"))),
+                ExpReadFlags.DEFAULT)
+        );
+        
+        assertNotNull("Check record should exist", checkRec);
+        Object unionCount = checkRec.getValue("unionCount");
+        assertNotNull("Union count should exist", unionCount);
+        assertTrue("Union count should be positive", ((Number) unionCount).longValue() >= 3);
     }
 }

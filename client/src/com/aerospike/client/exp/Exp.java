@@ -1194,7 +1194,7 @@ public abstract class Exp {
 	 * Requires server version 8.1.1
 	 *
 	 * <pre>{@code
-	 * Exp.loopVarString(LoopVarPart.MAP_KEY)
+	 * Exp.stringLoopVar(LoopVarPart.MAP_KEY)
 	 * }</pre>
 	 */
 	public static Exp stringLoopVar(LoopVarPart part) {
@@ -1204,9 +1204,33 @@ public abstract class Exp {
 	/**
 	 * Create expression that references a built-in variable.
 	 * Requires server version 8.1.1
+	 *
+	 * <pre>{@code
+	 * Exp.boolLoopVar(LoopVarPart.MAP_KEY)
+	 * }</pre>
+	 */
+	public static Exp boolLoopVar(LoopVarPart part) {
+		return new Var(Type.BOOL.code, part.id);
+	}
+
+	/**
+	 * Create expression that references a built-in variable.
+	 * Requires server version 8.1.1
+	 *
+	 * <pre>{@code
+	 * Exp.hllLoopVar(LoopVarPart.MAP_KEY)
+	 * }</pre>
+	 */
+	public static Exp hllLoopVar(LoopVarPart part) {
+		return new Var(Type.HLL.code, part.id);
+	}
+
+	/**
+	 * Create expression that references a built-in variable.
+	 * Requires server version 8.1.1
 	 * 
 	 * <pre>{@code
-	 * Exp.loopVarInt(LoopVarPart.MAP_KEY)
+	 * Exp.intLoopVar(LoopVarPart.MAP_KEY)
 	 * }</pre>
 	 */
 	public static Exp intLoopVar(LoopVarPart part) {
@@ -1218,7 +1242,7 @@ public abstract class Exp {
 	 * Requires server version 8.1.1
 	 * 
 	 * <pre>{@code
-	 * Exp.loopVarFloat(LoopVarPart.MAP_KEY)
+	 * Exp.floatLoopVar(LoopVarPart.MAP_KEY)
 	 * }</pre>
 	 */
 	public static Exp floatLoopVar(LoopVarPart part) {
@@ -1230,7 +1254,7 @@ public abstract class Exp {
 	 * Requires server version 8.1.1
 	 * 
 	 * <pre>{@code
-	 * Exp.loopVarList(LoopVarPart.MAP_KEY)
+	 * Exp.listLoopVar(LoopVarPart.MAP_KEY)
 	 * }</pre>
 	 */
 	public static Exp listLoopVar(LoopVarPart part)	{
@@ -1242,7 +1266,7 @@ public abstract class Exp {
 	 * Requires server version 8.1.1
 	 * 
 	 * <pre>{@code
-	 * Exp.loopVarMap(LoopVarPart.MAP_KEY)
+	 * Exp.mapLoopVar(LoopVarPart.MAP_KEY)
 	 * }</pre>
 	 */
 	public static Exp mapLoopVar(LoopVarPart part)	{
@@ -1254,7 +1278,7 @@ public abstract class Exp {
 	 * Requires server version 8.1.1
 	 * 
 	 * <pre>{@code
-	 * Exp.loopVarBlob(LoopVarPart.MAP_KEY)
+	 * Exp.blobLoopVar(LoopVarPart.MAP_KEY)
 	 * }</pre>
 	 */
 	public static Exp blobLoopVar(LoopVarPart part)	{
@@ -1266,7 +1290,7 @@ public abstract class Exp {
 	 * Requires server version 8.1.1
 	 * 
 	 * <pre>{@code
-	 * Exp.loopVarNil(LoopVarPart.MAP_KEY)
+	 * Exp.nilLoopVar(LoopVarPart.MAP_KEY)
 	 * }</pre>
 	 */
 	public static Exp nilLoopVar(LoopVarPart part)	{
@@ -1278,7 +1302,7 @@ public abstract class Exp {
 	 * Requires server version 8.1.1
 	 * 
 	 * <pre>{@code
-	 * Exp.loopVarGeoJson(LoopVarPart.MAP_KEY)
+	 * Exp.geoJsonLoopVar(LoopVarPart.MAP_KEY)
 	 * }</pre>
 	 */
 	public static Exp geoJsonLoopVar(LoopVarPart part)	{
@@ -1290,7 +1314,7 @@ public abstract class Exp {
      * Requires server version 8.1.1+.
 	 *
 	 * <pre>{@code
-	 * Exp.resultRemove()
+	 * Exp.removeResults()
 	 * }</pre>
 	 */
 	public static Exp removeResults() {
