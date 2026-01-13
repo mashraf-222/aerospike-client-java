@@ -77,7 +77,9 @@ public class CdtOperation {
                     packer.packByteArray(c.exp.getBytes(), 0, c.exp.getBytes().length);
             }
 
-            packer.packInt(flags);
+	        // Ensure the apply flag is cleared, since no expression is provided.
+	        // This avoids problems if the caller accidentally sets bit 2 in the flags field.
+            packer.packInt(flags & ~4);
 
             if (i == 0) {
                 packer.createBuffer();
