@@ -48,6 +48,18 @@ public abstract class Exp {
 		}
 	}
 
+	public static final int SELECT_MATCHING_TREE = 0;
+	public static final int SELECT_VALUE = 1;
+	public static final int SELECT_LIST_VALUE = 1;
+	public static final int SELECT_MAP_VALUE = 1;
+	public static final int SELECT_MAP_KEY = 2;
+	public static final int SELECT_MAP_KEY_VALUE = SELECT_MAP_KEY | SELECT_MAP_VALUE;
+	public static final int SELECT_NO_FAIL = 0x10;
+
+	public static final int MODIFY_DEFAULT = 0x00;
+    public static final int MODIFY_APPLY = 0x04;
+    public static final int MODIFY_NO_FAIL = 0x10;
+
 	public static final int CTX_EXP = 0x04;
 
 	//--------------------------------------------------
@@ -1184,10 +1196,8 @@ public abstract class Exp {
 	 * <pre>{@code
 	 * Exp.loopVarString(LoopVarPart.MAP_KEY)
 	 * }</pre>
-	 * @param part
-	 * @return
 	 */
-	public static Exp loopVarString(LoopVarPart part) {
+	public static Exp stringLoopVar(LoopVarPart part) {
 		return new Var(Type.STRING.code, part.id);
 	}
 
@@ -1198,10 +1208,8 @@ public abstract class Exp {
 	 * <pre>{@code
 	 * Exp.loopVarInt(LoopVarPart.MAP_KEY)
 	 * }</pre>
-	 * @param part
-	 * @return
 	 */
-	public static Exp loopVarInt(LoopVarPart part) {
+	public static Exp intLoopVar(LoopVarPart part) {
 		return new Var(Type.INT.code, part.id);
 	}
 
@@ -1212,10 +1220,8 @@ public abstract class Exp {
 	 * <pre>{@code
 	 * Exp.loopVarFloat(LoopVarPart.MAP_KEY)
 	 * }</pre>
-	 * @param part
-	 * @return
 	 */
-	public static Exp loopVarFloat(LoopVarPart part) {
+	public static Exp floatLoopVar(LoopVarPart part) {
 		return new Var(Type.FLOAT.code, part.id);
 	}
 
@@ -1226,10 +1232,8 @@ public abstract class Exp {
 	 * <pre>{@code
 	 * Exp.loopVarList(LoopVarPart.MAP_KEY)
 	 * }</pre>
-	 * @param part
-	 * @return
 	 */
-	public static Exp loopVarList(LoopVarPart part)	{
+	public static Exp listLoopVar(LoopVarPart part)	{
 		return new Var(Type.LIST.code, part.id);
 	}
 
@@ -1240,11 +1244,57 @@ public abstract class Exp {
 	 * <pre>{@code
 	 * Exp.loopVarMap(LoopVarPart.MAP_KEY)
 	 * }</pre>
-	 * @param part
-	 * @return
 	 */
-	public static Exp loopVarMap(LoopVarPart part)	{
+	public static Exp mapLoopVar(LoopVarPart part)	{
 		return new Var(Type.MAP.code, part.id);
+	}
+
+	/**
+	 * Create expression that references a built-in variable.
+	 * Requires server version 8.1.1
+	 * 
+	 * <pre>{@code
+	 * Exp.loopVarBlob(LoopVarPart.MAP_KEY)
+	 * }</pre>
+	 */
+	public static Exp blobLoopVar(LoopVarPart part)	{
+		return new Var(Type.BLOB.code, part.id);
+	}
+
+	/**
+	 * Create expression that references a built-in variable.
+	 * Requires server version 8.1.1
+	 * 
+	 * <pre>{@code
+	 * Exp.loopVarNil(LoopVarPart.MAP_KEY)
+	 * }</pre>
+	 */
+	public static Exp nilLoopVar(LoopVarPart part)	{
+		return new Var(Type.NIL.code, part.id);
+	}
+
+	/**
+	 * Create expression that references a built-in variable.
+	 * Requires server version 8.1.1
+	 * 
+	 * <pre>{@code
+	 * Exp.loopVarGeoJson(LoopVarPart.MAP_KEY)
+	 * }</pre>
+	 */
+	public static Exp geoJsonLoopVar(LoopVarPart part)	{
+		return new Var(Type.GEO.code, part.id);
+	}
+
+	/**
+     * Creates a result remove expression.
+     * Requires server version 8.1.1+.
+	 *
+	 * <pre>{@code
+	 * Exp.resultRemove()
+	 * }</pre>
+	 */
+	public static Exp removeResults() {
+		return new Cmd(RESULT_REMOVE);
 	}
 
 	//--------------------------------------------------
@@ -1341,6 +1391,7 @@ public abstract class Exp {
 	private static final int KEY = 80;
 	private static final int BIN = 81;
 	private static final int BIN_TYPE = 82;
+	private static final int RESULT_REMOVE = 100;
 	private static final int VAR_BUILTIN = 122;
 	private static final int COND = 123;
 	private static final int VAR = 124;

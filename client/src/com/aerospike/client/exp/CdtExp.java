@@ -19,13 +19,25 @@ package com.aerospike.client.exp;
 import com.aerospike.client.cdt.CTX;
 import com.aerospike.client.util.Packer;
 
-public class CDTExp {
+public class CdtExp {
+    /**
+     * The module identifier for CDT expressions.
+     */
 	private static final int MODULE = 0;
+
+    /**
+     * The modify flag for CDT expressions.
+     */
 	public static final int MODIFY = 0x40;
 
+    /**
+     * The type of CDT expression.
+     */
     enum Type {
-        SELECT(0xfe),
-        MODIFY(0xff);
+        /**
+         * The identifier for SELECT CDT expressions.
+         */
+        SELECT(0xfe);
 
         int value;
 
@@ -57,13 +69,13 @@ public class CDTExp {
      * @param ctx
      * @return
      */
-    public static Exp modifyByPath(Exp.Type returnType, int flags, Exp modifyExp, Exp bin, CTX... ctx) {
-        byte[] bytes = packCdtModify(Type.SELECT, flags | 4, modifyExp, ctx);
+    public static Exp modifyByPath(Exp.Type returnType, int modifyFlag, Exp modifyExp, Exp bin, CTX... ctx) {
+        byte[] bytes = packCdtModify(Type.SELECT, modifyFlag, modifyExp, ctx);
 
         return new Exp.Module(bin, bytes, returnType.code, MODULE | MODIFY);
     }
 
-	private static byte[] packCdtModify(Type type, int selectFlag, Exp modifyExp, CTX... ctx) {
+	private static byte[] packCdtModify(Type type, int modifyFlag, Exp modifyExp, CTX... ctx) {
         Packer packer = new Packer();
 
         for (int i = 0; i < 2; i++) {
@@ -79,7 +91,7 @@ public class CDTExp {
 		            packer.packByteArray(c.exp.getBytes(), 0, c.exp.getBytes().length);
             }
 
-            packer.packInt(selectFlag);
+            packer.packInt(modifyFlag | 4);
             modifyExp.pack(packer);
 
             if (i == 0) {
@@ -91,7 +103,7 @@ public class CDTExp {
         return packer.getBuffer();
 	}
 
-	private static byte[] packCdtSelect(Type type, int selectFlags, CTX... ctx) {
+	private static byte[] packCdtSelect(Type type, int selectFlag, CTX... ctx) {
         Packer packer = new Packer();
 
         for (int i = 0; i < 2; i++) {
@@ -107,7 +119,7 @@ public class CDTExp {
 		            packer.packByteArray(c.exp.getBytes(), 0, c.exp.getBytes().length);
             }
 
-            packer.packInt(selectFlags);
+            packer.packInt(selectFlag);
 
             if (i == 0) {
                 packer.createBuffer();
