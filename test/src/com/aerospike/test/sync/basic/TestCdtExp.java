@@ -45,8 +45,6 @@ import com.aerospike.client.exp.ExpWriteFlags;
 import com.aerospike.client.exp.Expression;
 import com.aerospike.client.exp.LoopVarPart;
 import com.aerospike.client.exp.MapExp;
-import com.aerospike.client.operation.ModifyFlag;
-import com.aerospike.client.operation.SelectFlag;
 import com.aerospike.client.util.Version;
 import com.aerospike.test.sync.TestSync;
 
@@ -107,7 +105,7 @@ public class TestCdtExp extends TestSync {
         Expression selectExp = Exp.build(
             CdtExp.selectByPath(
                 Exp.Type.LIST,                    // Return type: list
-                SelectFlag.VALUE.flag,            // AS_CDT_SELECT_LEAF_MAP_VALUE equivalent
+                Exp.SELECT_VALUE,            // AS_CDT_SELECT_LEAF_MAP_VALUE equivalent
                 Exp.mapBin("res1"),              // Source bin
                 bookKey, allChildren, priceKey   // CTX path
             )
@@ -177,7 +175,7 @@ public class TestCdtExp extends TestSync {
         Expression applyExp = Exp.build(
             CdtExp.modifyByPath(
                 Exp.Type.MAP,                     // Return type: map
-                ModifyFlag.DEFAULT.flag,                                // Flags
+                Exp.MODIFY_DEFAULT,                                // Flags
                 modifyExp,                        // Modify expression
                 Exp.mapBin("res1"),              // Source bin
                 bookKey, allChildren, priceKey   // CTX path
@@ -268,7 +266,7 @@ public class TestCdtExp extends TestSync {
         Expression selectExp = Exp.build(
             CdtExp.selectByPath(
                 Exp.Type.LIST,
-                SelectFlag.VALUE.flag,
+                Exp.SELECT_VALUE,
                 Exp.mapBin("res1"),
                 ctx1, ctx2, ctx3
             )
@@ -315,7 +313,7 @@ public class TestCdtExp extends TestSync {
         Expression selectExp = Exp.build(
             CdtExp.selectByPath(
                 Exp.Type.LIST,
-                SelectFlag.VALUE.flag,
+                Exp.SELECT_VALUE,
                 Exp.mapBin("data"),
                 ctx1, ctx2
             )
@@ -374,7 +372,7 @@ public class TestCdtExp extends TestSync {
         Expression applyExp = Exp.build(
             CdtExp.modifyByPath(
                 Exp.Type.MAP,
-                ModifyFlag.DEFAULT.flag,
+                Exp.MODIFY_DEFAULT,
                 modifyExp,
                 Exp.mapBin("data"),
                 ctx1, ctx2, ctx3
@@ -437,7 +435,7 @@ public class TestCdtExp extends TestSync {
         Expression applyExp = Exp.build(
             CdtExp.modifyByPath(
                 Exp.Type.MAP,
-                ModifyFlag.DEFAULT.flag,
+                Exp.MODIFY_DEFAULT,
                 modifyExp,
                 Exp.mapBin("data"),
                 ctx1, ctx2
@@ -489,7 +487,7 @@ public class TestCdtExp extends TestSync {
         Expression selectExp = Exp.build(
             CdtExp.selectByPath(
                 Exp.Type.LIST,
-                SelectFlag.VALUE.flag,
+                Exp.SELECT_VALUE,
                 Exp.mapBin("data"),
                 ctx1, ctx2
             )
@@ -553,7 +551,7 @@ public class TestCdtExp extends TestSync {
         Expression selectExp = Exp.build(
             CdtExp.selectByPath(
                 Exp.Type.LIST,
-                SelectFlag.VALUE.flag,
+                Exp.SELECT_VALUE,
                 Exp.mapBin("data"),
                 selectCtx1, selectCtx2, selectCtx3
             )
@@ -577,7 +575,7 @@ public class TestCdtExp extends TestSync {
         Expression applyExp = Exp.build(
             CdtExp.modifyByPath(
                 Exp.Type.MAP,
-                ModifyFlag.DEFAULT.flag,
+                Exp.MODIFY_DEFAULT,
                 modifyExp,
                 Exp.mapBin("data"),
                 modifyCtx1, modifyCtx2, modifyCtx3
@@ -653,7 +651,7 @@ public class TestCdtExp extends TestSync {
         Expression selectExp = Exp.build(
             CdtExp.selectByPath(
                 Exp.Type.LIST,
-                SelectFlag.VALUE.flag,
+                Exp.SELECT_VALUE,
                 Exp.mapBin("data"),
                 ctx1, ctx2
             )
@@ -719,7 +717,7 @@ public class TestCdtExp extends TestSync {
         Expression applyExp = Exp.build(
             CdtExp.modifyByPath(
                 Exp.Type.MAP,
-                ModifyFlag.DEFAULT.flag,
+                Exp.MODIFY_DEFAULT,
                 modifyExp,
                 Exp.mapBin("data"),
                 ctx1, ctx2, ctx3
@@ -778,7 +776,7 @@ public class TestCdtExp extends TestSync {
         Expression selectExp = Exp.build(
             CdtExp.selectByPath(
                 Exp.Type.LIST,
-                SelectFlag.VALUE.flag,
+                Exp.SELECT_VALUE,
                 Exp.mapBin("data"),
                 ctx1, ctx2
             )
@@ -827,7 +825,7 @@ public class TestCdtExp extends TestSync {
         Expression applyExp = Exp.build(
             CdtExp.modifyByPath(
                 Exp.Type.MAP,
-                ModifyFlag.DEFAULT.flag,
+                Exp.MODIFY_DEFAULT,
                 modifyExp,
                 Exp.mapBin("data"),
                 ctx1, ctx2
@@ -880,7 +878,7 @@ public class TestCdtExp extends TestSync {
         Expression selectExp = Exp.build(
             CdtExp.selectByPath(
                 Exp.Type.LIST,
-                SelectFlag.MAP_KEY.flag,
+                Exp.SELECT_MAP_KEY,
                 Exp.mapBin("data"),
                 ctx1, ctx2
             )
@@ -958,7 +956,7 @@ public class TestCdtExp extends TestSync {
         Expression selectExp = Exp.build(
             CdtExp.selectByPath(
                 Exp.Type.LIST,
-                SelectFlag.VALUE.flag,
+                Exp.SELECT_VALUE,
                 Exp.mapBin("data"),
                 ctx1, ctx2, ctx3
             )
@@ -1001,7 +999,7 @@ public class TestCdtExp extends TestSync {
         Expression selectExp = Exp.build(
             CdtExp.selectByPath(
                 Exp.Type.LIST,
-                SelectFlag.VALUE.flag,
+                Exp.SELECT_VALUE,
                 Exp.mapBin("nonexistent"),
                 ctx1, ctx2
             )
@@ -1041,7 +1039,7 @@ public class TestCdtExp extends TestSync {
         Expression selectExp = Exp.build(
             CdtExp.selectByPath(
                 Exp.Type.LIST,
-                SelectFlag.VALUE.flag,
+                Exp.SELECT_VALUE,
                 Exp.mapBin("data"),
                 ctx1, ctx2
             )
@@ -1056,7 +1054,7 @@ public class TestCdtExp extends TestSync {
         Expression applyExp = Exp.build(
             CdtExp.modifyByPath(
                 Exp.Type.MAP,
-                ModifyFlag.DEFAULT.flag,
+                Exp.MODIFY_DEFAULT,
                 modifyExp,
                 Exp.mapBin("data"),
                 ctx1, ctx2
