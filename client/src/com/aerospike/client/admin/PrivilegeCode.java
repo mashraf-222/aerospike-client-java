@@ -16,7 +16,7 @@
  */
 package com.aerospike.client.admin;
 
-import com.aerospike.client.AerospikeException;
+import com.aerospike.client.Log;
 
 /**
  * Permission codes define the type of permission granted for a user's role.
@@ -77,7 +77,30 @@ public enum PrivilegeCode {
 	 * User can truncate data only.
 	 * Requires server version 6.0+
 	 */
-	TRUNCATE(14, Role.Truncate);
+	TRUNCATE(14, Role.Truncate),
+
+	/**
+	 * User can perform data masking administration actions.
+	 * Global scope only.
+	 */
+	MASKING_ADMIN(15, Role.MaskingAdmin),
+
+	/**
+	 * User can read masked data only.
+	 */
+	READ_MASKED(16, Role.ReadMasked),
+
+	/**
+	 * User can write masked data only.
+	 */
+	WRITE_MASKED(17, Role.WriteMasked),
+
+	/**
+	 * Unknown privilege code from server.
+	 * This is used for forward compatibility when the server sends
+	 * privilege codes that are not yet known to this client version.
+	 */
+	UNKNOWN(-1, "unknown");
 
 	/**
 	 * Privilege code ID used in wire protocol.
@@ -94,11 +117,16 @@ public enum PrivilegeCode {
 	 * Can privilege be scoped with namespace and set.
 	 */
 	public boolean canScope() {
-		return id >= 10;
+		// Unknown privileges cannot be scoped since we don't know their characteristics
+		// MaskingAdmin (15) is global only
+		// Data privileges (id >= 10) can be scoped except MaskingAdmin
+		return id >= 10 && id != 15;
 	}
 
 	/**
 	 * Convert ID to privilege code enum.
+	 * Returns UNKNOWN for unrecognized privilege codes to support
+	 * forward compatibility with newer server versions.
 	 */
 	public static PrivilegeCode fromId(int id) {
 		switch (id) {
@@ -132,8 +160,23 @@ public enum PrivilegeCode {
 		case 14:
 			return TRUNCATE;
 
+		case 15:
+			return MASKING_ADMIN;
+
+		case 16:
+			return READ_MASKED;
+
+		case 17:
+			return WRITE_MASKED;
+
 		default:
-			throw new AerospikeException("Invalid privilege code: " + id);
+			// Return UNKNOWN for forward compatibility with new privilege codes
+			// from future server versions. This allows the client to work with
+			// newer servers without breaking when new privileges are added.
+			if (Log.warnEnabled()) {
+				Log.warn("Unknown privilege code received from server: " + id + ". Using UNKNOWN.");
+			}
+			return UNKNOWN;
 		}
 	}
 
