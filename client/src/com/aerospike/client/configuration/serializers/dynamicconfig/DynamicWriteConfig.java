@@ -17,6 +17,7 @@
 
 package com.aerospike.client.configuration.serializers.dynamicconfig;
 
+import com.aerospike.client.configuration.primitiveprops.DoubleProperty;
 import com.aerospike.client.configuration.primitiveprops.IntProperty;
 import com.aerospike.client.configuration.primitiveprops.BooleanProperty;
 import com.aerospike.client.Log;
@@ -34,6 +35,7 @@ public class DynamicWriteConfig {
     public IntProperty totalTimeout;
     public IntProperty maxRetries;
     public BooleanProperty durableDelete;
+    public DoubleProperty sleepMultiplier;
 
     public DynamicWriteConfig() {}
 
@@ -59,6 +61,8 @@ public class DynamicWriteConfig {
 
     public void setDurableDelete(BooleanProperty durableDelete) { this.durableDelete = durableDelete; }
 
+    public void setSleepMultiplier(DoubleProperty sleepMultiplier) { this.sleepMultiplier = sleepMultiplier; }
+
     public IntProperty getConnectTimeout() { return connectTimeout; }
 
     public BooleanProperty getFailOnFilteredOut() { return failOnFilteredOut; }
@@ -79,6 +83,8 @@ public class DynamicWriteConfig {
 
     public BooleanProperty getDurableDelete() { return durableDelete; }
 
+    public DoubleProperty getSleepMultiplier() { return sleepMultiplier; }
+
     @Override
     public String toString() {
         StringBuffer propsString = new StringBuffer("{");
@@ -93,6 +99,7 @@ public class DynamicWriteConfig {
             propsString.append(" total_timeout=").append(totalTimeout.value).append(", ");
             propsString.append(" max_retries=").append(maxRetries.value).append(", ");
             propsString.append(" durable_delete=").append(durableDelete.value).append(", ");
+            propsString.append(" sleep_multiplier=").append(sleepMultiplier.value);
         } catch (Exception e) {
             Log.error(e.toString());
         }

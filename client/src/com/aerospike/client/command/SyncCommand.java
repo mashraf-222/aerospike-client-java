@@ -78,6 +78,8 @@ public abstract class SyncCommand extends Command {
 		boolean metricsEnabled = cluster.metricsEnabled;
 		LatencyType latencyType = metricsEnabled? getLatencyType() : LatencyType.NONE;
 		boolean isClientTimeout;
+		int retryInterval = policy.sleepBetweenRetries;
+		double sleepMultiplier = policy.sleepMultiplier;
 
 		// Execute command until successful, timed out or maximum iterations have been reached.
 		while (true) {
@@ -245,7 +247,7 @@ public abstract class SyncCommand extends Command {
 
 			if (totalTimeout > 0) {
 				// Check for total timeout.
-				long remaining = deadline - System.nanoTime() - TimeUnit.MILLISECONDS.toNanos(policy.sleepBetweenRetries);
+				long remaining = deadline - System.nanoTime() - TimeUnit.MILLISECONDS.toNanos(retryInterval);
 
 				if (remaining <= 0) {
 					break;
@@ -265,8 +267,12 @@ public abstract class SyncCommand extends Command {
 
 			if (!isClientTimeout && policy.sleepBetweenRetries > 0) {
 				// Sleep before trying again.
-				Util.sleep(policy.sleepBetweenRetries);
+				Util.sleep(retryInterval);
+				if (sleepMultiplier > 1) {
+					retryInterval = (int) Math.round(retryInterval * sleepMultiplier);
+				}
 			}
+
 
 			exception.setNode(node);
 			exception.setPolicy(policy);

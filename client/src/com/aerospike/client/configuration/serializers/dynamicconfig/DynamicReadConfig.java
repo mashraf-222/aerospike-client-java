@@ -17,6 +17,7 @@
 
 package com.aerospike.client.configuration.serializers.dynamicconfig;
 
+import com.aerospike.client.configuration.primitiveprops.DoubleProperty;
 import com.aerospike.client.configuration.primitiveprops.IntProperty;
 import com.aerospike.client.configuration.primitiveprops.BooleanProperty;
 import com.aerospike.client.Log;
@@ -36,6 +37,7 @@ public class DynamicReadConfig {
     public IntProperty timeoutDelay;
     public IntProperty totalTimeout;
     public IntProperty maxRetries;
+    public DoubleProperty sleepMultiplier;
 
     public DynamicReadConfig() {}
 
@@ -59,6 +61,8 @@ public class DynamicReadConfig {
 
     public void setMaxRetries(IntProperty maxRetries) { this.maxRetries = maxRetries; }
 
+    public void setSleepMultiplier(DoubleProperty sleepMultiplier) { this.sleepMultiplier = sleepMultiplier; }
+
     public ReadModeAP getReadModeAP() { return readModeAP; }
 
     public ReadModeSC getReadModeSC() { return readModeSC; }
@@ -79,6 +83,8 @@ public class DynamicReadConfig {
 
     public IntProperty getMaxRetries() { return maxRetries; }
 
+    public DoubleProperty getSleepMultiplier() { return sleepMultiplier; }
+
     @Override
     public String toString() {
         StringBuffer propsString = new StringBuffer("{");
@@ -93,6 +99,7 @@ public class DynamicReadConfig {
             propsString.append(" timeout_delay=").append(timeoutDelay.value).append(", ");
             propsString.append(" total_timeout=").append(totalTimeout.value).append(", ");
             propsString.append(" max_retries=").append(maxRetries.value).append(", ");
+            propsString.append(" sleep_multiplier=").append(sleepMultiplier.value).append(", ");
         } catch (Exception e) {
             Log.error(e.toString());
         }

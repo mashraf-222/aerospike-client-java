@@ -209,6 +209,12 @@ public class QueryPolicy extends Policy {
 				Log.info("Set QueryPolicy.sleepBetweenRetries = " + this.sleepBetweenRetries);
 			}
 		}
+		if (dynQC.sleepMultiplier != null && this.sleepMultiplier != dynQC.sleepMultiplier.value) {
+			this.sleepMultiplier = dynQC.sleepMultiplier.value;
+			if (logUpdate) {
+				Log.info("Set QueryPolicy.sleepBetweenRetries = " + this.sleepMultiplier);
+			}
+		}
 		if (dynQC.socketTimeout != null && this.socketTimeout != dynQC.socketTimeout.value) {
 			this.socketTimeout = dynQC.socketTimeout.value;
 			if (logUpdate) {

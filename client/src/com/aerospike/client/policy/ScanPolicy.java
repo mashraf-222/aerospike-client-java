@@ -169,6 +169,12 @@ public final class ScanPolicy extends Policy {
 				Log.info("Set ScanPolicy.sleepBetweenRetries = " + this.sleepBetweenRetries);
 			}
 		}
+		if (dynSC.sleepMultiplier != null && this.sleepMultiplier != dynSC.sleepMultiplier.value) {
+			this.sleepMultiplier = dynSC.sleepMultiplier.value;
+			if (logUpdate) {
+				Log.info("Set ScanPolicy.sleepMultiplier = " + this.sleepMultiplier);
+			}
+		}
 		if (dynSC.socketTimeout != null && this.timeoutDelay != dynSC.timeoutDelay.value) {
 			this.socketTimeout = dynSC.socketTimeout.value;
 			if (logUpdate) {

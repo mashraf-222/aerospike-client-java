@@ -115,6 +115,12 @@ public class TxnRollPolicy extends BatchPolicy {
 				Log.info("Set TxnRollPolicy.sleepBetweenRetries = " + this.sleepBetweenRetries);
 			}
 		}
+		if (dynTRC.sleepMultiplier != null && this.sleepMultiplier != dynTRC.sleepMultiplier.value) {
+			this.sleepMultiplier = dynTRC.sleepMultiplier.value;
+			if (logUpdate) {
+				Log.info("Set TxnRollPolicy.sleepMultiplier = " + this.sleepMultiplier);
+			}
+		}
 		if (dynTRC.socketTimeout != null && this.socketTimeout != dynTRC.socketTimeout.value) {
 			this.socketTimeout = dynTRC.socketTimeout.value;
 			if (logUpdate) {
