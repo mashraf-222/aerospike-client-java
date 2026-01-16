@@ -71,7 +71,8 @@ public class TestQueryRoles extends TestSync {
 	}
 
 	@BeforeClass
-	public static void init() {
+	public static void setup() {
+		// Step 1: Check credentials
 		credentialsProvided = (args.user != null && !args.user.isEmpty() && 
 		                       args.password != null && !args.password.isEmpty());
 		
@@ -80,17 +81,16 @@ public class TestQueryRoles extends TestSync {
 			return;
 		}
 		
+		// Step 2: Initialize client
 		try {
 			TestSync.init();
 		} catch (AerospikeException.Connection e) {
 			securityEnabled = false;
 			return;
 		}
-	}
-	
-	@BeforeClass
-	public static void setup() {
-		if (client == null || !credentialsProvided) {
+		
+		// Step 3: Verify security is enabled
+		if (client == null) {
 			return;
 		}
 	
