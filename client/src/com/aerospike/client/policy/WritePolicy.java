@@ -261,6 +261,12 @@ public final class WritePolicy extends Policy {
 				Log.info("Set" + preText + " WritePolicy.sleepBetweenRetries = " + this.sleepBetweenRetries);
 			}
 		}
+		if (dynWC.sleepMultiplier != null && this.sleepMultiplier != dynWC.sleepMultiplier.value) {
+			this.sleepMultiplier = dynWC.sleepMultiplier.value;
+			if (logUpdate) {
+				Log.info("Set" + preText + " WritePolicy.sleepMultiplier = " + this.sleepMultiplier);
+			}
+		}
 		if (dynWC.socketTimeout != null && this.socketTimeout != dynWC.socketTimeout.value) {
 			this.socketTimeout = dynWC.socketTimeout.value;
 			if (logUpdate) {

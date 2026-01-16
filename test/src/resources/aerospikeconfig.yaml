@@ -29,6 +29,7 @@ dynamic:
     fail_on_filtered_out: false
     replica: PREFER_RACK
     sleep_between_retries: 2000
+    sleep_multiplier: 2.0
     socket_timeout: 12000
     timeout_delay: 1500
     total_timeout: 3500
@@ -39,6 +40,7 @@ dynamic:
     replica: PREFER_RACK
     send_key: false
     sleep_between_retries: 2000
+    sleep_multiplier: 2.0
     socket_timeout: 11000
     timeout_delay: 1500
     total_timeout: 3500
@@ -48,6 +50,7 @@ dynamic:
     connect_timeout: 10000
     replica: PREFER_RACK
     sleep_between_retries: 2000
+    sleep_multiplier: 2.0
     socket_timeout: 11000
     timeout_delay: 1500
     total_timeout: 3500
@@ -60,6 +63,7 @@ dynamic:
     connect_timeout: 10000
     replica: PREFER_RACK
     sleep_between_retries: 2000
+    sleep_multiplier: 2.0
     socket_timeout: 11000
     timeout_delay: 1500
     total_timeout: 3500
@@ -72,6 +76,7 @@ dynamic:
     connect_timeout: 10000
     replica: PREFER_RACK
     sleep_between_retries: 2000
+    sleep_multiplier: 2.0
     socket_timeout: 11000
     timeout_delay: 1500
     total_timeout: 3500
@@ -85,6 +90,7 @@ dynamic:
     replica: PREFER_RACK
     send_key: true
     sleep_between_retries: 2500
+    sleep_multiplier: 2.0
     socket_timeout: 15000
     timeout_delay: 1300
     total_timeout: 5500
@@ -106,6 +112,7 @@ dynamic:
     connect_timeout: 10000
     replica: RANDOM
     sleep_between_retries: 2500
+    sleep_multiplier: 2.0
     socket_timeout: 13000
     timeout_delay: 1500
     total_timeout: 3500
@@ -120,6 +127,7 @@ dynamic:
     connect_timeout: 8000
     replica: MASTER_PROLES
     sleep_between_retries: 2500
+    sleep_multiplier: 2.0
     socket_timeout: 13000
     timeout_delay: 1500
     total_timeout: 5500

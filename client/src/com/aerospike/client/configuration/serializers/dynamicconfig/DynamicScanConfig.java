@@ -18,6 +18,7 @@
 package com.aerospike.client.configuration.serializers.dynamicconfig;
 
 import com.aerospike.client.configuration.primitiveprops.BooleanProperty;
+import com.aerospike.client.configuration.primitiveprops.DoubleProperty;
 import com.aerospike.client.configuration.primitiveprops.IntProperty;
 import com.aerospike.client.Log;
 import com.aerospike.client.policy.Replica;
@@ -33,6 +34,7 @@ public class DynamicScanConfig {
     public IntProperty maxRetries;
     public BooleanProperty concurrentNodes;
     public IntProperty maxConcurrentNodes;
+    public DoubleProperty sleepMultiplier;
 
     public DynamicScanConfig() {}
 
@@ -54,6 +56,8 @@ public class DynamicScanConfig {
 
     public void setMaxConcurrentNodes(IntProperty maxConcurrentNodes) { this.maxConcurrentNodes = maxConcurrentNodes; }
 
+    public void setSleepMultiplier(DoubleProperty sleepMultiplier) { this.sleepMultiplier = sleepMultiplier; }
+
     public IntProperty getConnectTimeout() { return connectTimeout; }
 
     public Replica getReplica() { return replica; }
@@ -72,6 +76,8 @@ public class DynamicScanConfig {
 
     public IntProperty getMaxConcurrentNodes() { return maxConcurrentNodes; }
 
+    public DoubleProperty getSleepMultiplier() { return sleepMultiplier; }
+
     @Override
     public String toString() {
         StringBuffer propsString = new StringBuffer("{");
@@ -85,6 +91,7 @@ public class DynamicScanConfig {
             propsString.append(" max_retries=").append(maxRetries.value).append(", ");
             propsString.append(" concurrent_nodes=").append(concurrentNodes.value).append(", ");
             propsString.append(" max_concurrent_nodes=").append(maxConcurrentNodes.value).append(", ");
+            propsString.append(" sleep_multiplier=").append(sleepMultiplier.value).append(", ");
         } catch (Exception e) {
             Log.error(e.toString());
         }

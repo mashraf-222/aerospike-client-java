@@ -209,6 +209,12 @@ public class Policy {
 	public int sleepBetweenRetries;
 
 	/**
+	 * It denotes the multiplying factor to be used for exponential backoff during retries
+	 * Default: 1.0, Only values greater than 1 are acceptable.
+	 */
+	public double sleepMultiplier = 1.0;
+
+	/**
 	 * Determine how record TTL (time to live) is affected on reads. When enabled, the server can
 	 * efficiently operate as a read-based LRU cache where the least recently used records are expired.
 	 * The value is expressed as a percentage of the TTL sent on the most recent write such that a read
@@ -285,6 +291,7 @@ public class Policy {
 		this.sendKey = other.sendKey;
 		this.compress = other.compress;
 		this.failOnFilteredOut = other.failOnFilteredOut;
+		this.sleepMultiplier = other.sleepMultiplier;
 	}
 
 	/**
@@ -396,6 +403,8 @@ public class Policy {
 		this.failOnFilteredOut = failOnFilteredOut;
 	}
 
+	public void setSleepMultiplier(double sleepMultiplier) { this.sleepMultiplier = sleepMultiplier; }
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) {
@@ -405,12 +414,12 @@ public class Policy {
 			return false;
 		}
 		Policy policy = (Policy) o;
-		return connectTimeout == policy.connectTimeout && socketTimeout == policy.socketTimeout && totalTimeout == policy.totalTimeout && timeoutDelay == policy.timeoutDelay && maxRetries == policy.maxRetries && sleepBetweenRetries == policy.sleepBetweenRetries && readTouchTtlPercent == policy.readTouchTtlPercent && sendKey == policy.sendKey && compress == policy.compress && failOnFilteredOut == policy.failOnFilteredOut && Objects.equals(txn, policy.txn) && readModeAP == policy.readModeAP && readModeSC == policy.readModeSC && replica == policy.replica && Objects.equals(filterExp, policy.filterExp);
+		return connectTimeout == policy.connectTimeout && socketTimeout == policy.socketTimeout && totalTimeout == policy.totalTimeout && timeoutDelay == policy.timeoutDelay && maxRetries == policy.maxRetries && sleepBetweenRetries == policy.sleepBetweenRetries && Double.compare(policy.sleepMultiplier, sleepMultiplier) == 0 && readTouchTtlPercent == policy.readTouchTtlPercent && sendKey == policy.sendKey && compress == policy.compress && failOnFilteredOut == policy.failOnFilteredOut && Objects.equals(txn, policy.txn) && readModeAP == policy.readModeAP && readModeSC == policy.readModeSC && replica == policy.replica && Objects.equals(filterExp, policy.filterExp);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(txn, readModeAP, readModeSC, replica, filterExp, connectTimeout, socketTimeout, totalTimeout, timeoutDelay, maxRetries, sleepBetweenRetries, readTouchTtlPercent, sendKey, compress, failOnFilteredOut);
+		return Objects.hash(txn, readModeAP, readModeSC, replica, filterExp, connectTimeout, socketTimeout, totalTimeout, timeoutDelay, maxRetries, sleepBetweenRetries, sleepMultiplier, readTouchTtlPercent, sendKey, compress, failOnFilteredOut);
 	}
 
 	private void updateFromConfig(ConfigurationProvider configProvider, boolean log) {
@@ -468,6 +477,12 @@ public class Policy {
 			this.sleepBetweenRetries = dynRC.sleepBetweenRetries.value;
 			if (logUpdate) {
 				Log.info("Set Policy.sleepBetweenRetries = " + this.sleepBetweenRetries);
+			}
+		}
+		if (dynRC.sleepMultiplier != null && this.sleepMultiplier != dynRC.sleepMultiplier.value) {
+			this.sleepMultiplier = dynRC.sleepMultiplier.value;
+			if (logUpdate) {
+				Log.info("Set Policy.sleepMultiplier = " + this.sleepMultiplier);
 			}
 		}
 		if (dynRC.socketTimeout != null && this.socketTimeout != dynRC.socketTimeout.value) {
