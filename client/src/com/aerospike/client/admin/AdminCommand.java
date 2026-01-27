@@ -732,14 +732,8 @@ public class AdminCommand {
 						break;
 
 					case PRIVILEGES:
-						int startOffset = super.dataOffset;
 						parsePrivileges(role);
-						int bytesRead = super.dataOffset - startOffset;
-						if (bytesRead < len) {
-							super.dataOffset += len - bytesRead;
-						}
 						break;
-
 					case WHITELIST:
 						role.whitelist = parseWhitelist(len);
 						break;
