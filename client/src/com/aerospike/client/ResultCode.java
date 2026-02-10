@@ -87,7 +87,8 @@ public final class ResultCode {
 	public static final int SCAN_TERMINATED = -4;
 
 	/**
-	 * Chosen node is not currently active.
+	 * Chosen node is not currently active. This can also occur when a namespace
+	 * is removed after the client has connected.
 	 */
 	public static final int INVALID_NODE_ERROR = -3;
 
