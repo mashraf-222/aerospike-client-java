@@ -359,7 +359,8 @@ public class AerospikeException extends RuntimeException {
 	}
 
 	/**
-	 * Exception thrown when chosen node is not active.
+	 * Exception thrown when the selected node is not active, or when the namespace
+	 * is removed after the client has connected.
 	 */
 	public static final class InvalidNode extends AerospikeException {
 		private static final long serialVersionUID = 1L;
