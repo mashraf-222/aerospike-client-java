@@ -266,7 +266,11 @@ public class ClientPolicy {
 
 	/**
 	 * Default scan policy that is used when scan command's policy is null.
+	 *
+	 * @deprecated
+	 * Use {@link #queryPolicyDefault} with the query API instead.
 	 */
+	@Deprecated
 	public ScanPolicy scanPolicyDefault = new ScanPolicy();
 
 	/**
@@ -733,6 +737,11 @@ public class ClientPolicy {
 		this.writePolicyDefault = writePolicyDefault;
 	}
 
+	/**
+	 * @deprecated
+	 * Use {@link #setQueryPolicyDefault(QueryPolicy)} and the query API instead.
+	 */
+	@Deprecated
 	public void setScanPolicyDefault(ScanPolicy scanPolicyDefault) {
 		this.scanPolicyDefault = scanPolicyDefault;
 	}
