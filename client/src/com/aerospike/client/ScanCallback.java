@@ -19,7 +19,15 @@ package com.aerospike.client;
 /**
  * An object implementing this interface is passed in <code>scan()</code> calls, so the caller can
  * be notified with scan results.
+ * @deprecated
+ * <p>Use {@link com.aerospike.client.query.QueryListener} with
+ *    {@link com.aerospike.client.AerospikeClient#query(com.aerospike.client.policy.QueryPolicy, com.aerospike.client.query.Statement, com.aerospike.client.query.QueryListener)}
+ *    instead. create a {@link com.aerospike.client.query.Statement} with the same namespace and set name (no filter),
+ *    set bin names if needed, then call {@code query(queryPolicy, statement, queryListener)}.
+ *    For partition-scoped reads use {@link com.aerospike.client.AerospikeClient#queryPartitions(com.aerospike.client.policy.QueryPolicy, com.aerospike.client.query.Statement, com.aerospike.client.query.PartitionFilter)}.
+ * </p>
  */
+@Deprecated
 public interface ScanCallback {
 	/**
 	 * This method will be called for each record returned from a scan. The user may throw a

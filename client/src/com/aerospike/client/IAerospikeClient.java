@@ -114,12 +114,18 @@ public interface IAerospikeClient extends Closeable {
 
 	/**
 	 * Return scan policy default. Use when the policy will not be modified.
+	 *
+	 * @deprecated Use {@link #getQueryPolicyDefault()} with the query API instead.
 	 */
+	@Deprecated
 	public ScanPolicy getScanPolicyDefault();
 
 	/**
 	 * Copy scan policy default. Use when the policy will be modified for use in a specific command.
+	 *
+	 * @deprecated Use {@link #copyQueryPolicyDefault()} with the query API instead.
 	 */
+	@Deprecated
 	public ScanPolicy copyScanPolicyDefault();
 
 	/**
@@ -1335,7 +1341,10 @@ public interface IAerospikeClient extends Closeable {
 	 * @param callback				read callback method - called with record data
 	 * @param binNames				optional bin to retrieve. All bins will be returned if not specified.
 	 * @throws AerospikeException	if scan fails
+	 * @deprecated Use {@link #query(QueryPolicy, Statement, QueryListener)} with a {@link Statement}
+	 *             (namespace and setName, no filter) and {@link QueryListener} instead and will be removed eventually.
 	 */
+	@Deprecated
 	public void scanAll(ScanPolicy policy, String namespace, String setName, ScanCallback callback, String... binNames)
 		throws AerospikeException;
 
@@ -1355,7 +1364,10 @@ public interface IAerospikeClient extends Closeable {
 	 * @param setName				optional set name - equivalent to database table
 	 * @param binNames				optional bin to retrieve. All bins will be returned if not specified.
 	 * @throws AerospikeException	if event loop registration fails
+	 * @deprecated Use {@link #query(EventLoop, RecordSequenceListener, QueryPolicy, Statement)} with a
+	 *             {@link Statement} (namespace and setName, no filter) instead and will be removed eventually.
 	 */
+	@Deprecated
 	public void scanAll(EventLoop eventLoop, RecordSequenceListener listener, ScanPolicy policy, String namespace, String setName, String... binNames)
 		throws AerospikeException;
 
@@ -1373,7 +1385,11 @@ public interface IAerospikeClient extends Closeable {
 	 * @param callback				read callback method - called with record data
 	 * @param binNames				optional bin to retrieve. All bins will be returned if not specified.
 	 * @throws AerospikeException	if scan fails
+	 * @deprecated Use {@link #query(QueryPolicy, Statement, QueryListener)} or
+	 *             {@link #queryPartitions(QueryPolicy, Statement, PartitionFilter)} with a {@link Statement}
+	 *             (namespace and setName, no filter) and a partition filter for the node instead and will be removed eventually.
 	 */
+	@Deprecated
 	public void scanNode(ScanPolicy policy, String nodeName, String namespace, String setName, ScanCallback callback, String... binNames)
 		throws AerospikeException;
 
@@ -1390,7 +1406,11 @@ public interface IAerospikeClient extends Closeable {
 	 * @param callback				read callback method - called with record data
 	 * @param binNames				optional bin to retrieve. All bins will be returned if not specified.
 	 * @throws AerospikeException	if scan fails
+	 * @deprecated Use {@link #query(QueryPolicy, Statement, QueryListener)} or
+	 *             {@link #queryPartitions(QueryPolicy, Statement, PartitionFilter)} with a {@link Statement}
+	 *             (namespace and setName, no filter) and a partition filter for the node instead and will be removed eventually.
 	 */
+	@Deprecated
 	public void scanNode(ScanPolicy policy, Node node, String namespace, String setName, ScanCallback callback, String... binNames)
 		throws AerospikeException;
 
@@ -1407,7 +1427,10 @@ public interface IAerospikeClient extends Closeable {
 	 * @param callback				read callback method - called with record data
 	 * @param binNames				optional bin to retrieve. All bins will be returned if not specified.
 	 * @throws AerospikeException	if scan fails
+	 * @deprecated Use {@link #queryPartitions(QueryPolicy, Statement, PartitionFilter)} with a
+	 *             {@link Statement} (namespace and setName, no filter) instead and will be removed eventually.
 	 */
+	@Deprecated
 	public void scanPartitions(ScanPolicy policy, PartitionFilter partitionFilter, String namespace, String setName, ScanCallback callback, String... binNames)
 		throws AerospikeException;
 
@@ -1426,7 +1449,10 @@ public interface IAerospikeClient extends Closeable {
 	 * @param setName				optional set name - equivalent to database table
 	 * @param binNames				optional bin to retrieve. All bins will be returned if not specified.
 	 * @throws AerospikeException	if event loop registration fails
+	 * @deprecated Use {@link #queryPartitions(EventLoop, RecordSequenceListener, QueryPolicy, Statement, PartitionFilter)}
+	 *             with a {@link Statement} (namespace and setName, no filter) instead and will be removed eventually.
 	 */
+	@Deprecated
 	public void scanPartitions(EventLoop eventLoop, RecordSequenceListener listener, ScanPolicy policy, PartitionFilter partitionFilter, String namespace, String setName, String... binNames)
 		throws AerospikeException;
 

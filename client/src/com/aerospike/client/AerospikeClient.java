@@ -3603,7 +3603,10 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	 * @param callback				read callback method - called with record data
 	 * @param binNames				optional bin to retrieve. All bins will be returned if not specified.
 	 * @throws AerospikeException	if scan fails
+	 * @deprecated Use {@link #query(QueryPolicy, Statement, QueryListener)} with a {@link Statement}
+	 *             (namespace and set name, no filter) and {@link QueryListener} instead and will be removed eventually.
 	 */
+	@Deprecated
 	public final void scanAll(ScanPolicy policy, String namespace, String setName, ScanCallback callback, String... binNames)
 		throws AerospikeException {
 		if (policy == null) {
@@ -3633,7 +3636,10 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	 * @param setName				optional set name - equivalent to database table
 	 * @param binNames				optional bin to retrieve. All bins will be returned if not specified.
 	 * @throws AerospikeException	if event loop registration fails
+	 * @deprecated Use {@link #query(EventLoop, RecordSequenceListener, QueryPolicy, Statement)} with a
+	 *             {@link Statement} (namespace and set name, no filter) instead and will be removed eventually.
 	 */
+	@Deprecated
 	public final void scanAll(EventLoop eventLoop, RecordSequenceListener listener, ScanPolicy policy, String namespace, String setName, String... binNames)
 		throws AerospikeException {
 		if (eventLoop == null) {
@@ -3665,7 +3671,11 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	 * @param callback				read callback method - called with record data
 	 * @param binNames				optional bin to retrieve. All bins will be returned if not specified.
 	 * @throws AerospikeException	if scan fails
+	 * @deprecated Use {@link #query(QueryPolicy, Statement, QueryListener)} or
+	 *             {@link #queryPartitions(QueryPolicy, Statement, PartitionFilter)} with a
+	 *             {@link Statement} (namespace and set name, no filter) and a partition filter for the node instead.
 	 */
+	@Deprecated
 	public final void scanNode(ScanPolicy policy, String nodeName, String namespace, String setName, ScanCallback callback, String... binNames)
 		throws AerospikeException {
 		Node node = cluster.getNode(nodeName);
@@ -3685,7 +3695,11 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	 * @param callback				read callback method - called with record data
 	 * @param binNames				optional bin to retrieve. All bins will be returned if not specified.
 	 * @throws AerospikeException	if scan fails
+	 * @deprecated Use {@link #query(QueryPolicy, Statement, QueryListener)} or
+	 *             {@link #queryPartitions(QueryPolicy, Statement, PartitionFilter)} with a
+	 *             {@link Statement} (namespace and set name, no filter) and a partition filter for the node instead and will be removed eventually.
 	 */
+	@Deprecated
 	public final void scanNode(ScanPolicy policy, Node node, String namespace, String setName, ScanCallback callback, String... binNames)
 		throws AerospikeException {
 		if (policy == null) {
@@ -3711,7 +3725,10 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	 * @param callback				read callback method - called with record data
 	 * @param binNames				optional bin to retrieve. All bins will be returned if not specified
 	 * @throws AerospikeException	if scan fails
+	 * @deprecated Use {@link #queryPartitions(QueryPolicy, Statement, PartitionFilter)} with a
+	 *             {@link Statement} (namespace and setName, no filter) instead and will be removed eventually.
 	 */
+	@Deprecated
 	public final void scanPartitions(ScanPolicy policy, PartitionFilter partitionFilter, String namespace, String setName, ScanCallback callback, String... binNames)
 		throws AerospikeException {
 		if (policy == null) {
@@ -3740,7 +3757,10 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	 * @param setName				optional set name - equivalent to database table
 	 * @param binNames				optional bin to retrieve. All bins will be returned if not specified.
 	 * @throws AerospikeException	if event loop registration fails
+	 * @deprecated Use {@link #queryPartitions(EventLoop, RecordSequenceListener, QueryPolicy, Statement, PartitionFilter)}
+	 *             with a {@link Statement} (namespace and setName, no filter) instead and will be removed eventually.
 	 */
+	@Deprecated
 	public final void scanPartitions(EventLoop eventLoop, RecordSequenceListener listener, ScanPolicy policy, PartitionFilter partitionFilter, String namespace, String setName, String... binNames)
 		throws AerospikeException {
 		if (eventLoop == null) {
