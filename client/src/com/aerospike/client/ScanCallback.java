@@ -19,7 +19,11 @@ package com.aerospike.client;
 /**
  * An object implementing this interface is passed in <code>scan()</code> calls, so the caller can
  * be notified with scan results.
+ *
+ * @deprecated Use {@link com.aerospike.client.AerospikeClient#query(com.aerospike.client.policy.QueryPolicy, com.aerospike.client.query.Statement, com.aerospike.client.query.QueryListener)}
+ * with a {@link com.aerospike.client.query.Statement} that has no filter set (primary index query) instead. It will eventually be removed.
  */
+@Deprecated
 public interface ScanCallback {
 	/**
 	 * This method will be called for each record returned from a scan. The user may throw a

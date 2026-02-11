@@ -27,7 +27,13 @@ import com.aerospike.client.configuration.serializers.dynamicconfig.DynamicScanC
  * <p>
  * Inherited Policy fields {@link Policy#txn} and {@link Policy#failOnFilteredOut} are ignored in
  * scan commands.
+ *
+ * @deprecated Use {@link com.aerospike.client.policy.QueryPolicy} with
+ * {@link com.aerospike.client.AerospikeClient#query(com.aerospike.client.policy.QueryPolicy, com.aerospike.client.query.Statement)}
+ * (or related query methods) and a {@link com.aerospike.client.query.Statement} with no filter set (primary index query) instead.
+ * It will eventually be removed.
  */
+@Deprecated
 public final class ScanPolicy extends Policy {
 	/**
 	 * Approximate number of records to return to client. This number is divided by the
