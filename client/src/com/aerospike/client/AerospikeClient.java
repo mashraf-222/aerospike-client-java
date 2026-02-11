@@ -175,7 +175,11 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 
 	/**
 	 * Default scan policy that is used when scan command policy is null.
+	 *
+	 * @deprecated Use {@link #getQueryPolicyDefault()} with {@link #query(QueryPolicy, Statement, QueryListener)}
+	 * and a {@link Statement} with no filter (primary index query) instead. It will eventually be removed.
 	 */
+	@Deprecated
 	public final ScanPolicy scanPolicyDefault;
 	private ScanPolicy mergedScanPolicyDefault;
 
@@ -471,14 +475,21 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 
 	/**
 	 * Return scan policy default. Use when the policy will not be modified.
+	 *
+	 * @deprecated Use {@link #getQueryPolicyDefault()} with {@link #query(QueryPolicy, Statement, QueryListener)}
+	 * and a {@link Statement} with no filter (primary index query) instead. It will eventually be removed.
 	 */
+	@Deprecated
 	public final ScanPolicy getScanPolicyDefault() {
 		return scanPolicyDefault;
 	}
 
 	/**
 	 * Copy scan policy default. Use when the policy will be modified for use in a specific command.
+	 *
+	 * @deprecated Use {@link #copyQueryPolicyDefault()} with query methods instead. It will eventually be removed.
 	 */
+	@Deprecated
 	public final ScanPolicy copyScanPolicyDefault() {
 		return new ScanPolicy(scanPolicyDefault);
 	}
@@ -3603,7 +3614,11 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	 * @param callback				read callback method - called with record data
 	 * @param binNames				optional bin to retrieve. All bins will be returned if not specified.
 	 * @throws AerospikeException	if scan fails
+	 * @deprecated Use {@link #query(QueryPolicy, Statement, QueryListener)} with a {@link Statement} with
+	 * {@link Statement#setNamespace(String)}, {@link Statement#setSetName(String)}, {@link Statement#setBinNames(String...)}
+	 * and no filter (primary index query). It will eventually be removed.
 	 */
+	@Deprecated
 	public final void scanAll(ScanPolicy policy, String namespace, String setName, ScanCallback callback, String... binNames)
 		throws AerospikeException {
 		if (policy == null) {
@@ -3633,7 +3648,10 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	 * @param setName				optional set name - equivalent to database table
 	 * @param binNames				optional bin to retrieve. All bins will be returned if not specified.
 	 * @throws AerospikeException	if event loop registration fails
+	 * @deprecated Use {@link #query(EventLoop, RecordSequenceListener, QueryPolicy, Statement)} with a {@link Statement}
+	 * with namespace, set name and bin names set and no filter (primary index query). It will eventually be removed.
 	 */
+	@Deprecated
 	public final void scanAll(EventLoop eventLoop, RecordSequenceListener listener, ScanPolicy policy, String namespace, String setName, String... binNames)
 		throws AerospikeException {
 		if (eventLoop == null) {
@@ -3665,7 +3683,10 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	 * @param callback				read callback method - called with record data
 	 * @param binNames				optional bin to retrieve. All bins will be returned if not specified.
 	 * @throws AerospikeException	if scan fails
+	 * @deprecated Use {@link #queryNode(QueryPolicy, Statement, Node)} with a {@link Statement} with namespace, set name
+	 * and bin names set and no filter (primary index query). Use {@link #getNode(String)} to get the Node. It will eventually be removed.
 	 */
+	@Deprecated
 	public final void scanNode(ScanPolicy policy, String nodeName, String namespace, String setName, ScanCallback callback, String... binNames)
 		throws AerospikeException {
 		Node node = cluster.getNode(nodeName);
@@ -3685,7 +3706,10 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	 * @param callback				read callback method - called with record data
 	 * @param binNames				optional bin to retrieve. All bins will be returned if not specified.
 	 * @throws AerospikeException	if scan fails
+	 * @deprecated Use {@link #queryNode(QueryPolicy, Statement, Node)} with a {@link Statement} with namespace, set name
+	 * and bin names set and no filter (primary index query). It will eventually be removed.
 	 */
+	@Deprecated
 	public final void scanNode(ScanPolicy policy, Node node, String namespace, String setName, ScanCallback callback, String... binNames)
 		throws AerospikeException {
 		if (policy == null) {
@@ -3711,7 +3735,11 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	 * @param callback				read callback method - called with record data
 	 * @param binNames				optional bin to retrieve. All bins will be returned if not specified
 	 * @throws AerospikeException	if scan fails
+	 * @deprecated Use {@link #query(QueryPolicy, Statement, PartitionFilter, QueryListener)} or
+	 * {@link #queryPartitions(QueryPolicy, Statement, PartitionFilter)} with a {@link Statement} with namespace, set name
+	 * and bin names set and no filter (primary index query). It will eventually be removed.
 	 */
+	@Deprecated
 	public final void scanPartitions(ScanPolicy policy, PartitionFilter partitionFilter, String namespace, String setName, ScanCallback callback, String... binNames)
 		throws AerospikeException {
 		if (policy == null) {
@@ -3740,7 +3768,10 @@ public class AerospikeClient implements IAerospikeClient, Closeable {
 	 * @param setName				optional set name - equivalent to database table
 	 * @param binNames				optional bin to retrieve. All bins will be returned if not specified.
 	 * @throws AerospikeException	if event loop registration fails
+	 * @deprecated Use {@link #queryPartitions(EventLoop, RecordSequenceListener, QueryPolicy, Statement, PartitionFilter)}
+	 * with a {@link Statement} with namespace, set name and bin names set and no filter (primary index query). It will eventually be removed.
 	 */
+	@Deprecated
 	public final void scanPartitions(EventLoop eventLoop, RecordSequenceListener listener, ScanPolicy policy, PartitionFilter partitionFilter, String namespace, String setName, String... binNames)
 		throws AerospikeException {
 		if (eventLoop == null) {

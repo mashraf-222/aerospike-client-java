@@ -266,7 +266,12 @@ public class ClientPolicy {
 
 	/**
 	 * Default scan policy that is used when scan command's policy is null.
+	 *
+	 * @deprecated Use {@link #queryPolicyDefault} with
+	 * {@link com.aerospike.client.AerospikeClient#query(com.aerospike.client.policy.QueryPolicy, com.aerospike.client.query.Statement)}
+	 * instead. It will eventually be removed.
 	 */
+	@Deprecated
 	public ScanPolicy scanPolicyDefault = new ScanPolicy();
 
 	/**
@@ -750,6 +755,10 @@ public class ClientPolicy {
 		this.writePolicyDefault = writePolicyDefault;
 	}
 
+	/**
+	 * @deprecated Use {@link #setQueryPolicyDefault(QueryPolicy)} with query methods instead. It will eventually be removed.
+	 */
+	@Deprecated
 	public void setScanPolicyDefault(ScanPolicy scanPolicyDefault) {
 		this.scanPolicyDefault = scanPolicyDefault;
 	}
