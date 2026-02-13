@@ -39,110 +39,158 @@ import com.aerospike.client.lua.LuaInstance;
 import com.aerospike.client.util.Packer;
 
 /**
- * Polymorphic value classes used to efficiently serialize objects into the wire protocol.
+ * Polymorphic value types used to serialize and deserialize data for the Aerospike wire protocol.
+ *
+ * <p>Use the static {@link #get(Object)} and typed {@code get(type)} methods to obtain {@code Value} instances
+ * for bin values and keys. {@code null} inputs yield {@link #NULL}. Supported types include String, numeric,
+ * byte[], list, map, and GeoJSON.
+ *
+ * <p><b>Example:</b>
+ * <pre>{@code
+ * client.put(writePolicy, key, new Bin("name", Value.get("Alice")), new Bin("count", Value.get(42)));
+ * }</pre>
+ *
+ * @see #get(String)
+ * @see #get(long)
+ * @see #NULL
  */
 public abstract class Value {
 	/**
-	 * Should client send boolean particle type for a boolean bin.  If false,
-	 * an integer particle type (1 or 0) is sent instead. Must be false for server
-	 * versions less than 5.6 which do not support boolean bins. Can set to true for
-	 * server 5.6+.
+	 * When {@code true}, the client sends the boolean particle type for boolean bins; when {@code false}, sends integer (0/1).
+	 * <p>
+	 * Must be {@code false} for server versions before 5.6; can be {@code true} for server 5.6+.
 	 */
 	public static boolean UseBoolBin = true;
 
 	/**
-	 * Should the client return a map when {@link com.aerospike.client.cdt.MapReturnType#KEY_VALUE}
-	 * is specified in a map read operation and the server returns a list of key/value pairs.
+	 * When {@code true}, the client returns a map when {@link com.aerospike.client.cdt.MapReturnType#KEY_VALUE}
+	 * is used in a map read and the server returns a list of key/value pairs.
 	 */
 	public static boolean ReturnMapForKeyValue = false;
 
 	/**
-	 * Null value.
+	 * Singleton value representing null (e.g. for null bins or optional parameters).
 	 */
 	public static final Value NULL = NullValue.INSTANCE;
 
 	/**
-	 * Infinity value to be used in CDT range comparisons only.
+	 * Value representing positive infinity; for CDT range comparisons only.
 	 */
 	public static final Value INFINITY = new InfinityValue();
 
 	/**
-	 * Wildcard value to be used in CDT range comparisons only.
+	 * Wildcard value for CDT range comparisons only.
 	 */
 	public static final Value WILDCARD = new WildcardValue();
 
 	/**
-	 * Get string or null value instance.
+	 * Returns a Value for the given string, or {@link #NULL} if {@code value} is {@code null}.
+	 *
+	 * @param value the string; may be {@code null}
+	 * @return a StringValue or NULL
 	 */
 	public static Value get(String value) {
 		return (value == null)? NullValue.INSTANCE : new StringValue(value);
 	}
 
 	/**
-	 * Get byte array or null value instance.
+	 * Returns a Value for the given byte array, or {@link #NULL} if {@code value} is {@code null}.
+	 *
+	 * @param value the byte array; may be {@code null}
+	 * @return a BytesValue or NULL
 	 */
 	public static Value get(byte[] value) {
 		return (value == null)? NullValue.INSTANCE : new BytesValue(value);
 	}
 
 	/**
-	 * Get byte array with type or null value instance.
+	 * Returns a Value for the given byte array with the specified particle type, or {@link #NULL} if {@code value} is {@code null}.
+	 *
+	 * @param value the byte array; may be {@code null}
+	 * @param type particle type (e.g. blob, GeoJSON)
+	 * @return a BytesValue or NULL
 	 */
 	public static Value get(byte[] value, int type) {
 		return (value == null)? NullValue.INSTANCE : new BytesValue(value, type);
 	}
 
 	/**
-	 * Get byte segment or null value instance.
+	 * Returns a Value for a segment of the given byte array, or {@link #NULL} if {@code value} is {@code null}.
+	 *
+	 * @param value the byte array; may be {@code null}
+	 * @param offset offset of the segment
+	 * @param length length of the segment in bytes
+	 * @return a ByteSegmentValue or NULL
 	 */
 	public static Value get(byte[] value, int offset, int length) {
 		return (value == null)? NullValue.INSTANCE : new ByteSegmentValue(value, offset, length);
 	}
 
 	/**
-	 * Get byte segment or null value instance.
+	 * Returns a Value for the contents of the given ByteBuffer, or {@link #NULL} if {@code bb} is {@code null}.
+	 *
+	 * @param bb the ByteBuffer; may be {@code null}
+	 * @return a BytesValue or NULL
 	 */
 	public static Value get(ByteBuffer bb) {
 		return (bb == null)? NullValue.INSTANCE : new BytesValue(bb.array());
 	}
 
 	/**
-	 * Get byte value instance.
+	 * Returns a Value for the given byte.
+	 *
+	 * @param value the byte value
+	 * @return a ByteValue
 	 */
 	public static Value get(byte value) {
 		return new ByteValue(value);
 	}
 
 	/**
-	 * Get short value instance.
+	 * Returns a Value for the given short.
+	 *
+	 * @param value the short value
+	 * @return a ShortValue
 	 */
 	public static Value get(short value) {
 		return new ShortValue(value);
 	}
 
 	/**
-	 * Get integer value instance.
+	 * Returns a Value for the given int.
+	 *
+	 * @param value the int value
+	 * @return an IntegerValue
 	 */
 	public static Value get(int value) {
 		return new IntegerValue(value);
 	}
 
 	/**
-	 * Get long value instance.
+	 * Returns a Value for the given long.
+	 *
+	 * @param value the long value
+	 * @return a LongValue
 	 */
 	public static Value get(long value) {
 		return new LongValue(value);
 	}
 
 	/**
-	 * Get double value instance.
+	 * Returns a Value for the given double.
+	 *
+	 * @param value the double value
+	 * @return a DoubleValue
 	 */
 	public static Value get(double value) {
 		return new DoubleValue(value);
 	}
 
 	/**
-	 * Get float value instance.
+	 * Returns a Value for the given float.
+	 *
+	 * @param value the float value
+	 * @return a FloatValue
 	 */
 	public static Value get(float value) {
 		return new FloatValue(value);
@@ -352,7 +400,7 @@ public abstract class Value {
 
 	/**
 	 * Validate if value type can be used as a key.
-	 * @throws AerospikeException	if type can't be used as a key.
+	 * @throws AerospikeException	when the type cannot be used as a key (e.g. list or map type).
 	 */
 	public void validateKeyType() throws AerospikeException {
 	}

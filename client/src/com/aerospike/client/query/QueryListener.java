@@ -36,7 +36,7 @@ public interface QueryListener {
 	 *
 	 * @param key					unique record identifier
 	 * @param record				record instance
-	 * @throws AerospikeException	if error occurs or query should be terminated.
+	 * @throws AerospikeException	when an error occurs or the query should be terminated (e.g. throw {@link AerospikeException.QueryTerminated} to terminate).
 	 */
 	public void onRecord(Key key, Record record);
 }
