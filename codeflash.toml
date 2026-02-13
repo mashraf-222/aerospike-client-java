@@ -1,0 +1,7 @@
+[project]
+module-root = "client/src"
+tests-root = "test/src"
+formatter-cmds = []
+
+[language]
+java = true
