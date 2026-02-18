@@ -1111,7 +1111,8 @@ public class Cluster implements Runnable, Closeable {
 	}
 
 	public final boolean isConnCurrentTrim(long lastUsed) {
-		return (System.nanoTime() - lastUsed) <= maxSocketIdleNanosTrim;
+		long elapsed = System.nanoTime() - lastUsed;
+		return elapsed <= maxSocketIdleNanosTrim;
 	}
 
 	public final void recoverConnection(ConnectionRecover cs) {
