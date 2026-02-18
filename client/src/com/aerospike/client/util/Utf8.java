@@ -53,14 +53,21 @@ public final class Utf8 {
 			i++;
 		}
 
-		// This loop optimizes for chars less than 0x800.
+		// Process remaining characters
 		for (; i < utf16Length; i++) {
 			char c = sequence.charAt(i);
 			if (c < 0x800) {
 				utf8Length += ((0x7f - c) >>> 31); // branch free!
 			} else {
-				utf8Length += encodedLengthGeneral(sequence, i);
-				break;
+				utf8Length += 2;
+				// jdk7+: if (Character.isSurrogate(c)) {
+				if (MIN_SURROGATE <= c && c <= MAX_SURROGATE) {
+					// Check that we have a well-formed surrogate pair.
+					if (Character.codePointAt(sequence, i) == c) {
+						throw new AerospikeException("Unpaired surrogate at index " + i);
+					}
+					i++;
+				}
 			}
 		}
 
