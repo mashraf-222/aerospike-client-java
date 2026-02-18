@@ -1600,7 +1600,7 @@ public class Cluster implements Runnable, Closeable {
 	 * Increment async delay queue timeout count.
 	 */
 	public final long getDelayQueueTimeoutCount() {
-		return delayQueueTimeoutCount.get();
+		return delayQueueTimeoutCount.getOpaque();
 	}
 
 	/**
