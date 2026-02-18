@@ -102,7 +102,8 @@ public class DynamicBatchReadConfig {
 
     @Override
     public String toString() {
-        StringBuffer propsString = new StringBuffer("{");
+        StringBuilder propsString = new StringBuilder(400);
+        propsString.append("{");
         try {
             propsString.append(" read_mode_ap=").append(readModeAP).append(", ");
             propsString.append(" read_mode_sc=").append(readModeSC).append(", ");
