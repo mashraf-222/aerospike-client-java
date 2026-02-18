@@ -202,8 +202,28 @@ public final class Buffer {
 				buf[offset++] = (byte)(0xc0 | ((c >> 6)));
 				buf[offset++] = (byte)(0x80 | (c & 0x3f));
 			}
+			else if (c < 0xD800 || c > 0xDFFF) {
+				// 3-byte UTF-8 sequence for BMP characters (not surrogates)
+				buf[offset++] = (byte)(0xe0 | ((c >> 12)));
+				buf[offset++] = (byte)(0x80 | ((c >> 6) & 0x3f));
+				buf[offset++] = (byte)(0x80 | (c & 0x3f));
+			}
 			else {
-				// Encountered a different encoding other than 2-byte UTF8. Let java handle it.
+				// Handle surrogate pairs (4-byte UTF-8 sequence)
+				if (c >= 0xD800 && c <= 0xDBFF && i + 1 < length) {
+					int c2 = s.charAt(i + 1);
+					if (c2 >= 0xDC00 && c2 <= 0xDFFF) {
+						// Valid surrogate pair
+						int codePoint = 0x10000 + ((c & 0x3FF) << 10) + (c2 & 0x3FF);
+						buf[offset++] = (byte)(0xf0 | ((codePoint >> 18)));
+						buf[offset++] = (byte)(0x80 | ((codePoint >> 12) & 0x3f));
+						buf[offset++] = (byte)(0x80 | ((codePoint >> 6) & 0x3f));
+						buf[offset++] = (byte)(0x80 | (codePoint & 0x3f));
+						i++; // Skip the low surrogate
+						continue;
+					}
+				}
+				// Invalid surrogate or unpaired surrogate - fall back to Java's encoder
 				byte[] value = s.getBytes(StandardCharsets.UTF_8);
 				System.arraycopy(value, 0, buf, startOffset, value.length);
 				return value.length;
