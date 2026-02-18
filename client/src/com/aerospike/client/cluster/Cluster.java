@@ -1525,7 +1525,7 @@ public class Cluster implements Runnable, Closeable {
 	}
 
 	public boolean validateClusterName() {
-		return validateClusterName && clusterName != null && clusterName.length() > 0;
+		return validateClusterName && clusterName != null && !clusterName.isEmpty();
 	}
 
 	public final byte[] getUser() {
