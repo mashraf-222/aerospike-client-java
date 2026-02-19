@@ -48,19 +48,45 @@ public final class Utf8 {
 		int utf8Length = utf16Length;
 		int i = 0;
 
-		// This loop optimizes for pure ASCII.
+		// This loop optimizes for pure ASCII - process 4 chars at a time when possible
+		if (sequence instanceof String) {
+			String str = (String) sequence;
+			int limit = utf16Length - 3;
+			while (i < limit) {
+				char c1 = str.charAt(i);
+				char c2 = str.charAt(i + 1);
+				char c3 = str.charAt(i + 2);
+				char c4 = str.charAt(i + 3);
+				if ((c1 | c2 | c3 | c4) >= 0x80) {
+					break;
+				}
+				i += 4;
+			}
+		}
+		
+		// Handle remaining ASCII characters one at a time
 		while (i < utf16Length && sequence.charAt(i) < 0x80) {
 			i++;
 		}
 
-		// This loop optimizes for chars less than 0x800.
+		// Process remaining characters
 		for (; i < utf16Length; i++) {
 			char c = sequence.charAt(i);
 			if (c < 0x800) {
 				utf8Length += ((0x7f - c) >>> 31); // branch free!
 			} else {
-				utf8Length += encodedLengthGeneral(sequence, i);
-				break;
+				// jdk7+: if (Character.isSurrogate(c)) {
+				if (c <= MAX_SURROGATE && c >= MIN_SURROGATE) {
+					// Check that we have a well-formed surrogate pair.
+					int codePoint = Character.codePointAt(sequence, i);
+					if (codePoint == c) {
+						throw new AerospikeException("Unpaired surrogate at index " + i);
+					}
+					i++;
+					utf8Length += 2;
+				} else {
+					utf8Length += 2;
+				}
 			}
 		}
 
