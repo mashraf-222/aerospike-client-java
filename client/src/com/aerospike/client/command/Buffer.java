@@ -466,7 +466,7 @@ public final class Buffer {
 	 */
 	public static int littleBytesToInt(byte[] buf, int offset) {
 		return (
-			((buf[offset]   & 0xFF) << 0) |
+			(buf[offset]   & 0xFF) |
 			((buf[offset+1] & 0xFF) << 8) |
 			((buf[offset+2] & 0xFF) << 16) |
 			((buf[offset+3] & 0xFF) << 24)
