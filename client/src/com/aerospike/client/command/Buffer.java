@@ -413,13 +413,13 @@ public final class Buffer {
 	 */
 	public static long versionBytesToLong(byte[] buf, int offset) {
 		return (
-			((long)(buf[offset]   & 0xFF) << 0) |
-			((long)(buf[offset+1] & 0xFF) << 8) |
-			((long)(buf[offset+2] & 0xFF) << 16) |
-			((long)(buf[offset+3] & 0xFF) << 24) |
-			((long)(buf[offset+4] & 0xFF) << 32) |
-			((long)(buf[offset+5] & 0xFF) << 40) |
-			((long)(buf[offset+6] & 0xFF) << 48)
+			(buf[offset]   & 0xFFL) |
+			((buf[offset+1] & 0xFFL) << 8) |
+			((buf[offset+2] & 0xFFL) << 16) |
+			((buf[offset+3] & 0xFFL) << 24) |
+			((buf[offset+4] & 0xFFL) << 32) |
+			((buf[offset+5] & 0xFFL) << 40) |
+			((buf[offset+6] & 0xFFL) << 48)
 		);
 	}
 
