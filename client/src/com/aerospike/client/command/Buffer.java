@@ -477,12 +477,10 @@ public final class Buffer {
 	 * Convert big endian unsigned 32 bits to long.
 	 */
 	public static long bigUnsigned32ToLong(byte[] buf, int offset) {
-		return (
-			((long)(buf[offset]   & 0xFF) << 24) |
-			((long)(buf[offset+1] & 0xFF) << 16) |
-			((long)(buf[offset+2] & 0xFF) << 8) |
-			((long)(buf[offset+3] & 0xFF) << 0)
-			);
+		return ((buf[offset] & 0xFFL) << 24) |
+		       ((buf[offset+1] & 0xFFL) << 16) |
+		       ((buf[offset+2] & 0xFFL) << 8) |
+		       (buf[offset+3] & 0xFFL);
 	}
 
 	//-------------------------------------------------------
