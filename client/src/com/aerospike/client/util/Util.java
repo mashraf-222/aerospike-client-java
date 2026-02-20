@@ -208,7 +208,7 @@ public final class Util {
 	 */
 	public static byte toByte(Object obj) {
 		// The server always returns numbers as longs, so get long and cast.
-		return (byte)toLong(obj);
+		return (obj != null) ? ((Number)obj).byteValue() : 0;
 	}
 
 	/**
