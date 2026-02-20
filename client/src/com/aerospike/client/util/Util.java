@@ -200,7 +200,7 @@ public final class Util {
 	 */
 	public static short toShort(Object obj) {
 		// The server always returns numbers as longs, so get long and cast.
-		return (short)toLong(obj);
+		return (short)((obj != null) ? (Long)obj : 0);
 	}
 
 	/**
