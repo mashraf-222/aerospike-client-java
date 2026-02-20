@@ -379,16 +379,26 @@ public final class Buffer {
 	 * Convert little endian signed 64 bits to long.
 	 */
 	public static long littleBytesToLong(byte[] buf, int offset) {
+		// Read all bytes first to reduce array access overhead
+		long b0 = buf[offset]   & 0xFFL;
+		long b1 = buf[offset+1] & 0xFFL;
+		long b2 = buf[offset+2] & 0xFFL;
+		long b3 = buf[offset+3] & 0xFFL;
+		long b4 = buf[offset+4] & 0xFFL;
+		long b5 = buf[offset+5] & 0xFFL;
+		long b6 = buf[offset+6] & 0xFFL;
+		long b7 = buf[offset+7] & 0xFFL;
+		
 		return (
-			((long)(buf[offset]   & 0xFF) << 0) |
-			((long)(buf[offset+1] & 0xFF) << 8) |
-			((long)(buf[offset+2] & 0xFF) << 16) |
-			((long)(buf[offset+3] & 0xFF) << 24) |
-			((long)(buf[offset+4] & 0xFF) << 32) |
-			((long)(buf[offset+5] & 0xFF) << 40) |
-			((long)(buf[offset+6] & 0xFF) << 48) |
-			((long)(buf[offset+7] & 0xFF) << 56)
-			);
+			b0 |
+			(b1 << 8) |
+			(b2 << 16) |
+			(b3 << 24) |
+			(b4 << 32) |
+			(b5 << 40) |
+			(b6 << 48) |
+			(b7 << 56)
+		);
 	}
 
 	//-------------------------------------------------------
