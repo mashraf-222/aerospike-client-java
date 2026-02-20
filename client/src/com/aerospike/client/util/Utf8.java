@@ -49,7 +49,11 @@ public final class Utf8 {
 		int i = 0;
 
 		// This loop optimizes for pure ASCII.
-		while (i < utf16Length && sequence.charAt(i) < 0x80) {
+		while (i < utf16Length) {
+			char c = sequence.charAt(i);
+			if (c >= 0x80) {
+				break;
+			}
 			i++;
 		}
 
