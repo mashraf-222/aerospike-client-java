@@ -511,10 +511,7 @@ public final class Buffer {
 	 * Convert big endian unsigned 16 bits to int.
 	 */
 	public static int bytesToShort(byte[] buf, int offset) {
-		return (
-			((buf[offset]   & 0xFF) << 8) |
-			((buf[offset+1] & 0xFF) << 0)
-			);
+		return (Byte.toUnsignedInt(buf[offset]) << 8) | Byte.toUnsignedInt(buf[offset + 1]);
 	}
 
 	/**
