@@ -244,11 +244,70 @@ public final class Buffer {
 	}
 
 	public static Value bytesToLongValue(byte[] buf, int offset, int len) {
-		long val = 0;
-
-		for (int i = 0; i < len; i++) {
-			val <<= 8;
-			val |= buf[offset+i] & 0xFF;
+		long val;
+		
+		// Manually unroll for common cases (len <= 8 bytes fits in a long)
+		switch (len) {
+			case 1:
+				val = buf[offset] & 0xFFL;
+				break;
+			case 2:
+				val = ((buf[offset] & 0xFFL) << 8) |
+				      (buf[offset + 1] & 0xFFL);
+				break;
+			case 3:
+				val = ((buf[offset] & 0xFFL) << 16) |
+				      ((buf[offset + 1] & 0xFFL) << 8) |
+				      (buf[offset + 2] & 0xFFL);
+				break;
+			case 4:
+				val = ((buf[offset] & 0xFFL) << 24) |
+				      ((buf[offset + 1] & 0xFFL) << 16) |
+				      ((buf[offset + 2] & 0xFFL) << 8) |
+				      (buf[offset + 3] & 0xFFL);
+				break;
+			case 5:
+				val = ((buf[offset] & 0xFFL) << 32) |
+				      ((buf[offset + 1] & 0xFFL) << 24) |
+				      ((buf[offset + 2] & 0xFFL) << 16) |
+				      ((buf[offset + 3] & 0xFFL) << 8) |
+				      (buf[offset + 4] & 0xFFL);
+				break;
+			case 6:
+				val = ((buf[offset] & 0xFFL) << 40) |
+				      ((buf[offset + 1] & 0xFFL) << 32) |
+				      ((buf[offset + 2] & 0xFFL) << 24) |
+				      ((buf[offset + 3] & 0xFFL) << 16) |
+				      ((buf[offset + 4] & 0xFFL) << 8) |
+				      (buf[offset + 5] & 0xFFL);
+				break;
+			case 7:
+				val = ((buf[offset] & 0xFFL) << 48) |
+				      ((buf[offset + 1] & 0xFFL) << 40) |
+				      ((buf[offset + 2] & 0xFFL) << 32) |
+				      ((buf[offset + 3] & 0xFFL) << 24) |
+				      ((buf[offset + 4] & 0xFFL) << 16) |
+				      ((buf[offset + 5] & 0xFFL) << 8) |
+				      (buf[offset + 6] & 0xFFL);
+				break;
+			case 8:
+				val = ((buf[offset] & 0xFFL) << 56) |
+				      ((buf[offset + 1] & 0xFFL) << 48) |
+				      ((buf[offset + 2] & 0xFFL) << 40) |
+				      ((buf[offset + 3] & 0xFFL) << 32) |
+				      ((buf[offset + 4] & 0xFFL) << 24) |
+				      ((buf[offset + 5] & 0xFFL) << 16) |
+				      ((buf[offset + 6] & 0xFFL) << 8) |
+				      (buf[offset + 7] & 0xFFL);
+				break;
+			default:
+				// Fallback for unusual cases (len > 8 or len == 0)
+				val = 0;
+				for (int i = 0; i < len; i++) {
+					val <<= 8;
+					val |= buf[offset+i] & 0xFF;
+				}
+				break;
 		}
 
 		return new Value.LongValue(val);
