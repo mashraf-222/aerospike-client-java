@@ -457,7 +457,7 @@ public final class Buffer {
 			((buf[offset]   & 0xFF) << 24) |
 			((buf[offset+1] & 0xFF) << 16) |
 			((buf[offset+2] & 0xFF) << 8) |
-			((buf[offset+3] & 0xFF) << 0)
+			(buf[offset+3] & 0xFF)
 			);
 	}
 
