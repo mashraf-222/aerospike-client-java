@@ -223,11 +223,9 @@ public final class Buffer {
 	 */
 	public static int utf8DigitsToInt(byte[] buf, int begin, int end) {
 		int val = 0;
-		int mult = 1;
 
-		for (int i = end - 1; i >= begin; i--) {
-			val += (buf[i] - 48) * mult;
-			mult *= 10;
+		for (int i = begin; i < end; i++) {
+			val = val * 10 + (buf[i] - 48);
 		}
 		return val;
 	}
