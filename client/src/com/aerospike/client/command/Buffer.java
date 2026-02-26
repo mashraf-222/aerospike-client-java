@@ -155,7 +155,17 @@ public final class Buffer {
 		if (s == null || s.length() == 0) {
 			return 0;
 		}
-		return Utf8.encodedLength(s);
+		
+		// Fast path for ASCII strings - check if all characters are ASCII
+		int len = s.length();
+		for (int i = 0; i < len; i++) {
+			if (s.charAt(i) >= 128) {
+				// Non-ASCII character found, delegate to full UTF-8 calculation
+				return Utf8.encodedLength(s);
+			}
+		}
+		// All ASCII characters, encoded length equals string length
+		return len;
 	}
 
 	/**
@@ -165,7 +175,27 @@ public final class Buffer {
 		if (s == null) {
 			return 0;
 		}
-		return s.length() * 3;
+		
+		int len = s.length();
+		int size = len; // Start with minimum (all ASCII)
+		
+		// Scan for non-ASCII characters to adjust estimate
+		for (int i = 0; i < len; i++) {
+			char c = s.charAt(i);
+			if (c >= 0x80) {
+				// Non-ASCII: add extra bytes
+				if (c < 0x800) {
+					size++; // 2-byte char (1 extra)
+				} else if (Character.isHighSurrogate(c)) {
+					size += 3; // 4-byte char (3 extra), skip next char
+					i++;
+				} else {
+					size += 2; // 3-byte char (2 extra)
+				}
+			}
+		}
+		
+		return size;
 	}
 
 	public static byte[] stringToUtf8(String s) {
@@ -223,11 +253,9 @@ public final class Buffer {
 	 */
 	public static int utf8DigitsToInt(byte[] buf, int begin, int end) {
 		int val = 0;
-		int mult = 1;
 
-		for (int i = end - 1; i >= begin; i--) {
-			val += (buf[i] - 48) * mult;
-			mult *= 10;
+		for (int i = begin; i < end; i++) {
+			val = val * 10 + (buf[i] - 48);
 		}
 		return val;
 	}
@@ -278,8 +306,7 @@ public final class Buffer {
 			long val = 0;
 
 			for (int i = 0; i < len; i++) {
-				val <<= 8;
-				val |= buf[offset+i] & 0xFF;
+				val = (val << 8) | (buf[offset+i] & 0xFF);
 			}
 			return val;
 		}
