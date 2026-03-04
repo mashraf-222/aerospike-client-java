@@ -193,23 +193,29 @@ public final class Buffer {
 		int length = s.length();
 		int startOffset = offset;
 
+		// First pass: detect whether any character requires full UTF-8 handling (>= 0x800).
+		// If so, fall back to Java's getBytes to ensure correct encoding for 3/4-byte sequences.
 		for (int i = 0; i < length; i++) {
-			int c = s.charAt(i);
-			if (c < 0x80) {
-				buf[offset++] = (byte) c;
-			}
-			else if (c < 0x800) {
-				buf[offset++] = (byte)(0xc0 | ((c >> 6)));
-				buf[offset++] = (byte)(0x80 | (c & 0x3f));
-			}
-			else {
-				// Encountered a different encoding other than 2-byte UTF8. Let java handle it.
+			if (s.charAt(i) >= 0x800) {
 				byte[] value = s.getBytes(StandardCharsets.UTF_8);
 				System.arraycopy(value, 0, buf, startOffset, value.length);
 				return value.length;
 			}
 		}
-		return offset - startOffset;
+
+		// Fast path: all characters are < 0x800 (1 or 2 byte UTF-8). Encode directly.
+		int pos = offset;
+		for (int i = 0; i < length; i++) {
+			int c = s.charAt(i);
+			if (c < 0x80) {
+				buf[pos++] = (byte) c;
+			}
+			else {
+				buf[pos++] = (byte)(0xc0 | ((c >> 6)));
+				buf[pos++] = (byte)(0x80 | (c & 0x3f));
+			}
+		}
+		return pos - startOffset;
 	}
 
 	public static String utf8ToString(byte[] buf, int offset, int length) {
