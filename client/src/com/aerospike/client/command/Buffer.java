@@ -193,23 +193,39 @@ public final class Buffer {
 		int length = s.length();
 		int startOffset = offset;
 
-		for (int i = 0; i < length; i++) {
-			int c = s.charAt(i);
+		// Copy chars once to avoid repeated charAt bounds checks.
+		char[] chars = s.toCharArray();
+		int i = 0;
+		int len = chars.length;
+		byte[] b = buf;
+		int out = offset;
+
+		while (i < len) {
+			char c = chars[i];
 			if (c < 0x80) {
-				buf[offset++] = (byte) c;
+				// Fast path: copy runs of ASCII characters with minimal branching.
+				int j = i;
+				// Unrolled-style inner loop: copy contiguous ASCII chars.
+				do {
+					b[out++] = (byte) chars[j++];
+				} while (j < len && chars[j] < 0x80);
+				i = j;
 			}
 			else if (c < 0x800) {
-				buf[offset++] = (byte)(0xc0 | ((c >> 6)));
-				buf[offset++] = (byte)(0x80 | (c & 0x3f));
+				out++;
+				// 2-byte UTF-8
+				b[out - 1] = (byte)(0xc0 | ((c >> 6)));
+				b[out++] = (byte)(0x80 | (c & 0x3f));
+				i++;
 			}
 			else {
 				// Encountered a different encoding other than 2-byte UTF8. Let java handle it.
 				byte[] value = s.getBytes(StandardCharsets.UTF_8);
-				System.arraycopy(value, 0, buf, startOffset, value.length);
+				System.arraycopy(value, 0, b, startOffset, value.length);
 				return value.length;
 			}
 		}
-		return offset - startOffset;
+		return out - startOffset;
 	}
 
 	public static String utf8ToString(byte[] buf, int offset, int length) {
