@@ -44,22 +44,23 @@ public final class Utf8 {
 	 */
 	public static int encodedLength(CharSequence sequence) {
 		// Warning to maintainers: this implementation is highly optimized.
-		int utf16Length = sequence.length();
+		final CharSequence seq = sequence;
+		final int utf16Length = seq.length();
 		int utf8Length = utf16Length;
 		int i = 0;
 
 		// This loop optimizes for pure ASCII.
-		while (i < utf16Length && sequence.charAt(i) < 0x80) {
+		while (i < utf16Length && seq.charAt(i) < 0x80) {
 			i++;
 		}
 
 		// This loop optimizes for chars less than 0x800.
 		for (; i < utf16Length; i++) {
-			char c = sequence.charAt(i);
+			char c = seq.charAt(i);
 			if (c < 0x800) {
 				utf8Length += ((0x7f - c) >>> 31); // branch free!
 			} else {
-				utf8Length += encodedLengthGeneral(sequence, i);
+				utf8Length += encodedLengthGeneral(seq, i, utf16Length);
 				break;
 			}
 		}
